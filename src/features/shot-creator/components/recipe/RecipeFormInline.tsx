@@ -56,6 +56,30 @@ export function RecipeFormInline() {
 
   const activeRecipe = getActiveRecipe()
 
+  // Paste support for reference images
+  useEffect(() => {
+    if (!activeRecipeId || !activeRecipe || activeRecipe.requiresImage === false) return
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items
+      if (!items) return
+      const imageFiles: File[] = []
+      for (const item of Array.from(items)) {
+        if (item.type.startsWith('image/')) {
+          const file = item.getAsFile()
+          if (file) imageFiles.push(file)
+        }
+      }
+      if (imageFiles.length > 0) {
+        e.preventDefault()
+        const dt = new DataTransfer()
+        imageFiles.forEach(f => dt.items.add(f))
+        handleMultipleImageUpload(dt.files)
+      }
+    }
+    document.addEventListener('paste', handlePaste)
+    return () => document.removeEventListener('paste', handlePaste)
+  }, [activeRecipeId, activeRecipe, handleMultipleImageUpload])
+
   // Auto-expand textarea fields
   const textareaRefs = useRef<Record<string, HTMLTextAreaElement | null>>({})
   const autoResize = useCallback((el: HTMLTextAreaElement | null) => {
@@ -156,7 +180,7 @@ export function RecipeFormInline() {
       case 'name':
         return (
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-400">{field.label}</label>
+            <label className="text-xs font-medium text-cyan-300/70">{field.label}</label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-400 font-medium text-sm">@</span>
               <Input
@@ -164,7 +188,7 @@ export function RecipeFormInline() {
                 value={value}
                 onChange={e => setFieldValue(field.id, e.target.value)}
                 placeholder={field.placeholder}
-                className="h-10 text-sm bg-slate-800/50 border-slate-700 pl-7 focus:border-cyan-500 focus:ring-cyan-500/20"
+                className="h-10 text-sm bg-cyan-950/30 border-cyan-800/40 pl-7 focus:border-cyan-500 focus:ring-cyan-500/20"
               />
             </div>
           </div>
@@ -173,7 +197,7 @@ export function RecipeFormInline() {
       case 'text':
         return (
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-400">{field.label}</label>
+            <label className="text-xs font-medium text-cyan-300/70">{field.label}</label>
             <textarea
               ref={el => {
                 textareaRefs.current[field.id] = el
@@ -187,10 +211,10 @@ export function RecipeFormInline() {
               placeholder={field.placeholder}
               rows={1}
               className={cn(
-                'w-full rounded-md text-sm bg-slate-800/50 border border-slate-700 px-3 py-2',
+                'w-full rounded-md text-sm bg-cyan-950/30 border border-cyan-800/40 px-3 py-2',
                 'focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 focus:outline-none',
                 'resize-none overflow-hidden transition-colors',
-                'placeholder:text-slate-500'
+                'placeholder:text-cyan-400/30'
               )}
               style={{ minHeight: '36px' }}
             />
@@ -200,9 +224,9 @@ export function RecipeFormInline() {
       case 'select':
         return (
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-400">{field.label}</label>
+            <label className="text-xs font-medium text-cyan-300/70">{field.label}</label>
             <Select value={value} onValueChange={v => setFieldValue(field.id, v)}>
-              <SelectTrigger className="h-10 text-sm bg-slate-800/50 border-slate-700 focus:border-cyan-500 focus:ring-cyan-500/20">
+              <SelectTrigger className="h-10 text-sm bg-cyan-950/30 border-cyan-800/40 focus:border-cyan-500 focus:ring-cyan-500/20">
                 <SelectValue placeholder={field.placeholder} />
               </SelectTrigger>
               <SelectContent>{renderSelectOptions(field.options)}</SelectContent>
@@ -219,8 +243,8 @@ export function RecipeFormInline() {
         if (!wc) {
           return (
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-400">{field.label}</label>
-              <div className="h-10 flex items-center px-3 text-xs text-muted-foreground bg-slate-800/50 border border-slate-700 rounded-md opacity-60">
+              <label className="text-xs font-medium text-cyan-300/70">{field.label}</label>
+              <div className="h-10 flex items-center px-3 text-xs text-muted-foreground bg-cyan-950/30 border border-cyan-800/40 rounded-md opacity-60">
                 Wildcard &apos;{field.wildcardName}&apos; not available
               </div>
             </div>
@@ -248,11 +272,11 @@ export function RecipeFormInline() {
           const truncated = display.length > 80 ? display.slice(0, 80) + '...' : display
           return (
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-400">{field.label}</label>
+              <label className="text-xs font-medium text-cyan-300/70">{field.label}</label>
               <div className="flex items-center gap-1">
                 <div
                   onClick={reRoll}
-                  className="h-10 flex items-center gap-2 px-3 rounded-md cursor-pointer text-sm bg-slate-800/50 border border-cyan-500/30 hover:border-cyan-500/50 transition-colors text-cyan-200 select-none min-w-[140px] flex-1"
+                  className="h-10 flex items-center gap-2 px-3 rounded-md cursor-pointer text-sm bg-cyan-950/30 border border-cyan-500/30 hover:border-cyan-500/50 transition-colors text-cyan-200 select-none min-w-[140px] flex-1"
                   title="Click to re-roll"
                 >
                   <Dices className="w-4 h-4 text-cyan-400 shrink-0" />
@@ -270,10 +294,10 @@ export function RecipeFormInline() {
         const filteredEntries = search ? entries.filter(e => e.toLowerCase().includes(search.toLowerCase())) : entries
         return (
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-400">{field.label}</label>
+            <label className="text-xs font-medium text-cyan-300/70">{field.label}</label>
             <div className="flex items-center gap-1">
               <Select value={value} onValueChange={v => setFieldValue(field.id, v)}>
-                <SelectTrigger className="h-10 text-sm bg-slate-800/50 border-slate-700 min-w-[140px]">
+                <SelectTrigger className="h-10 text-sm bg-cyan-950/30 border-cyan-800/40 min-w-[140px]">
                   <SelectValue placeholder={field.placeholder} />
                 </SelectTrigger>
                 <SelectContent>
@@ -312,16 +336,16 @@ export function RecipeFormInline() {
   }
 
   return (
-    <div className="rounded-xl border border-slate-700/80 bg-slate-900/80 overflow-hidden">
+    <div className="rounded-xl border border-cyan-800/50 bg-[oklch(0.18_0.03_220)] overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-slate-800/60 border-b border-slate-700/60">
+      <div className="flex items-center justify-between px-4 py-2.5 bg-cyan-950/40 border-b border-cyan-800/30">
         <div className="flex items-center gap-2 relative">
           <button
             onClick={() => setShowRecipeSwitch(!showRecipeSwitch)}
-            className="flex items-center gap-1.5 text-sm font-medium text-slate-200 hover:text-white transition-colors"
+            className="flex items-center gap-1.5 text-sm font-medium text-cyan-100 hover:text-white transition-colors"
           >
             <span>{activeRecipe.name}</span>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+            <ChevronDown className="w-3.5 h-3.5 text-cyan-400" />
           </button>
           {activeRecipe.stages.length > 1 && (
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-400 font-medium">
@@ -331,7 +355,7 @@ export function RecipeFormInline() {
 
           {/* Recipe switcher dropdown */}
           {showRecipeSwitch && (
-            <div className="absolute top-full left-0 mt-1 z-50 w-64 max-h-[300px] overflow-y-auto bg-slate-800 border border-slate-700 rounded-lg shadow-xl">
+            <div className="absolute top-full left-0 mt-1 z-50 w-64 max-h-[300px] overflow-y-auto bg-[oklch(0.20_0.03_220)] border border-cyan-800/50 rounded-lg shadow-xl">
               {recipes.map(r => (
                 <button
                   key={r.id}
@@ -343,7 +367,7 @@ export function RecipeFormInline() {
                     'w-full text-left px-3 py-2 text-sm transition-colors',
                     r.id === activeRecipeId
                       ? 'bg-cyan-500/20 text-cyan-300'
-                      : 'text-slate-300 hover:bg-slate-700/50'
+                      : 'text-cyan-100/80 hover:bg-cyan-900/30'
                   )}
                 >
                   {r.name}
@@ -356,7 +380,7 @@ export function RecipeFormInline() {
           variant="ghost"
           size="sm"
           onClick={() => setActiveRecipe(null)}
-          className="h-7 w-7 p-0 text-slate-400 hover:text-white"
+          className="h-7 w-7 p-0 text-cyan-400/60 hover:text-white"
         >
           <X className="w-4 h-4" />
         </Button>
@@ -374,8 +398,8 @@ export function RecipeFormInline() {
               isDragOver
                 ? 'border-cyan-400 bg-cyan-500/10'
                 : shotCreatorReferenceImages.length > 0
-                  ? 'border-slate-700 bg-slate-800/30'
-                  : 'border-slate-600 bg-slate-800/50 hover:border-slate-500'
+                  ? 'border-cyan-800/40 bg-cyan-950/20'
+                  : 'border-cyan-700/40 bg-cyan-950/30 hover:border-cyan-600/50'
             )}
           >
             {shotCreatorReferenceImages.length > 0 ? (
@@ -400,7 +424,7 @@ export function RecipeFormInline() {
                   {/* Add more button */}
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-16 h-16 rounded-lg border border-dashed border-slate-600 flex items-center justify-center text-slate-500 hover:text-slate-300 hover:border-slate-400 transition-colors"
+                    className="w-16 h-16 rounded-lg border border-dashed border-cyan-700/40 flex items-center justify-center text-cyan-500/50 hover:text-cyan-300 hover:border-cyan-500/50 transition-colors"
                   >
                     <Upload className="w-4 h-4" />
                   </button>
@@ -412,12 +436,12 @@ export function RecipeFormInline() {
                 onClick={() => fileInputRef.current?.click()}
                 className="w-full py-6 flex flex-col items-center gap-2 cursor-pointer"
               >
-                <div className="w-10 h-10 rounded-full bg-slate-700/80 flex items-center justify-center">
-                  <ImageIcon className="w-5 h-5 text-slate-400" />
+                <div className="w-10 h-10 rounded-full bg-cyan-900/40 flex items-center justify-center">
+                  <ImageIcon className="w-5 h-5 text-cyan-400/60" />
                 </div>
                 <div className="text-center">
-                  <p className="text-sm text-slate-300">Drop reference image here</p>
-                  <p className="text-xs text-slate-500 mt-0.5">or click to upload</p>
+                  <p className="text-sm text-cyan-200/80">Drop or paste reference image here</p>
+                  <p className="text-xs text-cyan-400/40 mt-0.5">or click to upload</p>
                 </div>
               </button>
             )}
@@ -442,7 +466,7 @@ export function RecipeFormInline() {
           <div>
             <button
               onClick={() => setShowOptional(!showOptional)}
-              className="flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-slate-200 transition-colors"
+              className="flex items-center gap-1.5 text-xs font-medium text-cyan-400/60 hover:text-cyan-200 transition-colors"
             >
               {showOptional ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
               More options ({optionalFields.length})
@@ -461,7 +485,7 @@ export function RecipeFormInline() {
       {/* Recipe note */}
       {activeRecipe.recipeNote && (
         <div className="px-4 pb-3">
-          <p className="text-xs text-slate-500 italic">{activeRecipe.recipeNote}</p>
+          <p className="text-xs text-cyan-400/40 italic">{activeRecipe.recipeNote}</p>
         </div>
       )}
     </div>
