@@ -398,6 +398,57 @@ export function CommunityPage() {
     }
   }
 
+  // Admin: Delete thumbnail for LoRA community item
+  const handleDeleteThumbnail = async (item: CommunityItem) => {
+    if (!isAdmin || item.type !== 'lora') return
+    const content = item.content as LoraContent
+    if (!content.thumbnailUrl) return
+
+    try {
+      // Try to delete from Supabase Storage
+      const { createBrowserClient } = await import('@supabase/ssr')
+      const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      )
+
+      // Extract path from URL — community/lora-thumbnails/{itemId}.{ext}
+      const urlPath = content.thumbnailUrl.split('/directors-palette/')[1]?.split('?')[0]
+      if (urlPath) {
+        await supabase.storage.from('directors-palette').remove([urlPath])
+      }
+
+      // Clear thumbnailUrl in community item content
+      const updatedContent = { ...content, thumbnailUrl: undefined }
+      const res = await fetch('/api/admin/community', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'edit',
+          itemId: item.id,
+          updates: { content: updatedContent },
+        }),
+      })
+
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.error || 'Failed to delete thumbnail')
+      }
+
+      toast({
+        title: 'Thumbnail Deleted',
+        description: `Thumbnail for "${item.name}" has been removed.`,
+      })
+      refresh()
+    } catch (error) {
+      toast({
+        title: 'Delete Failed',
+        description: error instanceof Error ? error.message : 'Failed to delete thumbnail',
+        variant: 'destructive',
+      })
+    }
+  }
+
   // Check if it's a schema cache error (tables not available)
   const isSchemaError = error?.includes('schema cache') || error?.includes('PGRST205')
 
@@ -526,6 +577,10 @@ export function CommunityPage() {
                         ? (file) => handleUpdateThumbnail(item, file)
                         : undefined
                       }
+                      onDeleteThumbnail={isAdmin && item.type === 'lora'
+                        ? () => handleDeleteThumbnail(item)
+                        : undefined
+                      }
                     />
                   </div>
                 )
@@ -551,6 +606,7 @@ export function CommunityPage() {
             onEdit={handleOpenEdit}
             onDelete={handleOpenDelete}
             onUpdateThumbnail={isAdmin ? handleUpdateThumbnail : undefined}
+            onDeleteThumbnail={isAdmin ? handleDeleteThumbnail : undefined}
           />
         </div>
       </div>

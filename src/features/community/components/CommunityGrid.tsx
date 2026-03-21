@@ -21,6 +21,7 @@ interface CommunityGridProps {
   onEdit?: (item: CommunityItem) => void
   onDelete?: (item: CommunityItem) => void
   onUpdateThumbnail?: (item: CommunityItem, file: File) => Promise<void>
+  onDeleteThumbnail?: (item: CommunityItem) => Promise<void>
 }
 
 export function CommunityGrid({
@@ -36,6 +37,7 @@ export function CommunityGrid({
   onEdit,
   onDelete,
   onUpdateThumbnail,
+  onDeleteThumbnail,
 }: CommunityGridProps) {
   if (isLoading) {
     return (
@@ -73,6 +75,10 @@ export function CommunityGrid({
             onDelete={() => onDelete?.(item)}
             onUpdateThumbnail={item.type === 'lora' && onUpdateThumbnail
               ? (file) => onUpdateThumbnail(item, file)
+              : undefined
+            }
+            onDeleteThumbnail={item.type === 'lora' && onDeleteThumbnail
+              ? () => onDeleteThumbnail(item)
               : undefined
             }
           />

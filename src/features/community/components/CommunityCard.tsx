@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Minus, Check, User, Tag, Layers, BookOpen, MessageSquare, Wand2, Film, Pencil, Trash2, Camera } from 'lucide-react'
+import { Plus, Minus, Check, User, Tag, Layers, BookOpen, MessageSquare, Wand2, Film, Pencil, Trash2, Camera, X } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -30,6 +30,7 @@ interface CommunityCardProps {
   onEdit?: () => void
   onDelete?: () => void
   onUpdateThumbnail?: (file: File) => Promise<void>
+  onDeleteThumbnail?: () => Promise<void>
 }
 
 const TYPE_COLORS: Record<CommunityItemType, string> = {
@@ -60,6 +61,7 @@ export function CommunityCard({
   onEdit,
   onDelete,
   onUpdateThumbnail,
+  onDeleteThumbnail,
 }: CommunityCardProps) {
   const [isAdding, setIsAdding] = useState(false)
   const [isRemoving, setIsRemoving] = useState(false)
@@ -81,6 +83,17 @@ export function CommunityCard({
       setIsUploadingThumb(false)
     }
   }, [onUpdateThumbnail])
+
+  const handleDeleteThumbnail = useCallback(async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!onDeleteThumbnail) return
+    setIsUploadingThumb(true)
+    try {
+      await onDeleteThumbnail()
+    } finally {
+      setIsUploadingThumb(false)
+    }
+  }, [onDeleteThumbnail])
 
   const handleRemove = async (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -200,22 +213,39 @@ export function CommunityCard({
                   <Wand2 className="w-8 h-8 text-violet-500/30" />
                 </div>
               )}
-              {/* Camera button for thumbnail upload — admin only */}
+              {/* Thumbnail controls — admin only */}
               {isAdmin && onUpdateThumbnail && (
                 <>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); thumbInputRef.current?.click() }}
-                    disabled={isUploadingThumb}
-                    className={cn(
-                      'absolute bottom-1.5 right-1.5 w-7 h-7 rounded-md flex items-center justify-center',
-                      'bg-black/60 text-white/80 hover:bg-violet-500 hover:text-white',
-                      'opacity-0 group-hover/thumb:opacity-100 transition-all',
-                      isUploadingThumb && 'animate-pulse opacity-100'
+                  <div className="absolute bottom-1.5 right-1.5 flex gap-1 opacity-0 group-hover/thumb:opacity-100 transition-all">
+                    {/* Upload / replace thumbnail */}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); thumbInputRef.current?.click() }}
+                      disabled={isUploadingThumb}
+                      className={cn(
+                        'w-7 h-7 rounded-md flex items-center justify-center',
+                        'bg-black/60 text-white/80 hover:bg-violet-500 hover:text-white transition-all',
+                        isUploadingThumb && 'animate-pulse opacity-100'
+                      )}
+                      title="Upload thumbnail"
+                    >
+                      <Camera className="w-3.5 h-3.5" />
+                    </button>
+                    {/* Delete thumbnail — only when one exists */}
+                    {content.thumbnailUrl && onDeleteThumbnail && (
+                      <button
+                        onClick={handleDeleteThumbnail}
+                        disabled={isUploadingThumb}
+                        className={cn(
+                          'w-7 h-7 rounded-md flex items-center justify-center',
+                          'bg-black/60 text-red-400 hover:bg-red-500 hover:text-white transition-all',
+                          isUploadingThumb && 'animate-pulse opacity-100'
+                        )}
+                        title="Delete thumbnail"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
                     )}
-                    title="Upload thumbnail"
-                  >
-                    <Camera className="w-3.5 h-3.5" />
-                  </button>
+                  </div>
                   <input
                     ref={thumbInputRef}
                     type="file"
@@ -265,9 +295,9 @@ export function CommunityCard({
         'hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200'
       )}
     >
-      {/* Admin Controls - visible on hover, admin only - positioned at top-left to avoid overlap with Add button */}
+      {/* Admin Controls - visible on hover, positioned at bottom-right above footer */}
       {isAdmin && (
-        <div className="absolute top-2 left-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        <div className="absolute bottom-12 right-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           {/* Edit Button */}
           <Button
             size="icon"
@@ -282,23 +312,18 @@ export function CommunityCard({
             <Pencil className="w-3.5 h-3.5" />
           </Button>
 
-          {/* Delete Button - with animated trash lid */}
+          {/* Delete Button */}
           <Button
             size="icon"
             variant="ghost"
             onClick={(e) => { e.stopPropagation(); onDelete?.() }}
             className={cn(
-              "h-7 w-7 rounded-full transition-all group/trash",
+              "h-7 w-7 rounded-full transition-all",
               "bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white",
               "border border-red-500/30 hover:border-red-500"
             )}
           >
-            <div className="relative w-3.5 h-3.5">
-              {/* Trash lid that rotates on hover */}
-              <div className="absolute -top-[1px] left-[2px] w-[10px] h-[3px] bg-current rounded-t-sm origin-left group-hover/trash:rotate-[-30deg] transition-transform duration-200" />
-              {/* Trash body */}
-              <Trash2 className="w-3.5 h-3.5" />
-            </div>
+            <Trash2 className="w-3.5 h-3.5" />
           </Button>
         </div>
       )}
