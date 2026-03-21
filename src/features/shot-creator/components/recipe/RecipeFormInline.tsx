@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { useRecipeStore } from '../../store/recipe.store'
 import { useShotCreatorStore } from '../../store/shot-creator.store'
+import { useLoraStore } from '../../store/lora.store'
 import { useReferenceImageManager } from '../../hooks/useReferenceImageManager'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -24,6 +25,7 @@ import {
   Trash2,
   Dices,
   List,
+  Wand2,
 } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import { getAllFields } from '../../types/recipe.types'
@@ -44,11 +46,17 @@ export function RecipeFormInline() {
     shotCreatorReferenceImages,
   } = useShotCreatorStore()
 
+  const loras = useLoraStore(s => s.loras)
+  const activeLoraIds = useLoraStore(s => s.activeLoraIds)
+  const toggleActiveLora = useLoraStore(s => s.toggleActiveLora)
+  const loraThumbnails = useLoraStore(s => s.loraThumbnails)
+
   const wildcardStore = useWildCardStore()
   const [wildcardModes, setWildcardModes] = useState<Record<string, 'browse' | 'random'>>({})
   const [wildcardSearches, setWildcardSearches] = useState<Record<string, string>>({})
   const [showOptional, setShowOptional] = useState(false)
   const [showRecipeSwitch, setShowRecipeSwitch] = useState(false)
+  const [showLoras, setShowLoras] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isDragOver, setIsDragOver] = useState(false)
 
@@ -100,6 +108,7 @@ export function RecipeFormInline() {
   const optionalFields = allFields.filter(f => !f.required)
   const needsImage = activeRecipe.requiresImage !== false
   const recipes = getVisibleRecipes()
+  const activeLoras = loras.filter(l => activeLoraIds.includes(l.id))
 
   // Drag handlers for image upload
   const handleDragOver = (e: React.DragEvent) => {
@@ -161,7 +170,7 @@ export function RecipeFormInline() {
     return groups.map((group, gi) => (
       <SelectGroup key={gi}>
         {group.label && (
-          <SelectLabel className="text-xs font-semibold text-cyan-400 uppercase tracking-wider px-2 py-1.5">
+          <SelectLabel className="text-xs font-semibold text-primary uppercase tracking-wider px-2 py-1.5">
             {group.label}
           </SelectLabel>
         )}
@@ -180,15 +189,15 @@ export function RecipeFormInline() {
       case 'name':
         return (
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-cyan-300/70">{field.label}</label>
+            <label className="text-xs font-medium text-muted-foreground">{field.label}</label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-400 font-medium text-sm">@</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary font-medium text-sm">@</span>
               <Input
                 type="text"
                 value={value}
                 onChange={e => setFieldValue(field.id, e.target.value)}
                 placeholder={field.placeholder}
-                className="h-10 text-sm bg-cyan-950/30 border-cyan-800/40 pl-7 focus:border-cyan-500 focus:ring-cyan-500/20"
+                className="h-10 text-sm bg-input border-border pl-7 focus:border-primary focus:ring-primary/20"
               />
             </div>
           </div>
@@ -197,7 +206,7 @@ export function RecipeFormInline() {
       case 'text':
         return (
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-cyan-300/70">{field.label}</label>
+            <label className="text-xs font-medium text-muted-foreground">{field.label}</label>
             <textarea
               ref={el => {
                 textareaRefs.current[field.id] = el
@@ -211,10 +220,10 @@ export function RecipeFormInline() {
               placeholder={field.placeholder}
               rows={1}
               className={cn(
-                'w-full rounded-md text-sm bg-cyan-950/30 border border-cyan-800/40 px-3 py-2',
-                'focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 focus:outline-none',
+                'w-full rounded-md text-sm bg-input border border-border px-3 py-2',
+                'focus:border-primary focus:ring-1 focus:ring-primary/20 focus:outline-none',
                 'resize-none overflow-hidden transition-colors',
-                'placeholder:text-cyan-400/30'
+                'placeholder:text-muted-foreground/50'
               )}
               style={{ minHeight: '36px' }}
             />
@@ -224,9 +233,9 @@ export function RecipeFormInline() {
       case 'select':
         return (
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-cyan-300/70">{field.label}</label>
+            <label className="text-xs font-medium text-muted-foreground">{field.label}</label>
             <Select value={value} onValueChange={v => setFieldValue(field.id, v)}>
-              <SelectTrigger className="h-10 text-sm bg-cyan-950/30 border-cyan-800/40 focus:border-cyan-500 focus:ring-cyan-500/20">
+              <SelectTrigger className="h-10 text-sm bg-input border-border focus:border-primary focus:ring-primary/20">
                 <SelectValue placeholder={field.placeholder} />
               </SelectTrigger>
               <SelectContent>{renderSelectOptions(field.options)}</SelectContent>
@@ -243,8 +252,8 @@ export function RecipeFormInline() {
         if (!wc) {
           return (
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-cyan-300/70">{field.label}</label>
-              <div className="h-10 flex items-center px-3 text-xs text-muted-foreground bg-cyan-950/30 border border-cyan-800/40 rounded-md opacity-60">
+              <label className="text-xs font-medium text-muted-foreground">{field.label}</label>
+              <div className="h-10 flex items-center px-3 text-xs text-muted-foreground bg-input border border-border rounded-md opacity-60">
                 Wildcard &apos;{field.wildcardName}&apos; not available
               </div>
             </div>
@@ -272,17 +281,17 @@ export function RecipeFormInline() {
           const truncated = display.length > 80 ? display.slice(0, 80) + '...' : display
           return (
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-cyan-300/70">{field.label}</label>
+              <label className="text-xs font-medium text-muted-foreground">{field.label}</label>
               <div className="flex items-center gap-1">
                 <div
                   onClick={reRoll}
-                  className="h-10 flex items-center gap-2 px-3 rounded-md cursor-pointer text-sm bg-cyan-950/30 border border-cyan-500/30 hover:border-cyan-500/50 transition-colors text-cyan-200 select-none min-w-[140px] flex-1"
+                  className="h-10 flex items-center gap-2 px-3 rounded-md cursor-pointer text-sm bg-input border border-primary/30 hover:border-primary/50 transition-colors text-foreground select-none min-w-[140px] flex-1"
                   title="Click to re-roll"
                 >
-                  <Dices className="w-4 h-4 text-cyan-400 shrink-0" />
+                  <Dices className="w-4 h-4 text-primary shrink-0" />
                   <span className="truncate">{truncated}</span>
                 </div>
-                <Button variant="ghost" size="sm" onClick={toggleMode} className="h-10 w-10 p-0 shrink-0 text-muted-foreground hover:text-cyan-400" title="Switch to browse mode">
+                <Button variant="ghost" size="sm" onClick={toggleMode} className="h-10 w-10 p-0 shrink-0 text-muted-foreground hover:text-primary" title="Switch to browse mode">
                   <List className="w-4 h-4" />
                 </Button>
               </div>
@@ -294,10 +303,10 @@ export function RecipeFormInline() {
         const filteredEntries = search ? entries.filter(e => e.toLowerCase().includes(search.toLowerCase())) : entries
         return (
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-cyan-300/70">{field.label}</label>
+            <label className="text-xs font-medium text-muted-foreground">{field.label}</label>
             <div className="flex items-center gap-1">
               <Select value={value} onValueChange={v => setFieldValue(field.id, v)}>
-                <SelectTrigger className="h-10 text-sm bg-cyan-950/30 border-cyan-800/40 min-w-[140px]">
+                <SelectTrigger className="h-10 text-sm bg-input border-border min-w-[140px]">
                   <SelectValue placeholder={field.placeholder} />
                 </SelectTrigger>
                 <SelectContent>
@@ -322,7 +331,7 @@ export function RecipeFormInline() {
                   )}
                 </SelectContent>
               </Select>
-              <Button variant="ghost" size="sm" onClick={toggleMode} className="h-10 w-10 p-0 shrink-0 text-muted-foreground hover:text-cyan-400" title="Switch to random mode">
+              <Button variant="ghost" size="sm" onClick={toggleMode} className="h-10 w-10 p-0 shrink-0 text-muted-foreground hover:text-primary" title="Switch to random mode">
                 <Dices className="w-4 h-4" />
               </Button>
             </div>
@@ -336,26 +345,26 @@ export function RecipeFormInline() {
   }
 
   return (
-    <div className="rounded-xl border border-cyan-800/50 bg-[oklch(0.18_0.03_220)] overflow-hidden">
+    <div className="rounded-xl border border-border bg-card overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-cyan-950/40 border-b border-cyan-800/30">
+      <div className="flex items-center justify-between px-4 py-2.5 bg-secondary border-b border-border">
         <div className="flex items-center gap-2 relative">
           <button
             onClick={() => setShowRecipeSwitch(!showRecipeSwitch)}
-            className="flex items-center gap-1.5 text-sm font-medium text-cyan-100 hover:text-white transition-colors"
+            className="flex items-center gap-1.5 text-sm font-medium text-foreground hover:text-primary transition-colors"
           >
             <span>{activeRecipe.name}</span>
-            <ChevronDown className="w-3.5 h-3.5 text-cyan-400" />
+            <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
           </button>
           {activeRecipe.stages.length > 1 && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-400 font-medium">
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/20 text-primary font-medium">
               {activeRecipe.stages.length} stages
             </span>
           )}
 
           {/* Recipe switcher dropdown */}
           {showRecipeSwitch && (
-            <div className="absolute top-full left-0 mt-1 z-50 w-64 max-h-[300px] overflow-y-auto bg-[oklch(0.20_0.03_220)] border border-cyan-800/50 rounded-lg shadow-xl">
+            <div className="absolute top-full left-0 mt-1 z-50 w-64 max-h-[300px] overflow-y-auto bg-popover border border-border rounded-lg shadow-xl">
               {recipes.map(r => (
                 <button
                   key={r.id}
@@ -366,8 +375,8 @@ export function RecipeFormInline() {
                   className={cn(
                     'w-full text-left px-3 py-2 text-sm transition-colors',
                     r.id === activeRecipeId
-                      ? 'bg-cyan-500/20 text-cyan-300'
-                      : 'text-cyan-100/80 hover:bg-cyan-900/30'
+                      ? 'bg-primary/20 text-primary'
+                      : 'text-foreground/80 hover:bg-secondary'
                   )}
                 >
                   {r.name}
@@ -380,7 +389,7 @@ export function RecipeFormInline() {
           variant="ghost"
           size="sm"
           onClick={() => setActiveRecipe(null)}
-          className="h-7 w-7 p-0 text-cyan-400/60 hover:text-white"
+          className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
         >
           <X className="w-4 h-4" />
         </Button>
@@ -396,10 +405,10 @@ export function RecipeFormInline() {
             className={cn(
               'relative rounded-lg border-2 border-dashed transition-colors',
               isDragOver
-                ? 'border-cyan-400 bg-cyan-500/10'
+                ? 'border-primary bg-primary/10'
                 : shotCreatorReferenceImages.length > 0
-                  ? 'border-cyan-800/40 bg-cyan-950/20'
-                  : 'border-cyan-700/40 bg-cyan-950/30 hover:border-cyan-600/50'
+                  ? 'border-border bg-muted/30'
+                  : 'border-border hover:border-primary/50 bg-muted/20'
             )}
           >
             {shotCreatorReferenceImages.length > 0 ? (
@@ -424,7 +433,7 @@ export function RecipeFormInline() {
                   {/* Add more button */}
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-16 h-16 rounded-lg border border-dashed border-cyan-700/40 flex items-center justify-center text-cyan-500/50 hover:text-cyan-300 hover:border-cyan-500/50 transition-colors"
+                    className="w-16 h-16 rounded-lg border border-dashed border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors"
                   >
                     <Upload className="w-4 h-4" />
                   </button>
@@ -436,12 +445,12 @@ export function RecipeFormInline() {
                 onClick={() => fileInputRef.current?.click()}
                 className="w-full py-6 flex flex-col items-center gap-2 cursor-pointer"
               >
-                <div className="w-10 h-10 rounded-full bg-cyan-900/40 flex items-center justify-center">
-                  <ImageIcon className="w-5 h-5 text-cyan-400/60" />
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <ImageIcon className="w-5 h-5 text-primary/60" />
                 </div>
                 <div className="text-center">
-                  <p className="text-sm text-cyan-200/80">Drop or paste reference image here</p>
-                  <p className="text-xs text-cyan-400/40 mt-0.5">or click to upload</p>
+                  <p className="text-sm text-foreground/80">Drop or paste reference image here</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">or click to upload</p>
                 </div>
               </button>
             )}
@@ -466,7 +475,7 @@ export function RecipeFormInline() {
           <div>
             <button
               onClick={() => setShowOptional(!showOptional)}
-              className="flex items-center gap-1.5 text-xs font-medium text-cyan-400/60 hover:text-cyan-200 transition-colors"
+              className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               {showOptional ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
               More options ({optionalFields.length})
@@ -480,12 +489,58 @@ export function RecipeFormInline() {
             )}
           </div>
         )}
+
+        {/* LoRA influence */}
+        {loras.length > 0 && (
+          <div>
+            <button
+              onClick={() => setShowLoras(!showLoras)}
+              className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Wand2 className="w-3.5 h-3.5" />
+              LoRA Influence
+              {activeLoras.length > 0 && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/20 text-primary font-medium">
+                  {activeLoras.length}
+                </span>
+              )}
+              {showLoras ? <ChevronUp className="w-3 h-3 ml-auto" /> : <ChevronDown className="w-3 h-3 ml-auto" />}
+            </button>
+            {showLoras && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {loras.map(lora => {
+                  const isActive = activeLoraIds.includes(lora.id)
+                  const thumb = loraThumbnails[lora.id] || lora.thumbnailUrl
+                  return (
+                    <button
+                      key={lora.id}
+                      onClick={() => toggleActiveLora(lora.id)}
+                      className={cn(
+                        'flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium transition-all',
+                        isActive
+                          ? 'bg-primary/20 text-primary border border-primary/40'
+                          : 'bg-muted/50 text-muted-foreground border border-border hover:border-primary/30 hover:text-foreground'
+                      )}
+                    >
+                      {thumb ? (
+                        <img src={thumb} alt="" className="w-4 h-4 rounded object-cover" />
+                      ) : (
+                        <Wand2 className="w-3 h-3" />
+                      )}
+                      {lora.name}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Recipe note */}
       {activeRecipe.recipeNote && (
         <div className="px-4 pb-3">
-          <p className="text-xs text-cyan-400/40 italic">{activeRecipe.recipeNote}</p>
+          <p className="text-xs text-muted-foreground/60 italic">{activeRecipe.recipeNote}</p>
         </div>
       )}
     </div>
