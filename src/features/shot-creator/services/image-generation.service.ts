@@ -300,27 +300,35 @@ export class ImageGenerationService {
       })
 
       if (!response.ok) {
-        const error = await response.json()
+        const responseText = await response.text()
+        let error: Record<string, unknown> = {}
+        try {
+          error = JSON.parse(responseText)
+        } catch {
+          throw new Error(`Server error (${response.status}): ${responseText || response.statusText}`)
+        }
 
         // Handle insufficient credits error specifically
         if (response.status === 402) {
-          const creditsError = new Error(error.details || 'Insufficient credits') as Error & {
+          const creditsError = new Error(String(error.details || 'Insufficient credits')) as Error & {
             isInsufficientCredits: boolean
             required: number
             balance: number
           }
           creditsError.isInsufficientCredits = true
-          creditsError.required = error.required || 0
-          creditsError.balance = error.balance || 0
+          creditsError.required = (error.required as number) || 0
+          creditsError.balance = (error.balance as number) || 0
           throw creditsError
         }
 
-        throw new Error(error.error || 'Failed to start image generation')
+        throw new Error(String(error.error || error.message || `API error ${response.status}`))
       }
 
       return await response.json()
     } catch (error) {
-      logger.shotCreator.error('Image generation error', { error: error instanceof Error ? error.message : String(error) })
+      const errMsg = error instanceof Error ? error.message : String(error)
+      const errName = error instanceof Error ? error.name : typeof error
+      logger.shotCreator.error('Image generation error', { message: errMsg, name: errName, type: typeof error })
       throw error
     }
   }

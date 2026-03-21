@@ -855,7 +855,9 @@ export function useImageGeneration() {
                 totalVariations,
             }
         } catch (error) {
-            logger.shotCreator.error('Image generation failed', { error: error instanceof Error ? error.message : String(error) })
+            const errMsg = error instanceof Error ? error.message : String(error)
+            const errName = error instanceof Error ? error.name : typeof error
+            logger.shotCreator.error('Image generation failed', { message: errMsg, name: errName, type: typeof error })
 
             // Check if this is an insufficient credits error
             const isCreditsError = error && typeof error === 'object' && 'isInsufficientCredits' in error
