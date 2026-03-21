@@ -452,39 +452,47 @@ export function RecipeFormInline() {
         </Button>
       </div>
 
-      {/* Image / Description mode toggle */}
-      {pairedRecipe && (
-        <div className="flex items-center gap-2 px-4 py-2 border-b border-border bg-muted/30">
-          <span className="text-xs text-muted-foreground">Source:</span>
-          <div className="flex rounded-md overflow-hidden border border-border">
-            <button
-              onClick={() => !isDescriptionMode || switchMode()}
-              className={cn(
-                'px-3 py-1 text-xs font-medium transition-colors',
-                !isDescriptionMode
-                  ? 'bg-primary/20 text-primary'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-              )}
-            >
-              <ImageIcon className="w-3 h-3 inline mr-1" />
-              Image
-            </button>
-            <button
-              onClick={() => isDescriptionMode || switchMode()}
-              className={cn(
-                'px-3 py-1 text-xs font-medium transition-colors border-l border-border',
-                isDescriptionMode
-                  ? 'bg-primary/20 text-primary'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-              )}
-            >
-              Description
-            </button>
+      {/* Mode toggle + description */}
+      <div className="px-4 pt-3 space-y-2">
+        {/* Image / Description mode toggle */}
+        {pairedRecipe && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">Source:</span>
+            <div className="flex rounded-md overflow-hidden border border-border">
+              <button
+                onClick={() => !isDescriptionMode || switchMode()}
+                className={cn(
+                  'px-3 py-1 text-xs font-medium transition-colors',
+                  !isDescriptionMode
+                    ? 'bg-primary/20 text-primary'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                )}
+              >
+                <ImageIcon className="w-3 h-3 inline mr-1" />
+                Image
+              </button>
+              <button
+                onClick={() => isDescriptionMode || switchMode()}
+                className={cn(
+                  'px-3 py-1 text-xs font-medium transition-colors border-l border-border',
+                  isDescriptionMode
+                    ? 'bg-primary/20 text-primary'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                )}
+              >
+                Description
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <div className="p-4 space-y-4">
+        {/* Recipe note / description */}
+        {activeRecipe.recipeNote && (
+          <p className="text-xs text-muted-foreground italic">{activeRecipe.recipeNote}</p>
+        )}
+      </div>
+
+      <div className="px-4 pb-4 pt-2 space-y-4">
         {/* Image upload zone */}
         {needsImage && (
           <div
@@ -626,12 +634,6 @@ export function RecipeFormInline() {
         )}
       </div>
 
-      {/* Recipe note */}
-      {activeRecipe.recipeNote && (
-        <div className="px-4 pb-3">
-          <p className="text-xs text-muted-foreground/60 italic">{activeRecipe.recipeNote}</p>
-        </div>
-      )}
     </div>
   )
 }
