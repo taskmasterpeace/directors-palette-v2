@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useCallback } from 'react'
+import React, { useState, useRef, useCallback, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -448,9 +448,14 @@ function LoraDialog({ onClose, editingLora }: {
 const COLLAPSED_MAX = 3
 
 export function LoraSection({ selectedModel }: { selectedModel?: string }) {
-    const { loras, activeLoraIds, toggleActiveLora, removeLora, updateLora, rateLora, getLoraRating, isLoraUsed, loraThumbnails } = useLoraStore()
+    const { loras, activeLoraIds, toggleActiveLora, removeLora, updateLora, rateLora, getLoraRating, isLoraUsed, loraThumbnails, ensureAdminLoras } = useLoraStore()
     const { isAdmin } = useAdminAuth()
     const [showDialog, setShowDialog] = useState(false)
+
+    // Admin gets all built-in LoRAs automatically
+    useEffect(() => {
+        if (isAdmin) ensureAdminLoras()
+    }, [isAdmin, ensureAdminLoras])
     const [editingLora, setEditingLora] = useState<LoraItem | null>(null)
     const [expanded, setExpanded] = useState(false)
 

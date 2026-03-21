@@ -53,6 +53,9 @@ interface LoraStore {
     getLoraRating: (id: string) => LoraRating | null
     isLoraUsed: (id: string) => boolean
 
+    // Admin
+    ensureAdminLoras: () => void  // Adds all built-in LoRAs for admin users
+
     // Computed
     getActiveLoras: () => LoraItem[]
     getActiveLora: () => LoraItem | null  // backward compat — returns first active
@@ -161,6 +164,18 @@ const FLUX2_9B_LORAS: LoraItem[] = [
         compatibleModels: ['flux-2-klein-9b'],
         createdAt: 0,
     },
+    {
+        id: 'consistency-k9b',
+        name: 'Consistency',
+        type: 'style',
+        referenceTag: 'consistency',
+        triggerWord: '',
+        weightsUrl: 'https://pub-5db40a08df07458593b2b31de8bb6b62.r2.dev/loras/consistency-k9b/Klein-consistency.safetensors',
+        defaultGuidanceScale: 5.0,
+        defaultLoraScale: 0.8,
+        compatibleModels: ['flux-2-klein-9b'],
+        createdAt: 0,
+    },
 ]
 
 const ALL_BUILT_IN_LORAS = [...BUILT_IN_LORAS, ...FLUX2_9B_LORAS]
@@ -210,7 +225,7 @@ export const COMMUNITY_LORAS: LoraItem[] = [
 export const useLoraStore = create<LoraStore>()(
     persist(
         (set, get) => ({
-            loras: ALL_BUILT_IN_LORAS,
+            loras: [],  // Users start with no LoRAs — add from community
             activeLoraIds: [],
             loraRatings: {},
             usedLoraIds: [],
@@ -268,6 +283,15 @@ export const useLoraStore = create<LoraStore>()(
 
             getLoraThumbnail: (id, fallback) => {
                 return get().loraThumbnails[id] || fallback
+            },
+
+            ensureAdminLoras: () => {
+                set((state) => {
+                    const existingIds = new Set(state.loras.map(l => l.id))
+                    const missing = ALL_BUILT_IN_LORAS.filter(l => !existingIds.has(l.id))
+                    if (missing.length === 0) return state
+                    return { loras: [...state.loras, ...missing] }
+                })
             },
 
             addFromCommunity: (loraId) => {
@@ -332,33 +356,23 @@ export const useLoraStore = create<LoraStore>()(
         }),
         {
             name: 'directors-palette-lora-store',
-            version: 18,
+            version: 19,
             migrate: (persisted: unknown) => {
                 const state = persisted as Record<string, unknown>
                 const loras = (state?.loras as LoraItem[]) || []
-                const builtInIds = new Set(ALL_BUILT_IN_LORAS.map(l => l.id))
-                // Remove old built-ins no longer in the list (createdAt === 0 means built-in)
-                const filtered = loras.filter(l => l.createdAt !== 0 || builtInIds.has(l.id))
-                // Ensure built-in LoRAs are present and up-to-date
-                for (const builtIn of ALL_BUILT_IN_LORAS) {
-                    const existing = filtered.find((l) => l.id === builtIn.id)
-                    if (!existing) {
-                        filtered.push(builtIn)
-                    } else {
-                        existing.defaultLoraScale = builtIn.defaultLoraScale
-                        existing.defaultGuidanceScale = builtIn.defaultGuidanceScale
-                        existing.type = builtIn.type
-                        existing.referenceTag = builtIn.referenceTag
-                        existing.compatibleModels = builtIn.compatibleModels
-                    }
-                }
+                // v19: Remove all built-in LoRAs — users start empty, add from community
+                // Keep only user-added LoRAs (createdAt !== 0)
+                const filtered = loras.filter(l => l.createdAt !== 0)
                 // Ensure rating fields exist (v9)
                 const loraRatings = (state?.loraRatings as Record<string, LoraRating>) || {}
                 const usedLoraIds = (state?.usedLoraIds as string[]) || []
                 // Migrate activeLoraId (string|null) → activeLoraIds (string[]) (v10)
                 const oldActiveId = state?.activeLoraId as string | null | undefined
                 const activeLoraIds = (state?.activeLoraIds as string[]) || (oldActiveId ? [oldActiveId] : [])
-                return { ...state, loras: filtered, loraRatings, usedLoraIds, activeLoraIds }
+                // Deactivate any built-in LoRAs that were removed
+                const filteredIds = new Set(filtered.map(l => l.id))
+                const cleanActiveIds = activeLoraIds.filter(id => filteredIds.has(id))
+                return { ...state, loras: filtered, loraRatings, usedLoraIds, activeLoraIds: cleanActiveIds }
             },
         }
     )

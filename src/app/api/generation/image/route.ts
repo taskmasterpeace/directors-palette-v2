@@ -81,12 +81,15 @@ async function callFalAiKleinLora(params: {
 
   if (!response.ok) {
     const errorText = await response.text();
+    console.error(`[fal.ai] ${response.status} from ${endpoint}:`, errorText);
     lognog.error('fal.ai Klein LoRA API error', {
       status: response.status,
       error: errorText,
       type: 'integration',
       integration: 'fal',
       endpoint,
+      lora_count: params.loras.length,
+      lora_urls: params.loras.map(l => l.path?.substring(0, 80)),
     });
     throw new Error(`fal.ai API error (${response.status}): ${errorText}`);
   }
@@ -662,14 +665,21 @@ export async function POST(request: NextRequest) {
     if (useKleinFal) {
       lognog.devDebug('Routing to fal.ai for Klein 9B + LoRA', { model, loraActive, hasReferenceImage });
 
-      try {
-        // Build LoRA array for fal.ai: [{path, scale}]
-        const loraUrls = (ms.loraWeightsUrls as string[]) || (ms.loraWeightsUrl ? [ms.loraWeightsUrl as string] : []);
-        const loraScales = (ms.loraScales as number[]) || [ms.loraScale as number ?? 1.0];
-        const falLoras = loraUrls.map((url, i) => ({
+      // Build LoRA array for fal.ai: [{path, scale}] — outside try so catch can reference it
+      const loraUrls = (ms.loraWeightsUrls as string[]) || (ms.loraWeightsUrl ? [ms.loraWeightsUrl as string] : []);
+      const loraScales = (ms.loraScales as number[]) || [ms.loraScale as number ?? 1.0];
+      const falLoras = loraUrls
+        .map((url, i) => ({
           path: url,
           scale: loraScales[i] ?? 1.0,
-        }));
+        }))
+        .filter(l => l.path && l.path.startsWith('http'));
+
+      if (falLoras.length === 0) {
+        return NextResponse.json({ error: 'No valid LoRA URLs provided' }, { status: 400 });
+      }
+
+      try {
 
         // Map aspect ratio to fal.ai image_size format
         const settings = modelSettings as Record<string, unknown>;
@@ -850,14 +860,21 @@ export async function POST(request: NextRequest) {
           imageCount: falResult.images.length,
         });
       } catch (falError) {
+        const errMsg = falError instanceof Error ? falError.message : String(falError);
+        const errStack = falError instanceof Error ? falError.stack : undefined;
+        console.error('[fal.ai Klein LoRA] Generation failed:', errMsg, errStack);
         lognog.error('fal.ai Klein LoRA generation failed', {
           type: 'error',
           integration: 'fal',
-          error: falError instanceof Error ? falError.message : String(falError),
+          error: errMsg,
+          stack: errStack,
           user_id: user.id,
+          lora_count: falLoras.length,
+          loras: falLoras.map(l => ({ path: l.path?.substring(0, 80), scale: l.scale })),
+          has_reference_images: hasReferenceImage,
         });
         return NextResponse.json(
-          { error: 'Image generation failed', details: falError instanceof Error ? falError.message : 'fal.ai error' },
+          { error: 'Image generation failed', details: errMsg },
           { status: 500 }
         );
       }

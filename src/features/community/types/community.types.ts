@@ -60,6 +60,7 @@ export interface LoraContent {
   thumbnailUrl?: string
   defaultGuidanceScale: number
   defaultLoraScale: number
+  compatibleModels?: string[]
 }
 
 export interface DirectorContent {

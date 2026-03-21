@@ -128,6 +128,7 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
             thumbnailUrl: content.thumbnailUrl,
             defaultGuidanceScale: content.defaultGuidanceScale,
             defaultLoraScale: content.defaultLoraScale,
+            compatibleModels: content.compatibleModels,
           })
         }
       }
