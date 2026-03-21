@@ -32,6 +32,14 @@ import { getAllFields } from '../../types/recipe.types'
 import type { RecipeField } from '../../types/recipe-field.types'
 import { useWildCardStore } from '../../store/wildcard.store'
 
+// Paired recipes: image-based ↔ description-based
+const RECIPE_PAIRS: Record<string, string> = {
+  'Character Sheet': 'Character Sheet (From Description)',
+  'Character Sheet (From Description)': 'Character Sheet',
+  'Character Turnaround': 'Character Turnaround (From Description)',
+  'Character Turnaround (From Description)': 'Character Turnaround',
+}
+
 export function RecipeFormInline() {
   const {
     activeRecipeId,
@@ -40,6 +48,7 @@ export function RecipeFormInline() {
     setActiveRecipe,
     getActiveRecipe,
     getVisibleRecipes,
+    recipes: allRecipes,
   } = useRecipeStore()
 
   const {
@@ -57,6 +66,8 @@ export function RecipeFormInline() {
   const [showOptional, setShowOptional] = useState(false)
   const [showRecipeSwitch, setShowRecipeSwitch] = useState(false)
   const [showLoras, setShowLoras] = useState(false)
+  const [showNameSuggestions, setShowNameSuggestions] = useState(false)
+  const [focusedNameField, setFocusedNameField] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isDragOver, setIsDragOver] = useState(false)
 
@@ -102,6 +113,18 @@ export function RecipeFormInline() {
   }, [activeFieldValues, autoResize])
 
   if (!activeRecipeId || !activeRecipe) return null
+
+  // Check if this recipe has a paired variant (image ↔ description)
+  const pairedName = RECIPE_PAIRS[activeRecipe.name]
+  const pairedRecipe = pairedName ? allRecipes.find(r => r.name === pairedName) : null
+  const isDescriptionMode = activeRecipe.name.includes('From Description')
+
+  const switchMode = () => {
+    if (pairedRecipe) {
+      // Preserve field values when switching
+      setActiveRecipe(pairedRecipe.id)
+    }
+  }
 
   const allFields = getAllFields(activeRecipe.stages)
   const requiredFields = allFields.filter(f => f.required)
@@ -186,22 +209,56 @@ export function RecipeFormInline() {
     const value = activeFieldValues[field.id] || ''
 
     switch (field.type) {
-      case 'name':
+      case 'name': {
+        // Collect available reference tags from uploaded images
+        const availableTags = shotCreatorReferenceImages
+          .flatMap(img => [...img.tags, ...(img.persistentTag ? [img.persistentTag] : [])])
+          .filter(Boolean)
+          .filter((t, i, arr) => arr.indexOf(t) === i)
+        const showSuggestions = focusedNameField === field.id && showNameSuggestions && availableTags.length > 0
+        const filteredTags = value
+          ? availableTags.filter(t => t.toLowerCase().includes(value.toLowerCase()))
+          : availableTags
+
         return (
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground">{field.label}</label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary font-medium text-sm">@</span>
               <Input
                 type="text"
                 value={value}
-                onChange={e => setFieldValue(field.id, e.target.value)}
-                placeholder={field.placeholder}
-                className="h-10 text-sm bg-input border-border pl-7 focus:border-primary focus:ring-primary/20"
+                onChange={e => {
+                  setFieldValue(field.id, e.target.value)
+                  setShowNameSuggestions(true)
+                }}
+                onFocus={() => { setFocusedNameField(field.id); setShowNameSuggestions(true) }}
+                onBlur={() => setTimeout(() => setShowNameSuggestions(false), 150)}
+                placeholder={field.placeholder || 'Type a name or pick from references'}
+                className="h-10 text-sm bg-input border-border focus:border-primary focus:ring-primary/20"
               />
+              {/* Autocomplete suggestions from reference tags */}
+              {showSuggestions && filteredTags.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-popover border border-border rounded-lg shadow-xl overflow-hidden">
+                  {filteredTags.map(tag => (
+                    <button
+                      key={tag}
+                      onMouseDown={e => e.preventDefault()}
+                      onClick={() => {
+                        setFieldValue(field.id, tag)
+                        setShowNameSuggestions(false)
+                      }}
+                      className="w-full text-left px-3 py-1.5 text-sm text-foreground/80 hover:bg-secondary transition-colors flex items-center gap-2"
+                    >
+                      <span className="text-primary text-xs">@</span>
+                      <span>{tag}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )
+      }
 
       case 'text':
         return (
@@ -353,7 +410,7 @@ export function RecipeFormInline() {
             onClick={() => setShowRecipeSwitch(!showRecipeSwitch)}
             className="flex items-center gap-1.5 text-sm font-medium text-foreground hover:text-primary transition-colors"
           >
-            <span>{activeRecipe.name}</span>
+            <span>{activeRecipe.name.replace(' (From Description)', '')}</span>
             <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
           </button>
           {activeRecipe.stages.length > 1 && (
@@ -394,6 +451,38 @@ export function RecipeFormInline() {
           <X className="w-4 h-4" />
         </Button>
       </div>
+
+      {/* Image / Description mode toggle */}
+      {pairedRecipe && (
+        <div className="flex items-center gap-2 px-4 py-2 border-b border-border bg-muted/30">
+          <span className="text-xs text-muted-foreground">Source:</span>
+          <div className="flex rounded-md overflow-hidden border border-border">
+            <button
+              onClick={() => !isDescriptionMode || switchMode()}
+              className={cn(
+                'px-3 py-1 text-xs font-medium transition-colors',
+                !isDescriptionMode
+                  ? 'bg-primary/20 text-primary'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+              )}
+            >
+              <ImageIcon className="w-3 h-3 inline mr-1" />
+              Image
+            </button>
+            <button
+              onClick={() => isDescriptionMode || switchMode()}
+              className={cn(
+                'px-3 py-1 text-xs font-medium transition-colors border-l border-border',
+                isDescriptionMode
+                  ? 'bg-primary/20 text-primary'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+              )}
+            >
+              Description
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="p-4 space-y-4">
         {/* Image upload zone */}
