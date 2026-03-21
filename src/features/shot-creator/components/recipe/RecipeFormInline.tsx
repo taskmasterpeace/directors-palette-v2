@@ -24,6 +24,7 @@ import {
   Trash2,
   Dices,
   List,
+  ClipboardPaste,
 } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import { getAllFields } from '../../types/recipe.types'
@@ -146,6 +147,30 @@ export function RecipeFormInline() {
   useEffect(() => {
     Object.values(textareaRefs.current).forEach(el => autoResize(el))
   }, [activeFieldValues, autoResize])
+
+  // Paste image from clipboard via button click
+  const handlePasteFromClipboard = useCallback(async () => {
+    try {
+      const items = await navigator.clipboard.read()
+      const imageFiles: File[] = []
+      for (const item of items) {
+        const imageType = item.types.find(t => t.startsWith('image/'))
+        if (imageType) {
+          const blob = await item.getType(imageType)
+          const ext = imageType.split('/')[1] || 'png'
+          const file = new File([blob], `pasted-image.${ext}`, { type: imageType })
+          imageFiles.push(file)
+        }
+      }
+      if (imageFiles.length > 0) {
+        const dt = new DataTransfer()
+        imageFiles.forEach(f => dt.items.add(f))
+        handleMultipleImageUpload(dt.files)
+      }
+    } catch {
+      // Clipboard API not available or no image — ignore
+    }
+  }, [handleMultipleImageUpload])
 
   if (!activeRecipeId || !activeRecipe) return null
 
@@ -597,29 +622,48 @@ export function RecipeFormInline() {
                       </button>
                     </div>
                   ))}
-                  {/* Add more button */}
+                  {/* Add more / paste buttons */}
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-16 h-16 rounded-lg border border-dashed border-border flex items-center justify-center text-muted-foreground hover:text-amber-400 hover:border-amber-500/50 transition-colors"
+                    className="w-16 h-16 rounded-lg border border-dashed border-border flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-amber-400 hover:border-amber-500/50 transition-colors"
+                    title="Upload image"
                   >
                     <Upload className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={handlePasteFromClipboard}
+                    className="w-16 h-16 rounded-lg border border-dashed border-border flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-amber-400 hover:border-amber-500/50 transition-colors"
+                    title="Paste from clipboard"
+                  >
+                    <ClipboardPaste className="w-4 h-4" />
                   </button>
                 </div>
               </div>
             ) : (
               /* Empty state */
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full py-6 flex flex-col items-center gap-2 cursor-pointer"
-              >
+              <div className="w-full py-5 flex flex-col items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center">
                   <ImageIcon className="w-5 h-5 text-amber-500/60" />
                 </div>
-                <div className="text-center">
-                  <p className="text-sm text-foreground/80">Drop or paste reference image here</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">or click to upload</p>
+                <p className="text-xs text-muted-foreground">Add a reference image</p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-colors"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    Upload
+                  </button>
+                  <button
+                    onClick={handlePasteFromClipboard}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-colors"
+                  >
+                    <ClipboardPaste className="w-3.5 h-3.5" />
+                    Paste
+                  </button>
                 </div>
-              </button>
+                <p className="text-[10px] text-muted-foreground/60">or drag & drop</p>
+              </div>
             )}
             <input
               ref={fileInputRef}
