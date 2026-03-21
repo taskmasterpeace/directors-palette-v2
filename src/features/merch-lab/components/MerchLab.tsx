@@ -1,5 +1,6 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -10,10 +11,18 @@ import { ProductPicker } from './ProductPicker'
 import { ColorPicker } from './ColorPicker'
 import { DesignStylePicker } from './DesignStylePicker'
 import { DesignPrompt } from './DesignPrompt'
-import { MockupPreview } from './MockupPreview'
 import { OrderPanel } from './OrderPanel'
 import { OrderModal } from './OrderModal'
 import { PipelineStepper } from './PipelineStepper'
+
+const DesignEditor = dynamic(() => import('./DesignEditor').then(m => ({ default: m.DesignEditor })), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full items-center justify-center">
+      <div className="text-xs text-muted-foreground/40">Loading editor...</div>
+    </div>
+  ),
+})
 
 export function MerchLab() {
   usePrintify()
@@ -42,9 +51,9 @@ export function MerchLab() {
 
           <ResizableHandle />
 
-          {/* Center Panel — Mockup Preview */}
+          {/* Center Panel — Design Editor */}
           <ResizablePanel defaultSize={50} minSize={30}>
-            <MockupPreview />
+            <DesignEditor />
           </ResizablePanel>
 
           <ResizableHandle />

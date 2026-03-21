@@ -60,7 +60,7 @@ export interface MerchLabState {
   batchCount: 1 | 3 | 5
   generatedDesigns: GeneratedDesign[]
   activeDesignIndex: number
-  designPosition: { x: number; y: number; scale: number }
+  designPosition: { x: number; y: number; scale: number; rotation: number }
 
   // Order
   selectedSize: string | null
@@ -102,7 +102,7 @@ export interface MerchLabState {
   addDesign: (design: GeneratedDesign) => void
   addDesigns: (designs: GeneratedDesign[]) => void
   setActiveDesignIndex: (index: number) => void
-  setDesignPosition: (pos: { x: number; y: number; scale: number }) => void
+  setDesignPosition: (pos: { x: number; y: number; scale: number; rotation: number }) => void
   setSize: (size: string) => void
   setQuantity: (qty: number) => void
   setShippingAddress: (addr: ShippingAddress) => void

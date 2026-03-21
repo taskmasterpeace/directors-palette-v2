@@ -29,7 +29,7 @@ export const useMerchLabStore = create<MerchLabState>((set) => ({
   batchCount: 1 as 1 | 3 | 5,
   generatedDesigns: [] as GeneratedDesign[],
   activeDesignIndex: 0,
-  designPosition: { x: 0.5, y: 0.5, scale: 1 },
+  designPosition: { x: 0.5, y: 0.5, scale: 1, rotation: 0 },
 
   // Catalog
   variants: [] as PrintifyVariant[],
