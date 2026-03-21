@@ -96,7 +96,7 @@ Black grid lines between all cells. Match the template layout exactly.`,
   {
     name: 'Character Sheet',
     description: 'Professional character reference sheet with full-body views, expressions, and accessories',
-    recipeNote: 'Attach a reference image. Identity = face/build/features only. Use OUTFIT field for clothing.',
+    recipeNote: 'Attach a reference image. Identity = face/build/features. Specify outfit and attributes separately.',
     stages: [{
       id: 'stage_0',
       order: 0,
@@ -105,6 +105,7 @@ Black grid lines between all cells. Match the template layout exactly.`,
 Character identity: <<CHARACTER_DESCRIPTION:text!>>
 
 OUTFIT: <<OUTFIT:text>>
+ATTRIBUTES: <<ATTRIBUTES:text>>
 
 Face consistency: Keep the person's facial features exactly the same as the reference image. Do not alter face, hairstyle, or body proportions.
 
@@ -265,6 +266,8 @@ Output a crisp, print-ready reference sheet look with sharp details.`,
 
 CHARACTER NAME: @<<CHARACTER_NAME:name!>>
 VISUAL DESCRIPTION: <<CHARACTER_DESCRIPTION:text!>>
+OUTFIT: <<OUTFIT:text>>
+ATTRIBUTES: <<ATTRIBUTES:text>>
 
 Create a full-body character portrait:
 - Standing pose, facing forward (slight 3/4 angle is acceptable)
@@ -281,8 +284,8 @@ The character should match the description EXACTLY - pay attention to:
 - Hair color, style, length
 - Eye color
 - Build/body type
-- Clothing and accessories
-- Any distinctive features (scars, tattoos, glasses, etc.)
+- Outfit and clothing details
+- Attributes and distinctive features (scars, tattoos, glasses, posture, etc.)
 
 Output: High-quality full-body character portrait suitable for reference.`,
         fields: [],
