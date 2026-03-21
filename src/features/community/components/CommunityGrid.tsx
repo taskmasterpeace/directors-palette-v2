@@ -20,6 +20,7 @@ interface CommunityGridProps {
   isAdmin?: boolean
   onEdit?: (item: CommunityItem) => void
   onDelete?: (item: CommunityItem) => void
+  onUpdateThumbnail?: (item: CommunityItem, file: File) => Promise<void>
 }
 
 export function CommunityGrid({
@@ -34,6 +35,7 @@ export function CommunityGrid({
   isAdmin,
   onEdit,
   onDelete,
+  onUpdateThumbnail,
 }: CommunityGridProps) {
   if (isLoading) {
     return (
@@ -69,6 +71,10 @@ export function CommunityGrid({
             isAdmin={isAdmin}
             onEdit={() => onEdit?.(item)}
             onDelete={() => onDelete?.(item)}
+            onUpdateThumbnail={item.type === 'lora' && onUpdateThumbnail
+              ? (file) => onUpdateThumbnail(item, file)
+              : undefined
+            }
           />
         ))}
       </AnimatePresence>

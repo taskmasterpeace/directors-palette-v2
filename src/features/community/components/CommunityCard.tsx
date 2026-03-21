@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Minus, Check, User, Tag, Layers, BookOpen, MessageSquare, Wand2, Film, Pencil, Trash2 } from 'lucide-react'
+import { Plus, Minus, Check, User, Tag, Layers, BookOpen, MessageSquare, Wand2, Film, Pencil, Trash2, Camera } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -29,6 +29,7 @@ interface CommunityCardProps {
   isAdmin?: boolean
   onEdit?: () => void
   onDelete?: () => void
+  onUpdateThumbnail?: (file: File) => Promise<void>
 }
 
 const TYPE_COLORS: Record<CommunityItemType, string> = {
@@ -58,13 +59,28 @@ export function CommunityCard({
   isAdmin,
   onEdit,
   onDelete,
+  onUpdateThumbnail,
 }: CommunityCardProps) {
   const [isAdding, setIsAdding] = useState(false)
   const [isRemoving, setIsRemoving] = useState(false)
   const [justAdded, setJustAdded] = useState(false)
   const [showRating, setShowRating] = useState(false)
+  const [isUploadingThumb, setIsUploadingThumb] = useState(false)
+  const thumbInputRef = useRef<HTMLInputElement>(null)
 
   const TypeIcon = TYPE_ICONS[item.type]
+
+  const handleThumbUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !onUpdateThumbnail) return
+    e.target.value = ''
+    setIsUploadingThumb(true)
+    try {
+      await onUpdateThumbnail(file)
+    } finally {
+      setIsUploadingThumb(false)
+    }
+  }, [onUpdateThumbnail])
 
   const handleRemove = async (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -172,15 +188,44 @@ export function CommunityCard({
         const content = item.content as LoraContent
         return (
           <div className="space-y-2">
-            {content.thumbnailUrl && (
-              <div className="relative aspect-video rounded overflow-hidden bg-muted/20 mb-2">
+            <div className="relative aspect-video rounded overflow-hidden bg-muted/20 mb-2 group/thumb">
+              {content.thumbnailUrl ? (
                 <img
                   src={content.thumbnailUrl}
                   alt={`${item.name} preview`}
                   className="object-cover w-full h-full"
                 />
-              </div>
-            )}
+              ) : (
+                <div className="flex items-center justify-center w-full h-full bg-violet-950/20">
+                  <Wand2 className="w-8 h-8 text-violet-500/30" />
+                </div>
+              )}
+              {/* Camera button for thumbnail upload — admin only */}
+              {isAdmin && onUpdateThumbnail && (
+                <>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); thumbInputRef.current?.click() }}
+                    disabled={isUploadingThumb}
+                    className={cn(
+                      'absolute bottom-1.5 right-1.5 w-7 h-7 rounded-md flex items-center justify-center',
+                      'bg-black/60 text-white/80 hover:bg-violet-500 hover:text-white',
+                      'opacity-0 group-hover/thumb:opacity-100 transition-all',
+                      isUploadingThumb && 'animate-pulse opacity-100'
+                    )}
+                    title="Upload thumbnail"
+                  >
+                    <Camera className="w-3.5 h-3.5" />
+                  </button>
+                  <input
+                    ref={thumbInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleThumbUpload}
+                    className="hidden"
+                  />
+                </>
+              )}
+            </div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Badge variant="outline" className="text-[10px] px-1.5 py-0">
                 {content.loraType}

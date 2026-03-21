@@ -20,7 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useAdminAuth } from '@/features/admin/hooks/useAdminAuth'
-import type { CommunityItem, CommunityItemType, RecipeContent } from '../types/community.types'
+import type { CommunityItem, CommunityItemType, RecipeContent, LoraContent } from '../types/community.types'
 import type { RecipeStage, RecipeReferenceImage } from '@/features/shot-creator/types/recipe.types'
 import { parseStageTemplate } from '@/features/shot-creator/types/recipe.types'
 import { cn } from '@/utils/utils'
@@ -340,6 +340,64 @@ export function CommunityPage() {
     }
   }
 
+  // Admin: Upload thumbnail for LoRA community item → Supabase Storage + update content
+  const handleUpdateThumbnail = async (item: CommunityItem, file: File) => {
+    if (!isAdmin || item.type !== 'lora') return
+
+    try {
+      // Upload to Supabase Storage
+      const { createBrowserClient } = await import('@supabase/ssr')
+      const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      )
+
+      const ext = file.name.split('.').pop() || 'jpg'
+      const path = `community/lora-thumbnails/${item.id}.${ext}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('directors-palette')
+        .upload(path, file, { upsert: true, contentType: file.type })
+
+      if (uploadError) throw uploadError
+
+      const { data: urlData } = supabase.storage
+        .from('directors-palette')
+        .getPublicUrl(path)
+
+      const publicUrl = urlData.publicUrl + '?t=' + Date.now()
+
+      // Update community item content with new thumbnail URL
+      const updatedContent = { ...(item.content as LoraContent), thumbnailUrl: publicUrl }
+      const res = await fetch('/api/admin/community', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'edit',
+          itemId: item.id,
+          updates: { content: updatedContent },
+        }),
+      })
+
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.error || 'Failed to update thumbnail')
+      }
+
+      toast({
+        title: 'Thumbnail Updated',
+        description: `Thumbnail for "${item.name}" has been updated for all users.`,
+      })
+      refresh()
+    } catch (error) {
+      toast({
+        title: 'Upload Failed',
+        description: error instanceof Error ? error.message : 'Failed to upload thumbnail',
+        variant: 'destructive',
+      })
+    }
+  }
+
   // Check if it's a schema cache error (tables not available)
   const isSchemaError = error?.includes('schema cache') || error?.includes('PGRST205')
 
@@ -464,6 +522,10 @@ export function CommunityPage() {
                       isAdmin={isAdmin}
                       onEdit={() => handleOpenEdit(item)}
                       onDelete={() => handleOpenDelete(item)}
+                      onUpdateThumbnail={isAdmin && item.type === 'lora'
+                        ? (file) => handleUpdateThumbnail(item, file)
+                        : undefined
+                      }
                     />
                   </div>
                 )
@@ -488,6 +550,7 @@ export function CommunityPage() {
             isAdmin={isAdmin}
             onEdit={handleOpenEdit}
             onDelete={handleOpenDelete}
+            onUpdateThumbnail={isAdmin ? handleUpdateThumbnail : undefined}
           />
         </div>
       </div>
