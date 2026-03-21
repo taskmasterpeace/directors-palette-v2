@@ -148,6 +148,19 @@ const FLUX2_9B_LORAS: LoraItem[] = [
         compatibleModels: ['flux-2-klein-9b'],
         createdAt: 0,
     },
+    {
+        id: 'cinematic-filmstill-k9b',
+        name: 'Cinematic',
+        type: 'style',
+        referenceTag: 'cinematic',
+        triggerWord: 'Cinematic, Film Still',
+        weightsUrl: `${LORA_STORAGE_BASE}/cinematic-filmstill-k9b/FilmStill_Redmond.safetensors`,
+        thumbnailUrl: `${LORA_STORAGE_BASE}/cinematic-filmstill-k9b/thumbnail.webp`,
+        defaultGuidanceScale: 5.0,
+        defaultLoraScale: 1.0,
+        compatibleModels: ['flux-2-klein-9b'],
+        createdAt: 0,
+    },
 ]
 
 const ALL_BUILT_IN_LORAS = [...BUILT_IN_LORAS, ...FLUX2_9B_LORAS]
