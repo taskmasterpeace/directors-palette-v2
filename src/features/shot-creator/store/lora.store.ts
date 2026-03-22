@@ -164,18 +164,6 @@ const FLUX2_9B_LORAS: LoraItem[] = [
         compatibleModels: ['flux-2-klein-9b'],
         createdAt: 0,
     },
-    {
-        id: 'consistency-k9b',
-        name: 'Consistency',
-        type: 'style',
-        referenceTag: 'consistency',
-        triggerWord: '',
-        weightsUrl: 'https://pub-5db40a08df07458593b2b31de8bb6b62.r2.dev/loras/consistency-k9b/Klein-consistency.safetensors',
-        defaultGuidanceScale: 5.0,
-        defaultLoraScale: 0.8,
-        compatibleModels: ['flux-2-klein-9b'],
-        createdAt: 0,
-    },
 ]
 
 const ALL_BUILT_IN_LORAS = [...BUILT_IN_LORAS, ...FLUX2_9B_LORAS]
