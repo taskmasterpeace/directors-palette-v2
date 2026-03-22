@@ -245,7 +245,8 @@ export function DesignEditor() {
     setDesignPosition({ x: 0.5, y: 0.5, scale: 1, rotation: 0 })
     if (imageRef.current) {
       const attrs = getInitialDesignAttrs()
-      imageRef.current.setAttrs(attrs)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(imageRef.current as any).setAttrs(attrs)
       trRef.current?.getLayer()?.batchDraw()
     }
   }
