@@ -239,7 +239,7 @@ const ShotCreator = () => {
             {/* Mobile: Vertical stack, Desktop: Resizable panels */}
             <div className="flex-1 overflow-hidden">
                 {/* Mobile Layout (< lg) */}
-                <div className="lg:hidden space-y-4">
+                <div className="lg:hidden space-y-4 h-full overflow-y-auto pb-24">
                     {/* Reference Images — hidden when recipe is active (inline form has its own) */}
                     {!activeRecipeId && (
                         <div className={modelConfig?.maxReferenceImages === 0 ? 'px-1' : 'bg-background/30 p-0'}>

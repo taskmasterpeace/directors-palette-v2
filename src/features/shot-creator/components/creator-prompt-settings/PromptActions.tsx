@@ -601,16 +601,18 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
                 </div>
                 )}
 
-                {/* Desktop Prompts/Recipes Bar (tabbed interface) */}
-                <DesktopPromptsRecipesBar
-                    onSelectPrompt={(prompt) => setShotCreatorPrompt(shotCreatorPrompt + (shotCreatorPrompt ? ' ' : '') + prompt)}
-                    onSelectRecipe={_handleSelectRecipe}
-                    currentPrompt={shotCreatorPrompt}
-                />
+                {/* Desktop Prompts/Recipes Bar (tabbed interface) — desktop only */}
+                <div className="hidden lg:block">
+                    <DesktopPromptsRecipesBar
+                        onSelectPrompt={(prompt) => setShotCreatorPrompt(shotCreatorPrompt + (shotCreatorPrompt ? ' ' : '') + prompt)}
+                        onSelectRecipe={_handleSelectRecipe}
+                        currentPrompt={shotCreatorPrompt}
+                    />
+                </div>
 
-                {/* Organize, Expand, SlotMachine — only in freeform prompt mode */}
+                {/* Organize, Expand, SlotMachine — hidden on mobile, shown on desktop */}
                 {!activeRecipeId && (
-                    <>
+                    <div className="hidden lg:block space-y-3">
                         <div className="flex items-center gap-2">
                             <OrganizeButton
                                 prompt={shotCreatorPrompt}
@@ -627,7 +629,7 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
                             onApply={setShotCreatorPrompt}
                             disabled={isGenerating}
                         />
-                    </>
+                    </div>
                 )}
 
                 {/* LoRA section - for models with LoRA support */}
@@ -635,9 +637,9 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
                     <LoraSection selectedModel={shotCreatorSettings.model} />
                 )}
 
-                {/* Prompt syntax feedback + Anchor Transform — freeform only */}
+                {/* Prompt syntax feedback + Anchor Transform — hidden on mobile */}
                 {!activeRecipeId && (
-                    <>
+                    <div className="hidden lg:block space-y-3">
                         <PromptSyntaxFeedback
                             prompt={shotCreatorPrompt}
                             disablePipeSyntax={shotCreatorSettings.disablePipeSyntax}
@@ -679,7 +681,7 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
                                 </div>
                             )
                         })()}
-                    </>
+                    </div>
                 )}
 
                 {/* Large batch confirmation warning */}
