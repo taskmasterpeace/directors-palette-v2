@@ -33,6 +33,7 @@ interface RecipeState {
   // Active recipe state (when filling out a recipe form)
   activeRecipeId: string | null
   activeFieldValues: RecipeFieldValues
+  recipeReferenceImages: Record<string, string>  // tag → imageUrl for @references in recipe fields
 
   // Actions - Initialize & Sync
   initialize: (userId: string, isAdmin?: boolean) => Promise<void>
@@ -68,6 +69,8 @@ interface RecipeState {
   setActiveRecipe: (recipeId: string | null) => void
   setFieldValue: (fieldId: string, value: string) => void
   clearFieldValues: () => void
+  setRecipeReferenceImage: (tag: string, imageUrl: string) => void
+  clearRecipeReferenceImages: () => void
   getActiveRecipe: () => Recipe | null
   getActiveValidation: () => RecipeValidation | null
   buildActivePrompts: () => RecipePromptResult | null
@@ -95,6 +98,7 @@ export const useRecipeStore = create<RecipeState>()((set, get) => ({
   quickAccessItems: [],
   activeRecipeId: null,
   activeFieldValues: {},
+  recipeReferenceImages: {},
   isLoading: false,
   isInitialized: false,
   currentUserId: null,
@@ -570,7 +574,7 @@ export const useRecipeStore = create<RecipeState>()((set, get) => ({
 
   // Active Recipe (local state only - no database sync needed)
   setActiveRecipe: (recipeId) => {
-    set({ activeRecipeId: recipeId, activeFieldValues: {} })
+    set({ activeRecipeId: recipeId, activeFieldValues: {}, recipeReferenceImages: {} })
   },
 
   setFieldValue: (fieldId, value) => {
@@ -584,6 +588,16 @@ export const useRecipeStore = create<RecipeState>()((set, get) => ({
 
   clearFieldValues: () => {
     set({ activeFieldValues: {} })
+  },
+
+  setRecipeReferenceImage: (tag, imageUrl) => {
+    set((state) => ({
+      recipeReferenceImages: { ...state.recipeReferenceImages, [tag]: imageUrl },
+    }))
+  },
+
+  clearRecipeReferenceImages: () => {
+    set({ recipeReferenceImages: {} })
   },
 
   getActiveRecipe: () => {

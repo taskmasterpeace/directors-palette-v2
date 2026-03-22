@@ -3,7 +3,6 @@
 import { useRecipeStore } from '../../store/recipe.store'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
@@ -19,6 +18,7 @@ import { cn } from '@/utils/utils'
 import { RecipeField, getAllFields, calculateRecipeCost } from '../../types/recipe.types'
 import { useWildCardStore } from '../../store/wildcard.store'
 import { WildcardPickerField } from './WildcardPickerField'
+import { RecipeTextField } from './RecipeTextField'
 
 interface RecipeFormFieldsProps {
   className?: string
@@ -177,16 +177,12 @@ export function RecipeFormFields({
 
       case 'text':
       default:
-        // Larger resizable textarea, label in placeholder
         return (
-          <Textarea
+          <RecipeTextField
             value={value}
-            onChange={(e) => setFieldValue(field.id, e.target.value)}
+            onChange={(v) => setFieldValue(field.id, v)}
             placeholder={field.placeholder}
-            className={cn(
-              'min-h-[36px] text-sm bg-card border-border resize-y',
-              isMissing && 'border-amber-500/50 ring-1 ring-amber-500/30'
-            )}
+            isMissing={isMissing}
           />
         )
     }

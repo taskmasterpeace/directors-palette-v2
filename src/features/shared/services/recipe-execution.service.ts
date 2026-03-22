@@ -27,6 +27,7 @@ export interface RecipeExecutionOptions {
   recipe: Recipe
   fieldValues: RecipeFieldValues
   stageReferenceImages: string[][]  // Per-stage reference images [[stage0_refs], [stage1_refs], ...]
+  recipeReferenceImages?: Record<string, string>  // @tag → imageUrl from recipe field autocomplete
   model?: ImageModel
   aspectRatio?: string
   onProgress?: (stage: number, totalStages: number, status: string) => void
@@ -461,6 +462,7 @@ export async function executeRecipe(options: RecipeExecutionOptions): Promise<Re
     recipe,
     fieldValues,
     stageReferenceImages,
+    recipeReferenceImages,
     model = 'nano-banana-2' as ImageModel,
     aspectRatio = '21:9',
     onProgress,
@@ -476,6 +478,34 @@ export async function executeRecipe(options: RecipeExecutionOptions): Promise<Re
     const promptResult = buildRecipePrompts(recipe.stages, fieldValues)
     const { prompts } = promptResult
     const totalStages = prompts.length
+
+    // Resolve @tags from recipe reference images into (REF:IMG_N) tokens
+    if (recipeReferenceImages && Object.keys(recipeReferenceImages).length > 0) {
+      const refUrls = Object.values(recipeReferenceImages)
+      const tagToIndex = new Map<string, number>()
+      Object.keys(recipeReferenceImages).forEach((tag, i) => tagToIndex.set(tag, i))
+
+      for (let i = 0; i < prompts.length; i++) {
+        let prompt = prompts[i]
+        // Find @tags in the prompt and replace with (REF:IMG_N)
+        const tagPattern = /@([a-zA-Z0-9_-]+)/g
+        let match
+        while ((match = tagPattern.exec(prompt)) !== null) {
+          const fullTag = match[0] // e.g. @hero
+          const idx = tagToIndex.get(fullTag)
+          if (idx !== undefined) {
+            const refToken = `(REF:IMG_${idx + 1})`
+            prompt = prompt.replace(fullTag, refToken)
+          }
+        }
+        prompts[i] = prompt
+
+        // Append reference image URLs to this stage's reference images
+        if (!stageReferenceImages[i]) stageReferenceImages[i] = []
+        stageReferenceImages[i] = [...new Set([...stageReferenceImages[i], ...refUrls])]
+      }
+      log.info('Resolved @tags in recipe prompts', { tagCount: tagToIndex.size })
+    }
 
     if (totalStages === 0) {
       return { success: false, imageUrls: [], error: 'Recipe has no stages' }

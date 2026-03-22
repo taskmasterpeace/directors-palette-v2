@@ -49,7 +49,7 @@ export function usePromptGeneration() {
     const { settings: shotCreatorSettings, updateSettings } = useShotCreatorSettings()
     const { generateImage, isGenerating, cancelGeneration, pendingConfirmation, confirmGeneration, dismissConfirmation } = useImageGeneration()
     const { wildcards } = useWildCardStore()
-    const { activeFieldValues, setActiveRecipe: _setActiveRecipe, getActiveRecipe, getActiveValidation, buildActivePrompts } = useRecipeStore()
+    const { activeFieldValues, recipeReferenceImages, setActiveRecipe: _setActiveRecipe, getActiveRecipe, getActiveValidation, buildActivePrompts } = useRecipeStore()
     const activeLoras = useLoraStore(useShallow((s) => s.getActiveLoras()))
 
     // Track last used recipe for generation metadata
@@ -635,6 +635,7 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                         recipe: activeRecipe,
                         fieldValues: activeFieldValues,
                         stageReferenceImages,
+                        recipeReferenceImages,
                         model,
                         aspectRatio,
                         onProgress: (stage, total, status) => {
@@ -718,7 +719,7 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
         }
 
         setLastUsedRecipe(null)
-    }, [canGenerate, isGenerating, shotCreatorPrompt, shotCreatorReferenceImages, shotCreatorSettings, generateImage, buildModelSettings, lastUsedRecipe, getActiveRecipe, getActiveValidation, buildActivePrompts, updateSettings, setStageReferenceImages, activeFieldValues, generationCost, activeLoras])
+    }, [canGenerate, isGenerating, shotCreatorPrompt, shotCreatorReferenceImages, shotCreatorSettings, generateImage, buildModelSettings, lastUsedRecipe, getActiveRecipe, getActiveValidation, buildActivePrompts, updateSettings, setStageReferenceImages, activeFieldValues, recipeReferenceImages, generationCost, activeLoras])
 
     // Confirm large batch and re-trigger generation
     const handleConfirmGeneration = useCallback(() => {
