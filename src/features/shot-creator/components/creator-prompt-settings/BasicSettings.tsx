@@ -54,11 +54,13 @@ const BasicSettings = () => {
         <div className="space-y-4">
             {/* Compact Settings Row - All 4 on same line (desktop), 2x2 (mobile) */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-3">
-                {/* Style */}
-                <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Style</Label>
-                    <StyleSelector compact />
-                </div>
+                {/* Style — not available with Camera Angle model */}
+                {selectedModel !== 'qwen-image-edit' && (
+                    <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">Style</Label>
+                        <StyleSelector compact />
+                    </div>
+                )}
 
                 {/* Aspect Ratio */}
                 {supportsAspectRatio && (

@@ -54,7 +54,7 @@ const ShotCreator = () => {
         loadLibraryItems()
     }, [loadLibraryItems])
 
-    const { activeRecipeId } = useRecipeStore()
+    const { activeRecipeId, setActiveRecipe } = useRecipeStore()
     const modelConfig = getModelConfig((shotCreatorSettings.model || 'nano-banana-2') as ModelId)
 
     // Fix resolution mismatch on initial render
@@ -253,8 +253,13 @@ const ShotCreator = () => {
                                             const newModel = model as ModelId
                                             const newModelConfig = getModelConfig(newModel)
                                             const defaultResolution = newModelConfig.parameters.resolution?.default as string | undefined
-                                            const updates: { model: ModelId; resolution?: string } = { model: newModel }
+                                            const updates: Parameters<typeof updateSettings>[0] = { model: newModel }
                                             if (defaultResolution) updates.resolution = defaultResolution
+                                            // Camera Angle is incompatible with quick modes and recipes
+                                            if (newModel === 'qwen-image-edit') {
+                                                updates.quickMode = 'none'
+                                                setActiveRecipe(null)
+                                            }
                                             updateSettings(updates)
                                         }}
                                         compact={true}
@@ -348,8 +353,13 @@ const ShotCreator = () => {
                                                         const newModel = model as ModelId
                                                         const newModelConfig = getModelConfig(newModel)
                                                         const defaultResolution = newModelConfig.parameters.resolution?.default as string | undefined
-                                                        const updates: { model: ModelId; resolution?: string } = { model: newModel }
+                                                        const updates: Parameters<typeof updateSettings>[0] = { model: newModel }
                                                         if (defaultResolution) updates.resolution = defaultResolution
+                                                        // Camera Angle is incompatible with quick modes and recipes
+                                                        if (newModel === 'qwen-image-edit') {
+                                                            updates.quickMode = 'none'
+                                                            setActiveRecipe(null)
+                                                        }
                                                         updateSettings(updates)
                                                     }}
                                                     compact={true}

@@ -58,6 +58,9 @@ export function QuickModeIcons() {
   const charSheetRecipe = recipes.find(r => r.name.toLowerCase() === 'character sheet')
   const isCharSheetActive = charSheetRecipe ? activeRecipeId === charSheetRecipe.id : quickMode === 'character-sheet'
 
+  // Camera Angle model (qwen-image-edit) is incompatible with quick modes
+  const isCameraAngleModel = settings.model === 'qwen-image-edit'
+
   return (
     <TooltipProvider>
       <div className="flex gap-1">
@@ -67,13 +70,14 @@ export function QuickModeIcons() {
               size="sm"
               variant={quickMode === 'style-transfer' ? 'default' : 'ghost'}
               onClick={toggleStyleMode}
+              disabled={isCameraAngleModel}
               className="h-7 w-7 p-0"
             >
               <Palette className="h-3.5 w-3.5" />
             </Button>
           </TooltipTrigger>
           <TooltipContent side="bottom">
-            <p>Style Sheet</p>
+            <p>{isCameraAngleModel ? 'Not available with Camera Angle' : 'Style Sheet'}</p>
           </TooltipContent>
         </Tooltip>
 
@@ -83,13 +87,14 @@ export function QuickModeIcons() {
               size="sm"
               variant={isCharSheetActive ? 'default' : 'ghost'}
               onClick={toggleCharacterSheet}
+              disabled={isCameraAngleModel}
               className="h-7 w-7 p-0"
             >
               <User className="h-3.5 w-3.5" />
             </Button>
           </TooltipTrigger>
           <TooltipContent side="bottom">
-            <p>Character Sheet</p>
+            <p>{isCameraAngleModel ? 'Not available with Camera Angle' : 'Character Sheet'}</p>
           </TooltipContent>
         </Tooltip>
       </div>
