@@ -219,6 +219,7 @@ Output a crisp, print-ready reference sheet look with sharp details.
       id: 'stage_turnaround_desc_0',
       order: 0,
       template: `Create a professional character reference sheet of <<CHARACTER_DESCRIPTION:text!>>.
+Outfit: <<OUTFIT:text>>
 
 Use a clean, neutral plain background and present the sheet as a technical model turnaround in a <<STYLE:select(photographic,cinematic,3D render,anime,cartoon,concept art,illustrated,Pixar-style,Disney-style)>> style.
 
@@ -951,6 +952,7 @@ ALL 9 CHARACTERS MUST SHARE THESE TRAITS:
 - Gender: <<GENDER:select(girl,boy,non-binary)!>>
 - Age: <<AGE:select(toddler (2-4),young child (5-7),older child (8-10),preteen (11-13))!>>
 - Ethnicity: <<ETHNICITY:select(Black,White,Asian,Hispanic/Latino,South Asian,Middle Eastern,Mixed/Multiracial,Indigenous,any)!>>
+- Clothing: <<CLOTHING_STYLE:text>>
 <<DISTINCTIVE_FEATURES:text>>
 
 BUT EACH CHARACTER MUST BE COMPLETELY DIFFERENT IN:
@@ -958,7 +960,6 @@ BUT EACH CHARACTER MUST BE COMPLETELY DIFFERENT IN:
 - Hair style (braids, locs, curly, straight, short, long, ponytail, etc.)
 - Hair color (if appropriate for ethnicity)
 - Body type (tall, short, thin, chubby, athletic)
-- Clothing style (casual, sporty, dressy, artistic, etc.)
 - Personality expressed through pose/expression (shy, confident, curious, playful, etc.)
 
 LAYOUT: Each cell shows ONE character in a full-body pose with clean background.

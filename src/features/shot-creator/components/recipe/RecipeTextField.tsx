@@ -35,13 +35,7 @@ export function RecipeTextField({
     getImageUrl,
   })
 
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newValue = e.target.value
-    onChange(newValue)
-    autocomplete.handleTextChange(newValue, e.target.selectionStart || 0)
-  }, [onChange, autocomplete])
-
-  const handleSelect = useCallback((item: ReferenceAutocompleteOption) => {
+  const handleSelect = (item: ReferenceAutocompleteOption) => {
     const textarea = textareaRef.current
     if (!textarea) return
 
@@ -63,9 +57,15 @@ export function RecipeTextField({
       textarea.setSelectionRange(newCursorPosition, newCursorPosition)
       textarea.focus()
     }, 0)
-  }, [value, onChange, autocomplete, setRecipeReferenceImage])
+  }
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value
+    onChange(newValue)
+    autocomplete.handleTextChange(newValue, e.target.selectionStart || 0)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (!autocomplete.isOpen) return
 
     if (e.key === 'ArrowUp') {
@@ -83,7 +83,7 @@ export function RecipeTextField({
     } else if (e.key === 'Escape') {
       autocomplete.close()
     }
-  }, [autocomplete, handleSelect])
+  }
 
   return (
     <div className="relative">

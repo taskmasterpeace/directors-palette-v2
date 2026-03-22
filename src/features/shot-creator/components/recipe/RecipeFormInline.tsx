@@ -22,14 +22,14 @@ import {
   Upload,
   Image as ImageIcon,
   Trash2,
-  Dices,
-  List,
   ClipboardPaste,
 } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import { getAllFields } from '../../types/recipe.types'
 import type { RecipeField } from '../../types/recipe-field.types'
 import { useWildCardStore } from '../../store/wildcard.store'
+import { WildcardPickerField } from './WildcardPickerField'
+import { RecipeTextField } from './RecipeTextField'
 
 // Paired recipes: image-based ↔ description-based
 const RECIPE_PAIRS: Record<string, string> = {
@@ -56,56 +56,11 @@ export function RecipeFormInline() {
 
 
   const wildcardStore = useWildCardStore()
-  const [wildcardModes, setWildcardModes] = useState<Record<string, 'browse' | 'random'>>({})
-  const [wildcardSearches, setWildcardSearches] = useState<Record<string, string>>({})
   const [showRecipeSwitch, setShowRecipeSwitch] = useState(false)
   const [showNameSuggestions, setShowNameSuggestions] = useState(false)
   const [focusedNameField, setFocusedNameField] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isDragOver, setIsDragOver] = useState(false)
-  // @ autocomplete state for text fields
-  const [atMenuField, setAtMenuField] = useState<string | null>(null)
-  const [atMenuFilter, setAtMenuFilter] = useState('')
-
-  // Available reference tags for @ autocomplete
-  const availableRefTags = shotCreatorReferenceImages
-    .flatMap(img => [...img.tags, ...(img.persistentTag ? [img.persistentTag] : [])])
-    .filter(Boolean)
-    .filter((t, i, arr) => arr.indexOf(t) === i)
-
-  // Handle @ key in textarea — show autocomplete
-  const handleTextareaChange = useCallback((fieldId: string, value: string, el: HTMLTextAreaElement) => {
-    setFieldValue(fieldId, value)
-    // Check if cursor is right after an @
-    const cursorPos = el.selectionStart
-    const textBefore = value.slice(0, cursorPos)
-    const atMatch = textBefore.match(/@(\w*)$/)
-    if (atMatch && availableRefTags.length > 0) {
-      setAtMenuField(fieldId)
-      setAtMenuFilter(atMatch[1])
-    } else {
-      setAtMenuField(null)
-    }
-  }, [setFieldValue, availableRefTags])
-
-  const insertAtTag = useCallback((fieldId: string, tag: string) => {
-    const current = activeFieldValues[fieldId] || ''
-    const el = textareaRefs.current[fieldId]
-    if (!el) return
-    const cursorPos = el.selectionStart
-    const textBefore = current.slice(0, cursorPos)
-    const textAfter = current.slice(cursorPos)
-    // Replace the @partial with @TAG
-    const replaced = textBefore.replace(/@\w*$/, `@${tag} `) + textAfter
-    setFieldValue(fieldId, replaced)
-    setAtMenuField(null)
-    // Restore focus after insert
-    setTimeout(() => {
-      const newPos = replaced.length - textAfter.length
-      el.focus()
-      el.setSelectionRange(newPos, newPos)
-    }, 0)
-  }, [activeFieldValues, setFieldValue])
 
   const { handleMultipleImageUpload, removeShotCreatorImage } = useReferenceImageManager(14)
 
@@ -134,19 +89,6 @@ export function RecipeFormInline() {
     document.addEventListener('paste', handlePaste)
     return () => document.removeEventListener('paste', handlePaste)
   }, [activeRecipeId, activeRecipe, handleMultipleImageUpload])
-
-  // Auto-expand textarea fields
-  const textareaRefs = useRef<Record<string, HTMLTextAreaElement | null>>({})
-  const autoResize = useCallback((el: HTMLTextAreaElement | null) => {
-    if (!el) return
-    el.style.height = 'auto'
-    el.style.height = `${Math.max(36, el.scrollHeight)}px`
-  }, [])
-
-  // Re-auto-resize when field values change
-  useEffect(() => {
-    Object.values(textareaRefs.current).forEach(el => autoResize(el))
-  }, [activeFieldValues, autoResize])
 
   // Paste image from clipboard via button click
   const handlePasteFromClipboard = useCallback(async () => {
@@ -275,8 +217,10 @@ export function RecipeFormInline() {
           .filter(Boolean)
           .filter((t, i, arr) => arr.indexOf(t) === i)
         const showSuggestions = focusedNameField === field.id && showNameSuggestions && availableTags.length > 0
-        const filteredTags = value
-          ? availableTags.filter(t => t.toLowerCase().includes(value.toLowerCase()))
+        // Strip leading @ for filtering so "@T" matches "Twork"
+        const filterText = value.replace(/^@/, '').toLowerCase()
+        const filteredTags = filterText
+          ? availableTags.filter(t => t.toLowerCase().includes(filterText))
           : availableTags
 
         return (
@@ -292,7 +236,7 @@ export function RecipeFormInline() {
                 }}
                 onFocus={() => { setFocusedNameField(field.id); setShowNameSuggestions(true) }}
                 onBlur={() => setTimeout(() => setShowNameSuggestions(false), 150)}
-                placeholder={field.placeholder || 'Type a name or pick from references'}
+                placeholder={field.placeholder || 'Type a name or @ to pick from references'}
                 className="h-10 text-sm bg-input border-border focus:border-amber-500 focus:ring-amber-500/20"
               />
               {/* Autocomplete suggestions from reference tags */}
@@ -303,7 +247,7 @@ export function RecipeFormInline() {
                       key={tag}
                       onMouseDown={e => e.preventDefault()}
                       onClick={() => {
-                        setFieldValue(field.id, tag)
+                        setFieldValue(field.id, `@${tag}`)
                         setShowNameSuggestions(false)
                       }}
                       className="w-full text-left px-3 py-1.5 text-sm text-foreground/80 hover:bg-secondary transition-colors flex items-center gap-2"
@@ -320,53 +264,15 @@ export function RecipeFormInline() {
       }
 
       case 'text': {
-        const showAtMenu = atMenuField === field.id && availableRefTags.length > 0
-        const filteredRefTags = showAtMenu
-          ? availableRefTags.filter(t => !atMenuFilter || t.toLowerCase().includes(atMenuFilter.toLowerCase()))
-          : []
         return (
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground">{field.label}</label>
-            <div className="relative">
-              <textarea
-                ref={el => {
-                  textareaRefs.current[field.id] = el
-                  if (el) autoResize(el)
-                }}
-                value={value}
-                onChange={e => {
-                  handleTextareaChange(field.id, e.target.value, e.target)
-                  autoResize(e.target)
-                }}
-                onBlur={() => setTimeout(() => setAtMenuField(null), 150)}
-                placeholder={field.placeholder}
-                rows={1}
-                className={cn(
-                  'w-full rounded-md text-sm bg-input border border-border px-3 py-2',
-                  'focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20 focus:outline-none',
-                  'resize-none overflow-hidden transition-colors',
-                  'placeholder:text-muted-foreground/50'
-                )}
-                style={{ minHeight: '36px' }}
-              />
-              {/* @ autocomplete dropdown */}
-              {showAtMenu && filteredRefTags.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-popover border border-amber-500/30 rounded-lg shadow-xl overflow-hidden">
-                  <div className="px-3 py-1.5 text-[10px] text-amber-400/70 font-medium uppercase tracking-wider border-b border-border">Reference Tags</div>
-                  {filteredRefTags.map(tag => (
-                    <button
-                      key={tag}
-                      onMouseDown={e => e.preventDefault()}
-                      onClick={() => insertAtTag(field.id, tag)}
-                      className="w-full text-left px-3 py-1.5 text-sm text-foreground/80 hover:bg-amber-500/10 transition-colors flex items-center gap-2"
-                    >
-                      <span className="text-amber-400 text-xs">@</span>
-                      <span>{tag}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            <RecipeTextField
+              value={value}
+              onChange={(v) => setFieldValue(field.id, v)}
+              placeholder={field.placeholder}
+              isMissing={field.required && !value.trim()}
+            />
           </div>
         )
       }
@@ -390,8 +296,6 @@ export function RecipeFormInline() {
       case 'wildcard': {
         const wc = field.wildcardName ? wildcardStore.getWildCardByName(field.wildcardName) : undefined
         const entries = wc ? wc.content.split('\n').map(e => e.trim()).filter(Boolean) : []
-        const mode = wildcardModes[field.id] || field.wildcardMode || 'browse'
-        const search = wildcardSearches[field.id] || ''
 
         if (!wc) {
           return (
@@ -404,81 +308,16 @@ export function RecipeFormInline() {
           )
         }
 
-        const toggleMode = () => {
-          const next = mode === 'browse' ? 'random' : 'browse'
-          setWildcardModes(prev => ({ ...prev, [field.id]: next }))
-          if (next === 'random' && !value && entries.length > 0) {
-            const rand = entries[Math.floor(Math.random() * entries.length)]
-            setTimeout(() => setFieldValue(field.id, rand), 0)
-          }
-        }
-
-        if (mode === 'random') {
-          const reRoll = () => {
-            if (entries.length === 0) return
-            setFieldValue(field.id, entries[Math.floor(Math.random() * entries.length)])
-          }
-          if (!value && entries.length > 0) {
-            setTimeout(() => setFieldValue(field.id, entries[Math.floor(Math.random() * entries.length)]), 0)
-          }
-          const display = value || 'Rolling...'
-          const truncated = display.length > 80 ? display.slice(0, 80) + '...' : display
-          return (
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">{field.label}</label>
-              <div className="flex items-center gap-1">
-                <div
-                  onClick={reRoll}
-                  className="h-10 flex items-center gap-2 px-3 rounded-md cursor-pointer text-sm bg-input border border-amber-500/30 hover:border-amber-500/50 transition-colors text-foreground select-none min-w-[140px] flex-1"
-                  title="Click to re-roll"
-                >
-                  <Dices className="w-4 h-4 text-amber-400 shrink-0" />
-                  <span className="truncate">{truncated}</span>
-                </div>
-                <Button variant="ghost" size="sm" onClick={toggleMode} className="h-10 w-10 p-0 shrink-0 text-muted-foreground hover:text-amber-400" title="Switch to browse mode">
-                  <List className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          )
-        }
-
-        // Browse mode
-        const filteredEntries = search ? entries.filter(e => e.toLowerCase().includes(search.toLowerCase())) : entries
         return (
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground">{field.label}</label>
-            <div className="flex items-center gap-1">
-              <Select value={value} onValueChange={v => setFieldValue(field.id, v)}>
-                <SelectTrigger className="h-10 text-sm bg-input border-border min-w-[140px]">
-                  <SelectValue placeholder={field.placeholder} />
-                </SelectTrigger>
-                <SelectContent>
-                  {entries.length >= 15 && (
-                    <div className="px-2 py-1.5 sticky top-0 bg-popover z-10">
-                      <Input
-                        type="text"
-                        placeholder="Search..."
-                        value={search}
-                        onChange={e => setWildcardSearches(prev => ({ ...prev, [field.id]: e.target.value }))}
-                        className="h-7 text-xs bg-card border-border"
-                        onKeyDown={e => e.stopPropagation()}
-                      />
-                    </div>
-                  )}
-                  {filteredEntries.map(entry => {
-                    const t = entry.length > 80 ? entry.slice(0, 80) + '...' : entry
-                    return <SelectItem key={entry} value={entry} className="text-sm">{t}</SelectItem>
-                  })}
-                  {filteredEntries.length === 0 && (
-                    <div className="px-3 py-2 text-xs text-muted-foreground">No matches</div>
-                  )}
-                </SelectContent>
-              </Select>
-              <Button variant="ghost" size="sm" onClick={toggleMode} className="h-10 w-10 p-0 shrink-0 text-muted-foreground hover:text-amber-400" title="Switch to random mode">
-                <Dices className="w-4 h-4" />
-              </Button>
-            </div>
+            <WildcardPickerField
+              wildcardName={field.wildcardName || ''}
+              value={value}
+              onChange={(v) => setFieldValue(field.id, v)}
+              entries={entries}
+              isMissing={field.required && !value.trim()}
+            />
           </div>
         )
       }

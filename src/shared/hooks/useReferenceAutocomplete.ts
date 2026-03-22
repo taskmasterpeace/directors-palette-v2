@@ -5,7 +5,7 @@
  * Decoupled from shot-creator stores — accepts reference sources as parameters.
  */
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 
 export interface ReferenceAutocompleteImage {
   url: string
@@ -48,6 +48,10 @@ export function useReferenceAutocomplete({
     selectedIndex: 0,
     triggerPosition: 0,
   })
+
+  // Ref to avoid stale closure in handleTextChange
+  const isOpenRef = useRef(false)
+  isOpenRef.current = state.isOpen
 
   const detectTrigger = useCallback((text: string, cursorPosition: number) => {
     const textBeforeCursor = text.slice(0, cursorPosition)
@@ -140,12 +144,12 @@ export function useReferenceAutocomplete({
   const handleTextChange = useCallback((text: string, cursorPosition: number) => {
     const trigger = detectTrigger(text, cursorPosition)
     if (trigger.shouldShow) {
-      if (state.isOpen) updateQuery(trigger.query)
+      if (isOpenRef.current) updateQuery(trigger.query)
       else open(trigger.query, trigger.triggerPosition)
-    } else if (state.isOpen) {
+    } else if (isOpenRef.current) {
       close()
     }
-  }, [state.isOpen, detectTrigger, open, updateQuery, close])
+  }, [detectTrigger, open, updateQuery, close])
 
   const insertItem = useCallback((
     item: ReferenceAutocompleteOption,
