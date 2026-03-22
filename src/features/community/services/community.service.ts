@@ -170,6 +170,7 @@ class CommunityService {
         category: request.category,
         tags: request.tags || [],
         content: request.content,
+        bundled_wildcards: request.bundled_wildcards || [],
         submitted_by: userId,
         submitted_by_name: userName,
         status: 'pending',

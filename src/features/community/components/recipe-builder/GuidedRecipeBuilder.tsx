@@ -12,8 +12,10 @@ import { FieldPalette } from './FieldPalette'
 import { parseStageTemplate } from '@/features/shot-creator/types/recipe.types'
 import { RECIPE_CATEGORIES } from '../../types/community.types'
 import { useRecipeStore } from '@/features/shot-creator/store/recipe.store'
+import { useWildCardStore } from '@/features/shot-creator/store/wildcard.store'
 import { useCommunity } from '../../hooks/useCommunity'
 import { communityService } from '../../services/community.service'
+import type { BundledWildcard } from '../../types/community.types'
 import { ChevronLeft, ChevronRight, Save, Share2 } from 'lucide-react'
 import { cn } from '@/utils/utils'
 
@@ -89,6 +91,26 @@ export function GuidedRecipeBuilder({ open, onClose }: GuidedRecipeBuilderProps)
       })
 
       if (shareToComm && recipe && userId) {
+        // Bundle referenced wildcards
+        const wildcardNames = [...template.matchAll(/wildcard\(([^)]+)\)/g)].map(m => m[1])
+        const bundled_wildcards: BundledWildcard[] = []
+        if (wildcardNames.length > 0) {
+          const wcStore = useWildCardStore.getState()
+          for (const wcName of [...new Set(wildcardNames)].slice(0, 10)) {
+            const wc = wcStore.getWildCardByName(wcName)
+            if (wc) {
+              // Enforce 1000 entry limit
+              const entries = wc.content.split('\n').filter(e => e.trim()).slice(0, 1000)
+              bundled_wildcards.push({
+                name: wc.name,
+                category: wc.category || '',
+                content: entries.join('\n'),
+                description: wc.description || '',
+              })
+            }
+          }
+        }
+
         await communityService.submitItem(
           {
             type: 'recipe',
@@ -106,6 +128,7 @@ export function GuidedRecipeBuilder({ open, onClose }: GuidedRecipeBuilderProps)
               suggestedAspectRatio: aspectRatio,
               referenceImages: [],
             },
+            bundled_wildcards: bundled_wildcards.length > 0 ? bundled_wildcards : undefined,
           },
           userId,
           userName || 'Anonymous'

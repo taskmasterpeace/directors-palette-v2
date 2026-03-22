@@ -130,6 +130,25 @@ export async function POST(request: NextRequest) {
     // Get user display name
     const userName = user.email || 'Anonymous'
 
+    // Validate bundled_wildcards if present
+    if (body.bundled_wildcards) {
+      if (!Array.isArray(body.bundled_wildcards)) {
+        return NextResponse.json({ error: 'bundled_wildcards must be an array' }, { status: 400 })
+      }
+      if (body.bundled_wildcards.length > 10) {
+        return NextResponse.json({ error: 'Maximum 10 bundled wildcards per recipe' }, { status: 400 })
+      }
+      for (const wc of body.bundled_wildcards) {
+        if (!wc.name || !wc.content) {
+          return NextResponse.json({ error: 'Each bundled wildcard requires name and content' }, { status: 400 })
+        }
+        const entries = wc.content.split('\n').filter((e: string) => e.trim())
+        if (entries.length > 1000) {
+          return NextResponse.json({ error: `Wildcard "${wc.name}" exceeds 1000 entries limit` }, { status: 400 })
+        }
+      }
+    }
+
     // Insert the submission
     const { data, error } = await supabase
       .from('community_items')
@@ -140,6 +159,7 @@ export async function POST(request: NextRequest) {
         category: body.category,
         tags: body.tags || [],
         content: body.content,
+        bundled_wildcards: body.bundled_wildcards || [],
         submitted_by: user.id,
         submitted_by_name: userName,
         status: 'pending',

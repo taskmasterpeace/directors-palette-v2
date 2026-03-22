@@ -119,6 +119,13 @@ export interface CommunityItem {
   updatedAt: string
 }
 
+export interface BundledWildcard {
+  name: string
+  category: string
+  content: string
+  description: string
+}
+
 // Database row type (snake_case)
 export interface CommunityItemRow {
   id: string
@@ -128,6 +135,7 @@ export interface CommunityItemRow {
   category: string
   tags: string[]
   content: CommunityContent
+  bundled_wildcards: BundledWildcard[] | null
   submitted_by: string | null
   submitted_by_name: string
   submitted_at: string
@@ -224,6 +232,7 @@ export interface SubmitItemRequest {
   category: string
   tags?: string[]
   content: CommunityContent
+  bundled_wildcards?: BundledWildcard[]
 }
 
 export interface RateItemRequest {

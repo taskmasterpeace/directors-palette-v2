@@ -318,6 +318,7 @@ export type Database = {
           category: string
           tags: string[]
           content: Json
+          bundled_wildcards: Json
           submitted_by: string | null
           submitted_by_name: string
           submitted_at: string
@@ -329,6 +330,7 @@ export type Database = {
           rating_sum: number
           rating_count: number
           is_featured: boolean
+          is_official: boolean | null
           created_at: string
           updated_at: string
         }
@@ -340,6 +342,7 @@ export type Database = {
           category: string
           tags?: string[]
           content: Json
+          bundled_wildcards?: Json
           submitted_by?: string | null
           submitted_by_name: string
           submitted_at?: string
@@ -351,6 +354,7 @@ export type Database = {
           rating_sum?: number
           rating_count?: number
           is_featured?: boolean
+          is_official?: boolean | null
           created_at?: string
           updated_at?: string
         }
@@ -362,6 +366,7 @@ export type Database = {
           category?: string
           tags?: string[]
           content?: Json
+          bundled_wildcards?: Json
           submitted_by?: string | null
           submitted_by_name?: string
           submitted_at?: string
@@ -373,6 +378,7 @@ export type Database = {
           rating_sum?: number
           rating_count?: number
           is_featured?: boolean
+          is_official?: boolean | null
           created_at?: string
           updated_at?: string
         }

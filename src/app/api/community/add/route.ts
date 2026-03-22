@@ -110,6 +110,36 @@ export async function POST(request: NextRequest) {
           logger.api.error('Error inserting recipe to user_recipes', { error: insertErr.message })
         }
       }
+
+      // Auto-import bundled wildcards
+      const bundledWildcards = itemData.bundled_wildcards as { name: string; category?: string; content: string; description?: string }[] | null
+      if (bundledWildcards && Array.isArray(bundledWildcards)) {
+        for (const bw of bundledWildcards) {
+          try {
+            // Check if user already has this wildcard
+            const { data: existingWc } = await adminClient
+              .from('wildcards')
+              .select('id')
+              .eq('user_id', user.id)
+              .eq('name', bw.name)
+              .maybeSingle()
+
+            if (!existingWc) {
+              await adminClient.from('wildcards').insert({
+                user_id: user.id,
+                name: bw.name,
+                category: bw.category || null,
+                content: bw.content,
+                description: bw.description || null,
+                is_shared: false,
+              })
+              logger.api.info('Auto-imported bundled wildcard', { name: bw.name })
+            }
+          } catch (wcErr) {
+            logger.api.warn('Failed to import bundled wildcard', { name: bw.name, error: wcErr instanceof Error ? wcErr.message : String(wcErr) })
+          }
+        }
+      }
     }
 
     if (itemData.type === 'wildcard') {
