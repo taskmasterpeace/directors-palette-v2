@@ -30,6 +30,7 @@ import { cn } from '@/utils/utils'
 import { getAllFields } from '../../types/recipe.types'
 import type { RecipeField } from '../../types/recipe-field.types'
 import { useWildCardStore } from '../../store/wildcard.store'
+import { useUnifiedGalleryStore } from '../../store/unified-gallery-store'
 import { RecipeTextField } from './RecipeTextField'
 
 // Paired recipes: image-based ↔ description-based
@@ -57,6 +58,7 @@ export function RecipeFormInline() {
 
 
   const wildcardStore = useWildCardStore()
+  const galleryGetAllRefs = useUnifiedGalleryStore(s => s.getAllReferences)
   const [wildcardModes, setWildcardModes] = useState<Record<string, 'browse' | 'random'>>({})
   const [wildcardSearches, setWildcardSearches] = useState<Record<string, string>>({})
   const [showRecipeSwitch, setShowRecipeSwitch] = useState(false)
@@ -214,11 +216,12 @@ export function RecipeFormInline() {
 
     switch (field.type) {
       case 'name': {
-        // Collect available reference tags from uploaded images
-        const availableTags = shotCreatorReferenceImages
+        // Collect available reference tags from uploaded images + gallery
+        const uploadedTags = shotCreatorReferenceImages
           .flatMap(img => [...img.tags, ...(img.persistentTag ? [img.persistentTag] : [])])
           .filter(Boolean)
-          .filter((t, i, arr) => arr.indexOf(t) === i)
+        const galleryRefs = galleryGetAllRefs()
+        const availableTags = [...new Set([...uploadedTags, ...galleryRefs])]
         const showSuggestions = focusedNameField === field.id && showNameSuggestions && availableTags.length > 0
         // Strip leading @ for filtering so "@T" matches "Twork"
         const filterText = value.replace(/^@/, '').toLowerCase()

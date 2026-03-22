@@ -6,6 +6,7 @@ import { cn } from '@/utils/utils'
 import { useReferenceAutocomplete, type ReferenceAutocompleteOption } from '@/shared/hooks/useReferenceAutocomplete'
 import { ReferenceAutocomplete } from '@/shared/components/ReferenceAutocomplete'
 import { useShotCreatorStore } from '../../store/shot-creator.store'
+import { useUnifiedGalleryStore } from '../../store/unified-gallery-store'
 import { useRecipeStore } from '../../store/recipe.store'
 
 interface RecipeTextFieldProps {
@@ -24,21 +25,28 @@ export function RecipeTextField({
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const { setRecipeReferenceImage } = useRecipeStore()
   const { shotCreatorReferenceImages } = useShotCreatorStore()
+  const galleryGetAllRefs = useUnifiedGalleryStore(s => s.getAllReferences)
+  const galleryGetByRefs = useUnifiedGalleryStore(s => s.getImagesByReferences)
 
-  // Use uploaded reference images as the source — matches the name field behavior
+  // Merge both sources: uploaded reference images + gallery references
   const getAllReferences = useCallback(() => {
-    return shotCreatorReferenceImages
+    const uploadedTags = shotCreatorReferenceImages
       .flatMap(img => [...img.tags, ...(img.persistentTag ? [img.persistentTag] : [])])
       .filter(Boolean)
-      .filter((t, i, arr) => arr.indexOf(t) === i)
-  }, [shotCreatorReferenceImages])
+    const galleryRefs = galleryGetAllRefs()
+    return [...new Set([...uploadedTags, ...galleryRefs])]
+  }, [shotCreatorReferenceImages, galleryGetAllRefs])
 
   const getImageUrl = useCallback((ref: string) => {
-    const img = shotCreatorReferenceImages.find(
+    // Check uploaded images first
+    const uploaded = shotCreatorReferenceImages.find(
       i => i.tags.includes(ref) || i.persistentTag === ref
     )
-    return img?.preview || img?.url
-  }, [shotCreatorReferenceImages])
+    if (uploaded) return uploaded.preview || uploaded.url
+    // Fall back to gallery images
+    const galleryMatches = galleryGetByRefs([ref])
+    return galleryMatches[0]?.url
+  }, [shotCreatorReferenceImages, galleryGetByRefs])
 
   const autocomplete = useReferenceAutocomplete({
     getAllReferences,
