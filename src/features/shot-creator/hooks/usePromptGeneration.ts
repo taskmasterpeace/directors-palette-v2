@@ -682,9 +682,13 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
 
         // ===== Regular mode =====
         const model = shotCreatorSettings.model || 'nano-banana-2'
-        const referenceUrls = shotCreatorReferenceImages
+        const allReferenceUrls = shotCreatorReferenceImages
             .map(ref => ref.url || ref.preview)
             .filter((url): url is string => Boolean(url))
+        // qwen-image-edit (Camera Angle) only accepts 1 input image
+        const referenceUrls = model === 'qwen-image-edit'
+            ? allReferenceUrls.slice(0, 1)
+            : allReferenceUrls
         const modelSettings = buildModelSettings()
 
         // Prepend LoRA trigger words when active on LoRA-capable models
