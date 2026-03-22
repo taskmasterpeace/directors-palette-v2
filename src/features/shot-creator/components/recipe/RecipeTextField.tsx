@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/utils/utils'
 import { useReferenceAutocomplete, type ReferenceAutocompleteOption } from '@/shared/hooks/useReferenceAutocomplete'
 import { ReferenceAutocomplete } from '@/shared/components/ReferenceAutocomplete'
-import { useUnifiedGalleryStore } from '../../store/unified-gallery-store'
+import { useShotCreatorStore } from '../../store/shot-creator.store'
 import { useRecipeStore } from '../../store/recipe.store'
 
 interface RecipeTextFieldProps {
@@ -23,12 +23,22 @@ export function RecipeTextField({
 }: RecipeTextFieldProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const { setRecipeReferenceImage } = useRecipeStore()
-  const { getAllReferences, getImagesByReferences } = useUnifiedGalleryStore()
+  const { shotCreatorReferenceImages } = useShotCreatorStore()
+
+  // Use uploaded reference images as the source — matches the name field behavior
+  const getAllReferences = useCallback(() => {
+    return shotCreatorReferenceImages
+      .flatMap(img => [...img.tags, ...(img.persistentTag ? [img.persistentTag] : [])])
+      .filter(Boolean)
+      .filter((t, i, arr) => arr.indexOf(t) === i)
+  }, [shotCreatorReferenceImages])
 
   const getImageUrl = useCallback((ref: string) => {
-    const images = getImagesByReferences([ref])
-    return images[0]?.url
-  }, [getImagesByReferences])
+    const img = shotCreatorReferenceImages.find(
+      i => i.tags.includes(ref) || i.persistentTag === ref
+    )
+    return img?.preview || img?.url
+  }, [shotCreatorReferenceImages])
 
   const autocomplete = useReferenceAutocomplete({
     getAllReferences,

@@ -23,12 +23,13 @@ import {
   Image as ImageIcon,
   Trash2,
   ClipboardPaste,
+  Dices,
+  List,
 } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import { getAllFields } from '../../types/recipe.types'
 import type { RecipeField } from '../../types/recipe-field.types'
 import { useWildCardStore } from '../../store/wildcard.store'
-import { WildcardPickerField } from './WildcardPickerField'
 import { RecipeTextField } from './RecipeTextField'
 
 // Paired recipes: image-based ↔ description-based
@@ -56,6 +57,8 @@ export function RecipeFormInline() {
 
 
   const wildcardStore = useWildCardStore()
+  const [wildcardModes, setWildcardModes] = useState<Record<string, 'browse' | 'random'>>({})
+  const [wildcardSearches, setWildcardSearches] = useState<Record<string, string>>({})
   const [showRecipeSwitch, setShowRecipeSwitch] = useState(false)
   const [showNameSuggestions, setShowNameSuggestions] = useState(false)
   const [focusedNameField, setFocusedNameField] = useState<string | null>(null)
@@ -296,6 +299,8 @@ export function RecipeFormInline() {
       case 'wildcard': {
         const wc = field.wildcardName ? wildcardStore.getWildCardByName(field.wildcardName) : undefined
         const entries = wc ? wc.content.split('\n').map(e => e.trim()).filter(Boolean) : []
+        const mode = wildcardModes[field.id] || field.wildcardMode || 'browse'
+        const search = wildcardSearches[field.id] || ''
 
         if (!wc) {
           return (
@@ -308,16 +313,81 @@ export function RecipeFormInline() {
           )
         }
 
+        const toggleMode = () => {
+          const next = mode === 'browse' ? 'random' : 'browse'
+          setWildcardModes(prev => ({ ...prev, [field.id]: next }))
+          if (next === 'random' && !value && entries.length > 0) {
+            const rand = entries[Math.floor(Math.random() * entries.length)]
+            setTimeout(() => setFieldValue(field.id, rand), 0)
+          }
+        }
+
+        if (mode === 'random') {
+          const reRoll = () => {
+            if (entries.length === 0) return
+            setFieldValue(field.id, entries[Math.floor(Math.random() * entries.length)])
+          }
+          if (!value && entries.length > 0) {
+            setTimeout(() => setFieldValue(field.id, entries[Math.floor(Math.random() * entries.length)]), 0)
+          }
+          const display = value || 'Rolling...'
+          const truncated = display.length > 80 ? display.slice(0, 80) + '...' : display
+          return (
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">{field.label}</label>
+              <div className="flex items-center gap-1">
+                <div
+                  onClick={reRoll}
+                  className="h-10 flex items-center gap-2 px-3 rounded-md cursor-pointer text-sm bg-input border border-amber-500/30 hover:border-amber-500/50 transition-colors text-foreground select-none min-w-[140px] flex-1"
+                  title="Click to re-roll"
+                >
+                  <Dices className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span className="truncate">{truncated}</span>
+                </div>
+                <Button variant="ghost" size="sm" onClick={toggleMode} className="h-10 w-10 p-0 shrink-0 text-muted-foreground hover:text-amber-400" title="Switch to browse mode">
+                  <List className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          )
+        }
+
+        // Browse mode
+        const filteredEntries = search ? entries.filter(e => e.toLowerCase().includes(search.toLowerCase())) : entries
         return (
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground">{field.label}</label>
-            <WildcardPickerField
-              wildcardName={field.wildcardName || ''}
-              value={value}
-              onChange={(v) => setFieldValue(field.id, v)}
-              entries={entries}
-              isMissing={field.required && !value.trim()}
-            />
+            <div className="flex items-center gap-1">
+              <Select value={value} onValueChange={v => setFieldValue(field.id, v)}>
+                <SelectTrigger className="h-10 text-sm bg-input border-border min-w-[140px]">
+                  <SelectValue placeholder={field.placeholder} />
+                </SelectTrigger>
+                <SelectContent>
+                  {entries.length >= 15 && (
+                    <div className="px-2 py-1.5 sticky top-0 bg-popover z-10">
+                      <Input
+                        type="text"
+                        placeholder="Search..."
+                        value={search}
+                        onChange={e => setWildcardSearches(prev => ({ ...prev, [field.id]: e.target.value }))}
+                        className="h-7 text-xs bg-card border-border"
+                        onKeyDown={e => e.stopPropagation()}
+                      />
+                    </div>
+                  )}
+                  {filteredEntries.map(entry => {
+                    const t = entry.length > 80 ? entry.slice(0, 80) + '...' : entry
+                    return <SelectItem key={entry} value={entry} className="text-sm">{t}</SelectItem>
+                  })}
+                  {filteredEntries.length === 0 && (
+                    <div className="px-3 py-2 text-xs text-muted-foreground">No matches</div>
+                  )}
+                </SelectContent>
+              </Select>
+              <Button variant="ghost" size="sm" onClick={toggleMode} className="h-10 w-10 p-0 shrink-0 text-muted-foreground hover:text-amber-400" title="Switch to random mode">
+                <Dices className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         )
       }
