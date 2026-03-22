@@ -14,11 +14,11 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import { X, Check, AlertCircle, Image as ImageIcon, ImageOff, Dices, List } from 'lucide-react'
+import { X, Check, AlertCircle, Image as ImageIcon, ImageOff } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import { RecipeField, getAllFields, calculateRecipeCost } from '../../types/recipe.types'
 import { useWildCardStore } from '../../store/wildcard.store'
-import { useState } from 'react'
+import { WildcardPickerField } from './WildcardPickerField'
 
 interface RecipeFormFieldsProps {
   className?: string
@@ -37,8 +37,6 @@ export function RecipeFormFields({
   } = useRecipeStore()
 
   const wildcardStore = useWildCardStore()
-  const [wildcardModes, setWildcardModes] = useState<Record<string, 'browse' | 'random'>>({})
-  const [wildcardSearches, setWildcardSearches] = useState<Record<string, string>>({})
 
   const activeRecipe = getActiveRecipe()
   const validation = getActiveValidation()
@@ -157,123 +155,23 @@ export function RecipeFormFields({
         const entries = wc
           ? wc.content.split('\n').map(e => e.trim()).filter(Boolean)
           : []
-        const mode = wildcardModes[field.id] || field.wildcardMode || 'browse'
-        const search = wildcardSearches[field.id] || ''
 
         if (!wc) {
           return (
             <div className="h-9 flex items-center px-3 text-xs text-muted-foreground bg-card border border-border rounded-md opacity-60">
-              Wildcard &apos;{field.wildcardName}&apos; not available
+              Missing wildcard: <span className="font-mono ml-1">{field.wildcardName}</span>
             </div>
           )
         }
 
-        const toggleMode = () => {
-          const next = mode === 'browse' ? 'random' : 'browse'
-          setWildcardModes(prev => ({ ...prev, [field.id]: next }))
-          if (next === 'random' && !value && entries.length > 0) {
-            const rand = entries[Math.floor(Math.random() * entries.length)]
-            setTimeout(() => setFieldValue(field.id, rand), 0)
-          }
-        }
-
-        if (mode === 'random') {
-          const reRoll = () => {
-            if (entries.length === 0) return
-            const rand = entries[Math.floor(Math.random() * entries.length)]
-            setFieldValue(field.id, rand)
-          }
-          // Auto-set random value if none exists
-          if (!value && entries.length > 0) {
-            const rand = entries[Math.floor(Math.random() * entries.length)]
-            setTimeout(() => setFieldValue(field.id, rand), 0)
-          }
-          const displayValue = value || 'Rolling...'
-          const truncated = displayValue.length > 80 ? displayValue.slice(0, 80) + '...' : displayValue
-          return (
-            <div className="flex items-center gap-1">
-              <div
-                onClick={reRoll}
-                className={cn(
-                  'h-9 flex items-center gap-2 px-3 rounded-md cursor-pointer text-sm',
-                  'bg-card border border-amber-500/30 hover:border-amber-500/50 transition-colors',
-                  'text-amber-200 select-none min-w-[140px]',
-                  isMissing && 'border-amber-500/50 ring-1 ring-amber-500/30'
-                )}
-                title="Click to re-roll"
-              >
-                <Dices className="w-4 h-4 text-amber-400 shrink-0" />
-                <span className="truncate">{truncated}</span>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={toggleMode}
-                className="h-9 w-9 p-0 shrink-0 text-muted-foreground hover:text-amber-400"
-                title="Switch to browse mode"
-              >
-                <List className="w-4 h-4" />
-              </Button>
-            </div>
-          )
-        }
-
-        // Browse mode
-        const filteredEntries = search
-          ? entries.filter(e => e.toLowerCase().includes(search.toLowerCase()))
-          : entries
         return (
-          <div className="flex items-center gap-1">
-            <Select
-              value={value}
-              onValueChange={(v) => setFieldValue(field.id, v)}
-            >
-              <SelectTrigger
-                className={cn(
-                  'h-9 text-sm bg-card border-border min-w-[140px]',
-                  isMissing && 'border-amber-500/50 ring-1 ring-amber-500/30'
-                )}
-              >
-                <SelectValue placeholder={field.placeholder} />
-              </SelectTrigger>
-              <SelectContent>
-                {entries.length >= 15 && (
-                  <div className="px-2 py-1.5 sticky top-0 bg-popover z-10">
-                    <Input
-                      type="text"
-                      placeholder="Search..."
-                      value={search}
-                      onChange={(e) =>
-                        setWildcardSearches(prev => ({ ...prev, [field.id]: e.target.value }))
-                      }
-                      className="h-7 text-xs bg-card border-border"
-                      onKeyDown={(e) => e.stopPropagation()}
-                    />
-                  </div>
-                )}
-                {filteredEntries.map((entry) => {
-                  const truncated = entry.length > 80 ? entry.slice(0, 80) + '...' : entry
-                  return (
-                    <SelectItem key={entry} value={entry} className="text-sm">
-                      {truncated}
-                    </SelectItem>
-                  )
-                })}
-                {filteredEntries.length === 0 && (
-                  <div className="px-3 py-2 text-xs text-muted-foreground">No matches</div>
-                )}
-              </SelectContent>
-            </Select>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleMode}
-              className="h-9 w-9 p-0 shrink-0 text-muted-foreground hover:text-amber-400"
-              title="Switch to random mode"
-            >
-              <Dices className="w-4 h-4" />
-            </Button>
-          </div>
+          <WildcardPickerField
+            wildcardName={field.wildcardName || ''}
+            value={value}
+            onChange={(v) => setFieldValue(field.id, v)}
+            entries={entries}
+            isMissing={isMissing}
+          />
         )
       }
 
