@@ -310,6 +310,8 @@ Generate one or more images asynchronously.
 | `loras` | array | No | Array of LoRA objects. Only for `flux-2-klein-9b` |
 | `reference_image` | string | No | URL of a reference image for img2img |
 | `reference_strength` | number | No | Strength of reference image influence (overrides model default) |
+| `reference_tag` | string | No | Auto-tag the generated image with this @reference (e.g., `"@sasha-foxworth"`) |
+| `reference_category` | string | No | Category for the reference tag: `people`, `places`, `props`, `layouts`, `styles`. Default: `"people"` |
 | `seed` | integer | No | Random seed for reproducibility |
 | `webhook_url` | string | No | URL to receive a POST when generation completes |
 
@@ -447,6 +449,99 @@ Returns two jobs (turnaround + expressions):
 **Errors:**
 - `422` -- Missing `name` or `description`
 - `402` -- Insufficient pts balance (costs 2x nano-banana-2 rate)
+
+---
+
+### GET /api/v2/gallery
+
+List gallery images with optional filters.
+
+**Query Parameters:**
+
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `limit` | integer | 50 | Results per page (max 100) |
+| `offset` | integer | 0 | Pagination offset |
+| `reference` | string | — | Filter by @reference tag (e.g., `"@sasha-foxworth"`) |
+| `has_reference` | string | — | Set to `"true"` to only show tagged images |
+| `type` | string | — | Filter by type: `"image"` or `"video"` |
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "images": [
+      {
+        "id": "image-uuid",
+        "url": "https://...",
+        "type": "image",
+        "reference": "@sasha-foxworth",
+        "prompt": "A portrait of...",
+        "model": "nano-banana-2",
+        "created_at": "2026-03-23T12:00:00Z"
+      }
+    ],
+    "total": 548,
+    "limit": 50,
+    "offset": 0
+  }
+}
+```
+
+---
+
+### PATCH /api/v2/gallery/{id}/reference
+
+Tag a gallery image with a @reference and add it to the reference library.
+
+**Request Body:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `reference` | string | Yes | Reference tag (e.g., `"@sasha-foxworth"` or `"sasha-foxworth"`) |
+| `category` | string | No | Category: `people`, `places`, `props`, `layouts`, `styles`. Default: `"people"` |
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "image-uuid",
+    "reference": "@sasha-foxworth",
+    "category": "people",
+    "message": "Tagged as @sasha-foxworth and added to people library"
+  }
+}
+```
+
+**Errors:**
+- `422` -- Missing `reference`, invalid `category`
+- `404` -- Image not found
+- `403` -- You don't own this image
+
+---
+
+### DELETE /api/v2/gallery/{id}/reference
+
+Remove a @reference tag from an image and remove it from the library.
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "image-uuid",
+    "message": "Reference tag removed"
+  }
+}
+```
+
+**Errors:**
+- `404` -- Image not found or not owned by you
 
 ---
 

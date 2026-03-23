@@ -24,6 +24,8 @@ export async function POST(request: NextRequest) {
       loras,
       reference_image,
       reference_strength,
+      reference_tag,
+      reference_category = 'people',
       num_images = 1,
       seed,
       webhook_url,
@@ -144,6 +146,30 @@ export async function POST(request: NextRequest) {
         })
         .select()
         .single()
+
+      // Auto-tag with reference if requested
+      if (reference_tag && gallery?.id) {
+        const normalizedTag = reference_tag.startsWith('@') ? reference_tag : `@${reference_tag}`
+        const tagName = normalizedTag.replace(/^@/, '')
+
+        // Update gallery metadata with reference
+        await supabase
+          .from('gallery')
+          .update({ metadata: { ...metadata, reference: normalizedTag } })
+          .eq('id', gallery.id)
+
+        // Upsert into reference table
+        await supabase
+          .from('reference')
+          .insert({
+            id: crypto.randomUUID(),
+            gallery_id: gallery.id,
+            category: reference_category,
+            tags: [tagName],
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+      }
 
       // Create API job
       const job = await createJob({
