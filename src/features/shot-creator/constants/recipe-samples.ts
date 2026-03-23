@@ -3428,7 +3428,7 @@ PERSON B ACTION: <<ACTION_B:wildcard(actions_expressive, browse)>>
 PERSON B OUTFIT: <<OUTFIT_B:wildcard(blkmen_fullbody, browse)>>
 PERSON B HAIR: <<HAIR_B:wildcard(blkmen_hair, browse)>>
 
-SETTING: <<LOCATION:wildcard(settingsbattlerap, browse)>>
+SETTING: <<LOCATION:select(---Street---,Dimly lit back alley with brick walls and fire escapes,Underground parking garage with concrete pillars and flickering lights,Rooftop at night with city skyline behind,Street corner under a broken streetlight,Graffiti-covered underpass with puddles on the ground,---Indoor---,Cramped basement with exposed pipes and bare bulbs,Abandoned warehouse with industrial shelving and dust,Barbershop after hours with neon signs in windows,Corner bodega with fluorescent lighting,Record store backroom with vinyl crates stacked high,---Venue---,Small stage at a dive bar with sticky floor,Community center gymnasium with folding chairs,Boxing ring in a dimly lit gym,Open mic night venue with Christmas lights strung overhead,Park amphitheater at dusk with concrete steps,---Urban---,Basketball court at night under buzzing floodlights,Public housing courtyard with clotheslines above,Bus stop bench on an empty late-night street,Laundromat at 2AM with spinning dryers in background,Stoop of a brownstone with iron railings)>>
 
 LIGHTING: <<LIGHTING_STYLE:select(Chiaroscuro high-contrast,Harsh overhead spotlight,Flickering industrial fluorescent,Natural golden-hour sunlight,Stark monochromatic grayscale)!>> creating deep shadows.
 

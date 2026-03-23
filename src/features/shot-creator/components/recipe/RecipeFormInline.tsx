@@ -401,9 +401,9 @@ export function RecipeFormInline() {
   }
 
   return (
-    <div className="rounded-xl border border-amber-500/30 bg-card overflow-hidden">
+    <div className="rounded-xl border border-amber-500/30 bg-card">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-amber-500/10 border-b border-amber-500/20">
+      <div className="flex items-center justify-between px-4 py-2.5 bg-amber-500/10 border-b border-amber-500/20 rounded-t-xl">
         <div className="flex items-center gap-2 relative">
           <button
             onClick={() => setShowRecipeSwitch(!showRecipeSwitch)}
