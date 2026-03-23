@@ -4,6 +4,7 @@ import { validateV2ApiKey, isAuthContext } from '../_lib/middleware'
 import { successResponse, errors } from '../_lib/response'
 import { apiKeyService } from '@/features/api-keys/services/api-key.service'
 import { createLogger } from '@/lib/logger'
+import { parseStageTemplate } from '@/features/shot-creator/types/recipe.types'
 
 const log = createLogger('ApiV2')
 
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest) {
     const { data, error, count } = await supabase
       .from('user_recipes')
       .select('*', { count: 'exact' })
-      .or(`user_id.eq.${auth.userId},is_shared.eq.true`)
+      .eq('user_id', auth.userId)
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1)
 
@@ -39,15 +40,41 @@ export async function GET(request: NextRequest) {
       return errors.internal('Failed to fetch recipes')
     }
 
-    const recipes = (data || []).map((r) => ({
-      id: r.id,
-      name: r.name,
-      description: r.description,
-      stages: Array.isArray(r.stages) ? r.stages.length : 0,
-      fields: r.fields || [],
-      suggested_model: r.suggested_model || 'nano-banana-2',
-      suggested_aspect_ratio: r.suggested_aspect_ratio || '16:9',
-    }))
+    const recipes = (data || []).map((r) => {
+      const stages = Array.isArray(r.stages) ? r.stages : []
+
+      // Parse fields from stage templates (DB fields array is usually empty)
+      const seenNames = new Set<string>()
+      const parsedFields: Array<Record<string, unknown>> = []
+
+      for (let i = 0; i < stages.length; i++) {
+        const stage = stages[i]
+        if (!stage?.template) continue
+        const fields = parseStageTemplate(stage.template, i)
+        for (const f of fields) {
+          if (seenNames.has(f.name)) continue
+          seenNames.add(f.name)
+          parsedFields.push({
+            name: f.name,
+            label: f.label,
+            type: f.type,
+            required: f.required,
+            ...(f.type === 'select' && f.options ? { options: f.options } : {}),
+            ...(f.type === 'wildcard' && f.wildcardName ? { wildcard: f.wildcardName } : {}),
+          })
+        }
+      }
+
+      return {
+        id: r.id,
+        name: r.name,
+        description: r.description,
+        stages: stages.length,
+        fields: parsedFields,
+        suggested_model: r.suggested_model || 'nano-banana-2',
+        suggested_aspect_ratio: r.suggested_aspect_ratio || '16:9',
+      }
+    })
 
     await apiKeyService.logUsage({
       apiKeyId: auth.apiKeyId,
