@@ -20,6 +20,7 @@ import { GalleryListView } from './GalleryListView'
 import { GalleryCarouselView } from './GalleryCarouselView'
 import { DocumentaryTimeline } from './DocumentaryTimeline'
 import { useGalleryActions } from '../../hooks/useGalleryActions'
+import { exportTimeline } from '../../services/timeline-export.service'
 
 interface StoryboardGalleryProps {
     chapterIndex?: number
@@ -60,6 +61,15 @@ export function StoryboardGallery({ chapterIndex = 0 }: StoryboardGalleryProps) 
         handleRegenerateFailedShots,
         handleDownloadSingleShot,
     } = useGalleryActions()
+
+    const handleExportTimeline = (format: 'otio' | 'edl') => {
+        try {
+            exportTimeline(generatedPrompts, generatedImages, format)
+            toast.success(`Timeline exported as .${format}`)
+        } catch {
+            toast.error('Failed to export timeline')
+        }
+    }
 
     const [selectedShot, setSelectedShot] = useState<GeneratedShotPrompt | null>(null)
     const [contactSheetOpen, setContactSheetOpen] = useState(false)
@@ -277,6 +287,7 @@ export function StoryboardGallery({ chapterIndex = 0 }: StoryboardGalleryProps) 
                             onDownloadAll={handleDownloadAll}
                             onExportJSON={handleExportJSON}
                             onImportJSON={handleImportJSON}
+                            onExportTimeline={handleExportTimeline}
                             onViewModeChange={setViewMode}
                         />
                         <input

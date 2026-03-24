@@ -545,6 +545,61 @@ Remove a @reference tag from an image and remove it from the library.
 
 ---
 
+### GET /api/v2/storyboard/{id}/timeline
+
+Generate a proposed timeline from a storyboard's shot list with timestamps.
+
+**Query Parameters:**
+
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `pace` | number | 4 | Seconds per shot (1-30) |
+| `fps` | number | 24 | Frames per second |
+| `format` | string | `"json"` | Output format: `"json"`, `"otio"`, or `"edl"` |
+
+**Response (format=json):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "storyboard_id": "uuid",
+    "title": "Battle Rap Documentary - Episode 1",
+    "total_shots": 6,
+    "total_duration_sec": 24,
+    "fps": 24,
+    "pace_sec": 4,
+    "shots": [
+      {
+        "sequence": 1,
+        "shot_id": "uuid",
+        "prompt": "Wide cinematic shot...",
+        "original_text": "Wide establishing shot of a venue",
+        "characters": ["crowd"],
+        "location": "Underground Venue",
+        "image_url": "https://...",
+        "status": "completed",
+        "start_sec": 0,
+        "end_sec": 4,
+        "duration_sec": 4,
+        "track": "V1"
+      }
+    ]
+  }
+}
+```
+
+**Response (format=otio):** Downloads a `.otio` file (OpenTimelineIO JSON) importable into Premiere Pro, DaVinci Resolve, and Avid.
+
+**Response (format=edl):** Downloads a `.edl` file (CMX3600 Edit Decision List) importable into any NLE.
+
+**Errors:**
+- `404` -- Storyboard not found
+- `403` -- You don't own this storyboard
+- `422` -- No shots in storyboard, invalid format/pace
+
+---
+
 ### GET /api/v2/recipes
 
 List available recipes (your own + shared community recipes).

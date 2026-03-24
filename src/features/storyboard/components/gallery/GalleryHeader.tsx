@@ -2,7 +2,7 @@
 
 import { CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Images, CheckCircle, AlertCircle, Clock, RefreshCw, Archive, LayoutGrid, GalleryHorizontal, List, Download, Upload } from 'lucide-react'
+import { Images, CheckCircle, AlertCircle, Clock, RefreshCw, Archive, LayoutGrid, GalleryHorizontal, List, Download, Upload, Film } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 
 export type GalleryViewMode = 'grid' | 'list' | 'carousel'
@@ -20,6 +20,7 @@ interface GalleryHeaderProps {
     onDownloadAll: () => void
     onExportJSON: () => void
     onImportJSON: () => void
+    onExportTimeline?: (format: 'otio' | 'edl') => void
     onViewModeChange: (mode: GalleryViewMode) => void
 }
 
@@ -36,6 +37,7 @@ export function GalleryHeader({
     onDownloadAll,
     onExportJSON,
     onImportJSON,
+    onExportTimeline,
     onViewModeChange,
 }: GalleryHeaderProps) {
     return (
@@ -132,6 +134,36 @@ export function GalleryHeader({
                         <Download className="w-3 h-3 mr-1" />
                         Export
                     </Button>
+                    {onExportTimeline && (
+                        <div className="relative group/timeline">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 text-xs"
+                            >
+                                <Film className="w-3 h-3 mr-1" />
+                                Timeline
+                            </Button>
+                            <div className="absolute right-0 top-full mt-1 hidden group-hover/timeline:block z-50">
+                                <div className="bg-popover border border-border rounded-md shadow-lg py-1 min-w-[140px]">
+                                    <button
+                                        onClick={() => onExportTimeline('otio')}
+                                        className="w-full px-3 py-1.5 text-xs text-left hover:bg-accent/30 transition-colors"
+                                    >
+                                        Download .otio
+                                        <span className="block text-[10px] text-muted-foreground">Premiere / Resolve / Avid</span>
+                                    </button>
+                                    <button
+                                        onClick={() => onExportTimeline('edl')}
+                                        className="w-full px-3 py-1.5 text-xs text-left hover:bg-accent/30 transition-colors"
+                                    >
+                                        Download .edl
+                                        <span className="block text-[10px] text-muted-foreground">Universal NLE format</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                     <Button
                         variant="outline"
                         size="sm"
