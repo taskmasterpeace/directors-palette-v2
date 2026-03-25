@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { getAPIClient } from '@/lib/db/client'
 import { creditsService } from '@/features/credits/services/credits.service'
-import { BrandBoostService } from '@/features/brand-studio/services/brand-boost.service'
 import { AD_APPROACHES } from '@/features/brand-studio/data/ad-approaches'
 import { createLogger } from '@/lib/logger'
 import type { Brand } from '@/features/brand-studio/types'
@@ -74,14 +73,40 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Insufficient credits', required: CREDIT_COST, balance: currentBalance }, { status: 402 })
     }
 
-    // Brand boost enrichment
+    // Brand boost enrichment — pull full brand DNA
     let brandContext = ''
     if (brandBoost && brandId) {
       const supabase = await getAPIClient()
       const { data: brand } = await supabase.from('brands').select('*').eq('id', brandId).single()
       if (brand) {
-        brandContext = BrandBoostService.enrichCopyPrompt('', brand as unknown as Brand)
-        log.info('Brand boost applied', { brandId })
+        const b = brand as unknown as Brand
+        const parts: string[] = []
+        if (b.name) parts.push(`Brand name: ${b.name}`)
+        if (b.tagline) parts.push(`Tagline: ${b.tagline}`)
+        if (b.industry) parts.push(`Industry: ${b.industry}`)
+        // Voice
+        if (b.voice_json) {
+          if (b.voice_json.tone?.length) parts.push(`Brand tone: ${b.voice_json.tone.join(', ')}`)
+          if (b.voice_json.persona) parts.push(`Brand persona: ${b.voice_json.persona}`)
+          if (b.voice_json.avoid?.length) parts.push(`Avoid in copy: ${b.voice_json.avoid.join(', ')}`)
+        }
+        // Audience
+        if (b.audience_json) {
+          if (b.audience_json.primary) parts.push(`Primary audience: ${b.audience_json.primary}`)
+          if (b.audience_json.secondary) parts.push(`Secondary audience: ${b.audience_json.secondary}`)
+          if (b.audience_json.psychographics) parts.push(`Audience psychographics: ${b.audience_json.psychographics}`)
+        }
+        // Visual identity (useful for color references in copy)
+        const colors = b.visual_identity_json?.colors
+        if (colors?.length) {
+          parts.push(`Brand colors: ${colors.map(c => `${c.name} (${c.hex})`).join(', ')}`)
+        }
+        // Music (mood context)
+        if (b.music_json?.moods?.length) {
+          parts.push(`Brand mood: ${b.music_json.moods.join(', ')}`)
+        }
+        brandContext = parts.join('. ')
+        log.info('Brand boost applied (full DNA)', { brandId, contextLength: brandContext.length })
       }
     }
 

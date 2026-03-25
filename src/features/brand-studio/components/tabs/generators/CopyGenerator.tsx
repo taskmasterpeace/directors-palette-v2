@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useRef } from 'react'
-import { PenLine, Sparkles, Loader2, ArrowLeft, Copy, Check, ChevronDown, Search, Zap } from 'lucide-react'
+import { useState, useRef, useMemo } from 'react'
+import { PenLine, Sparkles, Loader2, ArrowLeft, Copy, Check, ChevronDown, Search, Zap, ImageIcon, Download } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -17,6 +17,13 @@ const OUTPUT_TYPES = [
   { value: 'headlines-only', label: 'Headlines Only', desc: '10 headline variations' },
   { value: 'social-post', label: 'Social Post', desc: 'Platform-ready social copy' },
   { value: 'video-script', label: 'Video Script', desc: '15-30s ad script with visual directions' },
+]
+
+const AD_CARD_RATIOS = [
+  { value: '1:1', label: '1:1', desc: 'Square' },
+  { value: '9:16', label: '9:16', desc: 'Story/Reel' },
+  { value: '16:9', label: '16:9', desc: 'Landscape' },
+  { value: '4:5', label: '4:5', desc: 'Instagram' },
 ]
 
 const APPROACH_COLORS: Record<string, { bg: string; border: string; text: string; dot: string }> = {
@@ -45,6 +52,27 @@ function getColors(color: string) {
   return APPROACH_COLORS[color] || APPROACH_COLORS.slate
 }
 
+/** Extract structured sections from generated copy markdown */
+function parseCopySections(text: string): { headline: string; hook: string; body: string; tagline: string } {
+  const sections: Record<string, string> = {}
+  let currentSection = ''
+
+  for (const line of text.split('\n')) {
+    if (line.startsWith('## ')) {
+      currentSection = line.slice(3).trim().toLowerCase()
+    } else if (currentSection && line.trim() && !line.startsWith('#')) {
+      sections[currentSection] = (sections[currentSection] || '') + line.trim() + ' '
+    }
+  }
+
+  return {
+    headline: (sections['headline'] || '').trim(),
+    hook: (sections['hook'] || '').trim(),
+    body: (sections['body copy'] || sections['body'] || '').trim(),
+    tagline: (sections['tagline'] || '').trim(),
+  }
+}
+
 export function CopyGenerator({ onBack }: { onBack: () => void }) {
   const brand = useActiveBrand()
   const { generateCopy, isGenerating, error, lastResult } = useGenerationStore()
@@ -58,10 +86,25 @@ export function CopyGenerator({ onBack }: { onBack: () => void }) {
   const [copied, setCopied] = useState(false)
   const resultRef = useRef<HTMLDivElement>(null)
 
+  // Ad card generation state
+  const [adCardRatio, setAdCardRatio] = useState('1:1')
+  const [isGeneratingAdCard, setIsGeneratingAdCard] = useState(false)
+  const [adCardUrl, setAdCardUrl] = useState<string | null>(null)
+  const [adCardError, setAdCardError] = useState<string | null>(null)
+
   const hasBrandData = !!(brand?.voice_json || brand?.audience_json)
+  const hasBrandGuide = !!brand?.brand_guide_image_url
+
+  // Parse structured sections from generated copy
+  const parsedCopy = useMemo(() => {
+    if (!lastResult?.text) return null
+    return parseCopySections(lastResult.text)
+  }, [lastResult?.text])
 
   const handleGenerate = () => {
     if (!prompt.trim() || !selectedApproach || isGenerating) return
+    setAdCardUrl(null)
+    setAdCardError(null)
     generateCopy({
       prompt: prompt.trim(),
       brandId: brand?.id,
@@ -78,6 +121,34 @@ export function CopyGenerator({ onBack }: { onBack: () => void }) {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  const handleGenerateAdCard = async () => {
+    if (!parsedCopy?.headline || !brand?.id || isGeneratingAdCard) return
+    setIsGeneratingAdCard(true)
+    setAdCardError(null)
+    setAdCardUrl(null)
+
+    try {
+      const res = await fetch('/api/brand-studio/generate/ad-card', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          headline: parsedCopy.headline,
+          hook: parsedCopy.hook,
+          tagline: parsedCopy.tagline,
+          brandId: brand.id,
+          aspectRatio: adCardRatio,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Ad card generation failed')
+      setAdCardUrl(data.url)
+    } catch (e: unknown) {
+      setAdCardError(e instanceof Error ? e.message : 'Unknown error')
+    } finally {
+      setIsGeneratingAdCard(false)
+    }
+  }
+
   // Filter approaches
   const filteredApproaches = AD_APPROACHES.filter(a => {
     const matchesSearch = !approachSearch ||
@@ -88,6 +159,12 @@ export function CopyGenerator({ onBack }: { onBack: () => void }) {
       APPROACH_CATEGORIES.find(c => c.id === activeCategory)?.approachIds.includes(a.id)
     return matchesSearch && matchesCategory
   })
+
+  // Brand colors for visual preview
+  const brandColors = brand?.visual_identity_json?.colors || []
+  const primaryColor = brandColors.find(c => c.role === 'primary')?.hex || '#e11d90'
+  const bgColor = brandColors.find(c => c.role === 'background')?.hex || '#0a0a0a'
+  const textColor = brandColors.find(c => c.role === 'text')?.hex || '#ffffff'
 
   return (
     <div className="space-y-6">
@@ -304,48 +381,188 @@ export function CopyGenerator({ onBack }: { onBack: () => void }) {
           </Button>
         </div>
 
-        {/* Right: Result */}
-        <div>
+        {/* Right: Results */}
+        <div className="space-y-4">
           {lastResult?.type === 'copy' && lastResult.text ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="space-y-3"
+              className="space-y-4"
             >
-              {/* Result Header */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <PenLine className="w-3.5 h-3.5 text-pink-400" />
-                  <span className="text-xs font-medium">Generated Copy</span>
+              {/* Visual Preview Card */}
+              {parsedCopy?.headline && (
+                <div
+                  className="relative rounded-2xl overflow-hidden border border-border/20 shadow-xl shadow-black/20"
+                  style={{ background: `linear-gradient(135deg, ${bgColor} 0%, ${primaryColor}22 100%)` }}
+                >
+                  <div className="absolute inset-0 opacity-10" style={{
+                    backgroundImage: `radial-gradient(circle at 30% 20%, ${primaryColor}40 0%, transparent 60%), radial-gradient(circle at 80% 80%, ${primaryColor}20 0%, transparent 50%)`
+                  }} />
+                  <div className="relative p-6 sm:p-8 space-y-3">
+                    {brand?.name && (
+                      <div className="flex items-center gap-2 mb-4">
+                        {brand.logo_url && (
+                          <img src={brand.logo_url} alt="" className="w-6 h-6 rounded object-contain" />
+                        )}
+                        <span className="text-[10px] font-semibold tracking-[0.2em] uppercase" style={{ color: primaryColor }}>
+                          {brand.name}
+                        </span>
+                      </div>
+                    )}
+                    <h2
+                      className="text-xl sm:text-2xl font-black leading-tight tracking-tight"
+                      style={{ color: textColor }}
+                    >
+                      {parsedCopy.headline}
+                    </h2>
+                    {parsedCopy.hook && (
+                      <p className="text-sm leading-relaxed opacity-70" style={{ color: textColor }}>
+                        {parsedCopy.hook}
+                      </p>
+                    )}
+                    {parsedCopy.tagline && (
+                      <div className="pt-3 mt-3 border-t" style={{ borderColor: `${primaryColor}30` }}>
+                        <p className="text-xs font-semibold tracking-wide" style={{ color: primaryColor }}>
+                          {parsedCopy.tagline}
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-muted-foreground">{lastResult.creditsUsed} pts</span>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="gap-1.5 text-xs h-7"
-                    onClick={handleCopy}
-                  >
-                    {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                    {copied ? 'Copied' : 'Copy'}
-                  </Button>
-                </div>
-              </div>
+              )}
 
-              {/* Copy Output */}
-              <div
-                ref={resultRef}
-                className="rounded-2xl border border-border/30 bg-secondary/10 p-5 max-h-[600px] overflow-y-auto shadow-lg shadow-black/10"
-              >
-                <div className="prose prose-invert prose-sm max-w-none
-                  prose-headings:text-pink-300 prose-headings:font-bold prose-headings:tracking-tight
-                  prose-h2:text-base prose-h2:mt-5 prose-h2:mb-2 prose-h2:first:mt-0
-                  prose-h3:text-sm prose-h3:mt-4 prose-h3:mb-1
-                  prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:text-sm
-                  prose-strong:text-foreground
-                  prose-li:text-sm prose-li:text-muted-foreground
-                ">
-                  <CopyContent text={lastResult.text} />
+              {/* Generate Ad Card Section */}
+              {parsedCopy?.headline && brand?.id && (
+                <div className="rounded-xl border border-border/20 bg-secondary/10 p-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <ImageIcon className="w-3.5 h-3.5 text-violet-400" />
+                    <span className="text-xs font-semibold">Generate Visual Ad Card</span>
+                    {hasBrandGuide && (
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                        Brand guide as reference
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground/50">
+                    Nano Banana will create a visual ad using your headline, brand colors{hasBrandGuide ? ', and brand guide as style reference' : ''}.
+                  </p>
+
+                  {/* Aspect Ratio */}
+                  <div className="flex gap-1.5">
+                    {AD_CARD_RATIOS.map(ar => (
+                      <button
+                        key={ar.value}
+                        onClick={() => setAdCardRatio(ar.value)}
+                        className={cn(
+                          'flex-1 py-1.5 px-2 rounded-lg text-[10px] font-medium transition-all border',
+                          adCardRatio === ar.value
+                            ? 'bg-violet-500/15 border-violet-500/30 text-violet-300'
+                            : 'bg-secondary/20 border-border/15 text-muted-foreground/50 hover:bg-secondary/40'
+                        )}
+                      >
+                        <div>{ar.label}</div>
+                        <div className="text-[9px] opacity-50">{ar.desc}</div>
+                      </button>
+                    ))}
+                  </div>
+
+                  <Button
+                    onClick={handleGenerateAdCard}
+                    disabled={isGeneratingAdCard}
+                    className="w-full gap-2 bg-violet-600 hover:bg-violet-500 text-white text-xs h-9"
+                  >
+                    {isGeneratingAdCard ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        Generating ad card...
+                      </>
+                    ) : (
+                      <>
+                        <ImageIcon className="w-3.5 h-3.5" />
+                        Generate Ad Card (10 pts)
+                      </>
+                    )}
+                  </Button>
+
+                  {adCardError && (
+                    <div className="p-2 rounded-lg bg-red-500/10 border border-red-500/20 text-[10px] text-red-400">
+                      {adCardError}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Generated Ad Card Image */}
+              <AnimatePresence>
+                {(adCardUrl || isGeneratingAdCard) && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                  >
+                    {adCardUrl ? (
+                      <div className="space-y-2">
+                        <div className="relative rounded-2xl overflow-hidden border border-border/30 shadow-lg shadow-black/20">
+                          <img src={adCardUrl} alt="Generated ad card" className="w-full object-contain" />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] text-muted-foreground">10 pts used</span>
+                          <a href={adCardUrl} download target="_blank" rel="noopener noreferrer">
+                            <Button size="sm" variant="outline" className="gap-1.5 text-xs h-7">
+                              <Download className="w-3 h-3" />
+                              Download
+                            </Button>
+                          </a>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center h-48 rounded-2xl border border-dashed border-violet-500/20 bg-violet-500/5">
+                        <div className="text-center space-y-2">
+                          <Loader2 className="w-8 h-8 animate-spin text-violet-400/40 mx-auto" />
+                          <p className="text-xs text-muted-foreground/50">Creating visual ad card...</p>
+                          <p className="text-[10px] text-muted-foreground/30">10-30 seconds</p>
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Full Copy Output */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <PenLine className="w-3.5 h-3.5 text-pink-400" />
+                    <span className="text-xs font-medium">Full Copy</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-muted-foreground">{lastResult.creditsUsed} pts</span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1.5 text-xs h-7"
+                      onClick={handleCopy}
+                    >
+                      {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                      {copied ? 'Copied' : 'Copy'}
+                    </Button>
+                  </div>
+                </div>
+
+                <div
+                  ref={resultRef}
+                  className="rounded-2xl border border-border/30 bg-secondary/10 p-5 max-h-[400px] overflow-y-auto shadow-lg shadow-black/10"
+                >
+                  <div className="prose prose-invert prose-sm max-w-none
+                    prose-headings:text-pink-300 prose-headings:font-bold prose-headings:tracking-tight
+                    prose-h2:text-base prose-h2:mt-5 prose-h2:mb-2 prose-h2:first:mt-0
+                    prose-h3:text-sm prose-h3:mt-4 prose-h3:mb-1
+                    prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:text-sm
+                    prose-strong:text-foreground
+                    prose-li:text-sm prose-li:text-muted-foreground
+                  ">
+                    <CopyContent text={lastResult.text} />
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -391,7 +608,6 @@ function CopyContent({ text }: { text: string }) {
     } else if (line.trim() === '') {
       elements.push(<br key={key++} />)
     } else {
-      // Handle bold text within paragraphs
       const parts = line.split(/(\*\*[^*]+\*\*)/)
       const rendered = parts.map((part, i) => {
         if (part.startsWith('**') && part.endsWith('**')) {
