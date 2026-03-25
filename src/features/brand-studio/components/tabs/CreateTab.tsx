@@ -1,6 +1,6 @@
 'use client'
 
-import { Image as ImageIcon, Film, Mic2, Music2, FileText, Layers, Lock, Sparkles } from 'lucide-react'
+import { Image as ImageIcon, Film, Mic2, Music2, PenLine, Layers, Lock, Sparkles } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/utils/utils'
 import { useGenerationStore, type GeneratorType } from '../../hooks/useGenerationStore'
@@ -9,6 +9,7 @@ import { ImageGenerator } from './generators/ImageGenerator'
 import { VideoGenerator } from './generators/VideoGenerator'
 import { VoiceGenerator } from './generators/VoiceGenerator'
 import { MusicGenerator } from './generators/MusicGenerator'
+import { CopyGenerator } from './generators/CopyGenerator'
 
 const GENERATORS: {
   id: GeneratorType | 'script' | 'assemble'
@@ -24,7 +25,7 @@ const GENERATORS: {
   { id: 'video', icon: Film, label: 'Video', desc: 'Brand video clips', cost: '25+ pts', color: 'from-cyan-500/15 to-cyan-500/5 border-cyan-500/25 hover:border-cyan-500/40', iconColor: 'text-cyan-400' },
   { id: 'voice', icon: Mic2, label: 'Voice', desc: 'Brand voiceovers', cost: '5 pts', color: 'from-indigo-500/15 to-indigo-500/5 border-indigo-500/25 hover:border-indigo-500/40', iconColor: 'text-indigo-400' },
   { id: 'music', icon: Music2, label: 'Music', desc: 'Brand music tracks', cost: '15 pts', color: 'from-fuchsia-500/15 to-fuchsia-500/5 border-fuchsia-500/25 hover:border-fuchsia-500/40', iconColor: 'text-fuchsia-400' },
-  { id: 'script', icon: FileText, label: 'Script', desc: 'Ad scripts & copy', cost: '—', color: 'from-pink-500/10 to-pink-500/3 border-border/15', iconColor: 'text-muted-foreground/30', disabled: true },
+  { id: 'copy', icon: PenLine, label: 'Copy', desc: 'Ad copy & headlines', cost: '5 pts', color: 'from-pink-500/15 to-pink-500/5 border-pink-500/25 hover:border-pink-500/40', iconColor: 'text-pink-400' },
   { id: 'assemble', icon: Layers, label: 'Assemble', desc: 'Merge media assets', cost: '—', color: 'from-amber-500/10 to-amber-500/3 border-border/15', iconColor: 'text-muted-foreground/30', disabled: true },
 ]
 
@@ -48,6 +49,7 @@ export function CreateTab() {
           {activeGenerator === 'video' && <VideoGenerator onBack={handleBack} />}
           {activeGenerator === 'voice' && <VoiceGenerator onBack={handleBack} />}
           {activeGenerator === 'music' && <MusicGenerator onBack={handleBack} />}
+          {activeGenerator === 'copy' && <CopyGenerator onBack={handleBack} />}
         </motion.div>
       ) : (
         <motion.div

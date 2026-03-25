@@ -31,6 +31,29 @@ export class BrandBoostService {
     return parts.join('. ')
   }
 
+  static enrichCopyPrompt(prompt: string, brand: Brand): string {
+    const parts = [prompt]
+    const voice = brand.voice_json
+    if (voice) {
+      if (voice.tone?.length) parts.push(`Brand tone: ${voice.tone.join(', ')}`)
+      if (voice.persona) parts.push(`Brand persona: ${voice.persona}`)
+      if (voice.avoid?.length) parts.push(`Avoid: ${voice.avoid.join(', ')}`)
+    }
+    const audience = brand.audience_json
+    if (audience) {
+      if (audience.primary) parts.push(`Primary audience: ${audience.primary}`)
+      if (audience.secondary) parts.push(`Secondary audience: ${audience.secondary}`)
+      if (audience.psychographics) parts.push(`Psychographics: ${audience.psychographics}`)
+    }
+    if (brand.industry) parts.push(`Industry: ${brand.industry}`)
+    if (brand.tagline) parts.push(`Brand tagline: ${brand.tagline}`)
+    const colors = brand.visual_identity_json?.colors
+    if (colors?.length) {
+      parts.push(`Brand colors: ${colors.map(c => `${c.name} (${c.hex})`).join(', ')}`)
+    }
+    return parts.join('. ')
+  }
+
   static getVoiceSettings(brand: Brand): { stability: number; similarity_boost: number } {
     const voice = brand.voice_json
     if (!voice) return { stability: 0.5, similarity_boost: 0.75 }

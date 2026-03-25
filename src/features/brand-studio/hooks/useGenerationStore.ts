@@ -1,10 +1,11 @@
 import { create } from 'zustand'
 
-export type GeneratorType = 'image' | 'video' | 'voice' | 'music'
+export type GeneratorType = 'image' | 'video' | 'voice' | 'music' | 'copy'
 
 export interface GenerationResult {
   type: GeneratorType
   url: string
+  text?: string
   predictionId: string
   creditsUsed: number
   timestamp: number
@@ -23,6 +24,7 @@ interface GenerationStoreState {
   generateVideo: (params: { prompt: string; brandId?: string; brandBoost?: boolean; model?: string; duration?: number; imageUrl?: string }) => Promise<void>
   generateVoice: (params: { text: string; brandId?: string; brandBoost?: boolean; voiceId?: string }) => Promise<void>
   generateMusic: (params: { prompt: string; brandId?: string; brandBoost?: boolean; duration?: number; instrumental?: boolean }) => Promise<void>
+  generateCopy: (params: { prompt: string; brandId?: string; brandBoost?: boolean; approachId: string; outputType?: string }) => Promise<void>
   clearError: () => void
 }
 
@@ -114,6 +116,27 @@ export const useGenerationStore = create<GenerationStoreState>((set) => ({
         type: 'music',
         url: data.url as string,
         predictionId: data.predictionId as string,
+        creditsUsed: data.creditsUsed as number,
+        timestamp: Date.now(),
+        status: 'completed',
+      }
+      set(s => ({ lastResult: result, recentResults: [result, ...s.recentResults].slice(0, 12) }))
+    } catch (e: unknown) {
+      set({ error: e instanceof Error ? e.message : 'Unknown error' })
+    } finally {
+      set({ isGenerating: false })
+    }
+  },
+
+  generateCopy: async (params) => {
+    set({ isGenerating: true, error: null, lastResult: null })
+    try {
+      const data = await callAPI('/api/brand-studio/generate/copy', params)
+      const result: GenerationResult = {
+        type: 'copy',
+        url: '',
+        text: data.text as string,
+        predictionId: data.id as string,
         creditsUsed: data.creditsUsed as number,
         timestamp: Date.now(),
         status: 'completed',

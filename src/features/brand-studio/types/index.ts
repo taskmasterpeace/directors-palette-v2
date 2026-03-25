@@ -62,4 +62,4 @@ export interface BrandVisualStyle {
 
 export type BrandStudioTab = 'brand' | 'library' | 'create' | 'campaigns'
 
-export type CreateSubTab = 'image' | 'video' | 'voice' | 'music' | 'script' | 'assemble'
+export type CreateSubTab = 'image' | 'video' | 'voice' | 'music' | 'copy' | 'script' | 'assemble'
