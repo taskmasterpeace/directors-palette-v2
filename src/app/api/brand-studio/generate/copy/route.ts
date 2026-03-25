@@ -20,29 +20,30 @@ RULES:
 - Adapt tone and style to the brand identity when provided
 - Keep headlines punchy (under 15 words)
 - Write body copy that feels human, not corporate
+- IMPORTANT: Each section must contain EXACTLY ONE item. Put alternatives in the Variants section only.
 
-OUTPUT FORMAT (use markdown):
+OUTPUT FORMAT (use markdown — follow EXACTLY):
 ## Headline
-[One powerful headline]
+[Exactly ONE powerful headline — max 15 words, no alternatives here]
 
 ## Hook
-[Opening line that stops the scroll — 1-2 sentences]
+[Exactly ONE opening line that stops the scroll — 1-2 sentences max]
 
 ## Body Copy
 [Main ad copy — 3-5 sentences that drive the message home]
 
 ## Tagline
-[Short, memorable brand tagline — under 8 words]
+[Exactly ONE short, memorable brand tagline — under 8 words]
 
 ## Variants
 ### Alt Headline 1
-[Alternative headline option]
+[One alternative headline]
 
 ### Alt Headline 2
-[Another headline option]
+[Another alternative headline]
 
 ### Alt Hook
-[Alternative hook/opening]`
+[One alternative hook/opening]`
 
 export async function POST(request: NextRequest) {
   try {

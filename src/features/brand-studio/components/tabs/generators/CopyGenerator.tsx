@@ -65,11 +65,14 @@ function parseCopySections(text: string): { headline: string; hook: string; body
     }
   }
 
+  // Strip markdown bold markers from display text
+  const clean = (s: string) => s.replace(/\*\*/g, '').trim()
+
   return {
-    headline: (sections['headline'] || '').trim(),
-    hook: (sections['hook'] || '').trim(),
-    body: (sections['body copy'] || sections['body'] || '').trim(),
-    tagline: (sections['tagline'] || '').trim(),
+    headline: clean(sections['headline'] || ''),
+    hook: clean(sections['hook'] || ''),
+    body: clean(sections['body copy'] || sections['body'] || ''),
+    tagline: clean(sections['tagline'] || ''),
   }
 }
 
