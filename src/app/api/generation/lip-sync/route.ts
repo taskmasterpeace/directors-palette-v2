@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import Replicate from 'replicate'
-import type { Database } from '../../../../../supabase/database.types'
+import type { Database } from '@/lib/db/types'
 import { LipSyncGenerationService } from '@/features/lip-sync/services/lip-sync-generation.service'
 import type {
   LipSyncGenerationRequest,

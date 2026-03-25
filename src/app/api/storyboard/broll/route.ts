@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createOpenRouterService } from '@/features/storyboard/services/openrouter.service'
+import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { logger } from '@/lib/logger'
 
 export async function POST(request: NextRequest) {
     try {
+        const auth = await getAuthenticatedUser(request)
+        if (auth instanceof NextResponse) return auth
+
         const body = await request.json()
         const { storyText, count, model } = body
 

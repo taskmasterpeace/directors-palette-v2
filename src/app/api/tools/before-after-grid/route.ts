@@ -10,6 +10,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { lognog } from '@/lib/lognog'
 import { logger } from '@/lib/logger'
 
@@ -162,6 +163,9 @@ STRICT REQUIREMENTS:
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await getAuthenticatedUser(request)
+    if (auth instanceof NextResponse) return auth
+
     const body: BeforeAfterGridRequest = await request.json()
     const { referenceImageUrl, transformationType, customStates, locationDescription } = body
 
@@ -172,18 +176,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get user from auth
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const token = authHeader.replace('Bearer ', '')
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const user = auth.user
 
     // Check credits
     const { data: credits } = await supabase

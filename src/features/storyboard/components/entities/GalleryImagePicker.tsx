@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Search, Images, Loader2 } from 'lucide-react'
 import { useUnifiedGalleryStore, type GeneratedImage } from '@/features/shot-creator/store/unified-gallery-store'
-import { GalleryService } from '@/features/shot-creator/services/gallery.service'
+import { ImageGalleryService as GalleryService } from '@/lib/services/gallery.service'
 
 interface GalleryImagePickerProps {
     open: boolean

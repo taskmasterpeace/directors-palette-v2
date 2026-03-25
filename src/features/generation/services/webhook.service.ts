@@ -8,7 +8,7 @@ import { VideoGenerationService } from '@/features/shot-animator/services/video-
 import type { AnimationModel } from '@/features/shot-animator/types';
 import { LipSyncGenerationService } from '@/features/lip-sync/services/lip-sync-generation.service';
 import type { LipSyncModel, LipSyncResolution } from '@/features/lip-sync/types/lip-sync.types';
-import type { Database } from '../../../../supabase/database.types';
+import type { Database } from '@/lib/db/types';
 import { getModelCost, type ModelId } from '@/config';
 import { logger } from '@/lib/logger'
 

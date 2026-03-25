@@ -353,6 +353,84 @@ Multiple images (`num_images` > 1) -- returns an array:
 
 ---
 
+### POST /api/v2/images/angles
+
+Generate a 3x3 cinematic camera angles grid from a reference image. The same subject is shown from 9 different camera angles (extreme wide, wide, medium-long, medium, medium close-up, close-up, extreme close-up, low angle, high angle).
+
+**Request Body:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `image_url` | string | Yes | URL of the reference image |
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "url": "https://storage.example.com/images/angles-abc123.jpg",
+    "prediction_id": "abc123",
+    "grid_type": "angles",
+    "pts_used": 20
+  }
+}
+```
+
+**Example:**
+
+```bash
+curl -X POST https://directorspalette.com/api/v2/images/angles \
+  -H "Authorization: Bearer dp_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{ "image_url": "https://example.com/my-character.jpg" }'
+```
+
+**Errors:**
+- `422` -- Missing `image_url`
+- `402` -- Insufficient pts balance
+
+---
+
+### POST /api/v2/images/broll
+
+Generate a 3x3 B-roll grid from a reference image. Creates 9 complementary shots from the same visual world — different subjects that share the same look, feel, color palette, and lighting.
+
+**Request Body:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `image_url` | string | Yes | URL of the reference image |
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "url": "https://storage.example.com/images/broll-abc123.jpg",
+    "prediction_id": "abc123",
+    "grid_type": "broll",
+    "pts_used": 20
+  }
+}
+```
+
+**Example:**
+
+```bash
+curl -X POST https://directorspalette.com/api/v2/images/broll \
+  -H "Authorization: Bearer dp_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{ "image_url": "https://example.com/my-scene.jpg" }'
+```
+
+**Errors:**
+- `422` -- Missing `image_url`
+- `402` -- Insufficient pts balance
+
+---
+
 ### POST /api/v2/videos/generate
 
 Generate a video from a source image (or text, for select models).

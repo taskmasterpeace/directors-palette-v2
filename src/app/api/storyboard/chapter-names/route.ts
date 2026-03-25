@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generateChapterArcNames } from '@/features/storyboard/services/chapter-detection.service'
+import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { lognog } from '@/lib/lognog'
 
 export async function POST(request: NextRequest) {
     const apiStart = Date.now()
     try {
+        const auth = await getAuthenticatedUser(request)
+        if (auth instanceof NextResponse) return auth
+
         const body = await request.json()
         const { chapters, storyText, model } = body
 

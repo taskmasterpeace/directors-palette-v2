@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Replicate from 'replicate';
-import type { Database } from '../../../../../supabase/database.types';
+import type { Database } from '@/lib/db/types';
 import { VideoGenerationService } from '@/features/shot-animator/services/video-generation.service';
 import type { AnimationModel, ModelSettings } from '@/features/shot-animator/types';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';

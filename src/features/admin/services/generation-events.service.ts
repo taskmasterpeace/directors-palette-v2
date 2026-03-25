@@ -4,7 +4,7 @@
  */
 
 import { getAPIClient } from '@/lib/db/client'
-import type { Json } from '../../../../supabase/database.types'
+import type { Json } from '@/lib/db/types'
 import type {
     GenerationEvent,
     GenerationEventInput,

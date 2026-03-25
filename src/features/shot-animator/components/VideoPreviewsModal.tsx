@@ -16,7 +16,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { FullscreenVideoModal } from "./FullscreenVideoModal"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Pagination } from "@/features/shot-creator/components/unified-gallery/Pagination"
-import { VideoGalleryService } from "../services/gallery.service"
+import { VideoGalleryService } from '@/lib/services/gallery.service'
 import type { GeneratedVideo } from "../types"
 import { toast } from 'sonner'
 import { logger } from '@/lib/logger'

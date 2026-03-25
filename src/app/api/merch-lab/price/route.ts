@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { lognog } from '@/lib/lognog'
 import { PRINTIFY_PROVIDERS, MARGIN_MULTIPLIER } from '@/features/merch-lab/constants/products'
 
@@ -17,8 +18,11 @@ const ESTIMATED_SHIPPING: Record<string, number> = {
 
 // 1 pt = 1 cent (verified from credits system: centsToTokens is 1:1)
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
+    const auth = await getAuthenticatedUser(request)
+    if (auth instanceof NextResponse) return auth
+
     const { searchParams } = new URL(request.url)
     const blueprintId = Number(searchParams.get('blueprintId'))
     const variantId = Number(searchParams.get('variantId'))

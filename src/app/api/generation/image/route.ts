@@ -9,7 +9,7 @@ import { generationEventsService } from '@/features/admin/services/generation-ev
 import { getModelConfig, getModelCost, type ModelId } from '@/config';
 import { StorageService } from '@/features/generation/services/storage.service';
 import { StorageLimitsService } from '@/features/storage/services/storage-limits.service';
-import type { Database } from '../../../../../supabase/database.types';
+import type { Database } from '@/lib/db/types';
 import fs from 'fs';
 import path from 'path';
 import { lognog } from '@/lib/lognog';

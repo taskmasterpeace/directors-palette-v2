@@ -35,15 +35,13 @@ const APPROACH_COLORS: Record<string, { bg: string; border: string; text: string
   emerald: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/25', text: 'text-emerald-400', dot: 'bg-emerald-400' },
   amber: { bg: 'bg-amber-500/10', border: 'border-amber-500/25', text: 'text-amber-400', dot: 'bg-amber-400' },
   teal: { bg: 'bg-teal-500/10', border: 'border-teal-500/25', text: 'text-teal-400', dot: 'bg-teal-400' },
-  purple: { bg: 'bg-purple-500/10', border: 'border-purple-500/25', text: 'text-purple-400', dot: 'bg-purple-400' },
-  violet: { bg: 'bg-violet-500/10', border: 'border-violet-500/25', text: 'text-violet-400', dot: 'bg-violet-400' },
+  sky: { bg: 'bg-sky-500/10', border: 'border-sky-500/25', text: 'text-sky-400', dot: 'bg-sky-400' },
   cyan: { bg: 'bg-cyan-500/10', border: 'border-cyan-500/25', text: 'text-cyan-400', dot: 'bg-cyan-400' },
   blue: { bg: 'bg-blue-500/10', border: 'border-blue-500/25', text: 'text-blue-400', dot: 'bg-blue-400' },
   green: { bg: 'bg-green-500/10', border: 'border-green-500/25', text: 'text-green-400', dot: 'bg-green-400' },
   red: { bg: 'bg-red-500/10', border: 'border-red-500/25', text: 'text-red-400', dot: 'bg-red-400' },
   indigo: { bg: 'bg-indigo-500/10', border: 'border-indigo-500/25', text: 'text-indigo-400', dot: 'bg-indigo-400' },
   lime: { bg: 'bg-lime-500/10', border: 'border-lime-500/25', text: 'text-lime-400', dot: 'bg-lime-400' },
-  sky: { bg: 'bg-sky-500/10', border: 'border-sky-500/25', text: 'text-sky-400', dot: 'bg-sky-400' },
   fuchsia: { bg: 'bg-fuchsia-500/10', border: 'border-fuchsia-500/25', text: 'text-fuchsia-400', dot: 'bg-fuchsia-400' },
   zinc: { bg: 'bg-zinc-500/10', border: 'border-zinc-500/25', text: 'text-zinc-400', dot: 'bg-zinc-400' },
 }
@@ -438,7 +436,7 @@ export function CopyGenerator({ onBack }: { onBack: () => void }) {
               {parsedCopy?.headline && brand?.id && (
                 <div className="rounded-xl border border-border/20 bg-secondary/10 p-4 space-y-3">
                   <div className="flex items-center gap-2">
-                    <ImageIcon className="w-3.5 h-3.5 text-violet-400" />
+                    <ImageIcon className="w-3.5 h-3.5 text-cyan-400" />
                     <span className="text-xs font-semibold">Generate Visual Ad Card</span>
                     {hasBrandGuide && (
                       <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
@@ -459,7 +457,7 @@ export function CopyGenerator({ onBack }: { onBack: () => void }) {
                         className={cn(
                           'flex-1 py-1.5 px-2 rounded-lg text-[10px] font-medium transition-all border',
                           adCardRatio === ar.value
-                            ? 'bg-violet-500/15 border-violet-500/30 text-violet-300'
+                            ? 'bg-cyan-500/15 border-cyan-500/30 text-cyan-300'
                             : 'bg-secondary/20 border-border/15 text-muted-foreground/50 hover:bg-secondary/40'
                         )}
                       >
@@ -472,7 +470,7 @@ export function CopyGenerator({ onBack }: { onBack: () => void }) {
                   <Button
                     onClick={handleGenerateAdCard}
                     disabled={isGeneratingAdCard}
-                    className="w-full gap-2 bg-violet-600 hover:bg-violet-500 text-white text-xs h-9"
+                    className="w-full gap-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs h-9"
                   >
                     {isGeneratingAdCard ? (
                       <>
@@ -519,9 +517,9 @@ export function CopyGenerator({ onBack }: { onBack: () => void }) {
                         </div>
                       </div>
                     ) : (
-                      <div className="flex items-center justify-center h-48 rounded-2xl border border-dashed border-violet-500/20 bg-violet-500/5">
+                      <div className="flex items-center justify-center h-48 rounded-2xl border border-dashed border-cyan-500/20 bg-cyan-500/5">
                         <div className="text-center space-y-2">
-                          <Loader2 className="w-8 h-8 animate-spin text-violet-400/40 mx-auto" />
+                          <Loader2 className="w-8 h-8 animate-spin text-cyan-400/40 mx-auto" />
                           <p className="text-xs text-muted-foreground/50">Creating visual ad card...</p>
                           <p className="text-[10px] text-muted-foreground/30">10-30 seconds</p>
                         </div>

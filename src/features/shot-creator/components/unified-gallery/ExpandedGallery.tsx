@@ -17,7 +17,7 @@ import {
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { cn } from '@/utils/utils'
 import { useUnifiedGalleryStore, GeneratedImage } from '../../store/unified-gallery-store'
-import { GalleryService } from '../../services/gallery.service'
+import { ImageGalleryService as GalleryService } from '@/lib/services/gallery.service'
 import { ImageCard } from './ImageCard'
 import FullscreenModal from './FullScreenModal'
 import { useReferenceNamePrompt } from '@/components/providers/PromptProvider'

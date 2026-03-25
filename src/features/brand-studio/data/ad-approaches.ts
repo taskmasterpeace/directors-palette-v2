@@ -276,7 +276,7 @@ export const AD_APPROACHES: AdApproach[] = [
       expectedResult: 'Cultural permanence — the campaign becomes a cultural artifact',
     },
     bestFor: 'Cultural impact',
-    color: 'purple',
+    color: 'sky',
   },
   {
     id: 'identity-reflection',
@@ -305,7 +305,7 @@ export const AD_APPROACHES: AdApproach[] = [
       expectedResult: 'Zero resistance to purchase because it feels self-selected',
     },
     bestFor: 'Zero-resistance purchase',
-    color: 'violet',
+    color: 'indigo',
   },
   {
     id: 'psycho-logic',

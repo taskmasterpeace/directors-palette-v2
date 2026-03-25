@@ -1,6 +1,6 @@
 import { DatabaseError } from "@/lib/errors"
 import { ISettingsRepository, UpsertSettingsInput } from "./interfaces/settings.interface"
-import { Json, Tables } from "../../../../supabase/database.types"
+import { Json, Tables } from "@/lib/db/types"
 import { getClient, TypedSupabaseClient } from "../client"
 import { createLogger } from '@/lib/logger'
 

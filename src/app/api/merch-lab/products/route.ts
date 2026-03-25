@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { lognog } from '@/lib/lognog'
 import { PRINTIFY_PROVIDERS } from '@/features/merch-lab/constants/products'
 
@@ -84,8 +85,11 @@ function colorToHex(name: string): string {
   return COLOR_HEX_MAP[name] ?? COLOR_HEX_MAP[name.split(' ').map(w => w[0]?.toUpperCase() + w.slice(1).toLowerCase()).join(' ')] ?? '#6B7280'
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
+    const auth = await getAuthenticatedUser(request)
+    if (auth instanceof NextResponse) return auth
+
     const { searchParams } = new URL(request.url)
     const blueprintId = Number(searchParams.get('blueprintId'))
 

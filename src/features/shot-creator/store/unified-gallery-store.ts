@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { GalleryService } from '../services/gallery.service'
+import { ImageGalleryService as GalleryService } from '@/lib/services/gallery.service'
 import { FolderService } from '@/lib/services/folder.service'
 import type { FolderWithCount, CreateFolderInput, UpdateFolderInput } from '../types/folder.types'
 import { logger } from '@/lib/logger'
@@ -531,7 +531,7 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
 
     try {
       // Import GalleryService dynamically to avoid circular dependency
-      const { GalleryService } = await import('../services/gallery.service')
+      const { ImageGalleryService: GalleryService } = await import('@/lib/services/gallery.service')
 
       // Use infiniteScrollPage + 1 for the next page (infiniteScrollPage starts at 1 from initial load)
       const nextPage = state.infiniteScrollPage + 1
@@ -575,7 +575,7 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
 
     try {
       // Import GalleryService dynamically to avoid circular dependency
-      const { GalleryService } = await import('../services/gallery.service')
+      const { ImageGalleryService: GalleryService } = await import('@/lib/services/gallery.service')
 
       // Fetch fresh data for the current page/folder with optional search query and source filter
       const result = await GalleryService.loadUserGalleryPaginated(

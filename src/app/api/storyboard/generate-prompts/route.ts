@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createOpenRouterService } from '@/features/storyboard/services/openrouter.service'
+import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { lognog } from '@/lib/lognog'
 import { logger } from '@/lib/logger'
 
@@ -22,6 +23,9 @@ export async function POST(request: NextRequest) {
     const apiStart = Date.now()
 
     try {
+        const auth = await getAuthenticatedUser(request)
+        if (auth instanceof NextResponse) return auth
+
         const body = await request.json()
         const { segments, stylePrompt, characterDescriptions, storyContext, model, startFrom = 0, chapterPrefix } = body
 

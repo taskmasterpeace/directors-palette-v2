@@ -3,7 +3,7 @@
  */
 
 import { useEffect, useState, useRef, useCallback } from 'react'
-import { GalleryService } from '../services/gallery.service'
+import { ImageGalleryService as GalleryService } from '@/lib/services/gallery.service'
 import { useUnifiedGalleryStore } from '../store/unified-gallery-store'
 import { getClient } from '@/lib/db/client'
 import { logger } from '@/lib/logger'

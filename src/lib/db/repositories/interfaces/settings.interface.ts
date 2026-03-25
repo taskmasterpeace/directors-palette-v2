@@ -1,4 +1,4 @@
-import { Tables } from "../../../../../supabase/database.types"
+import { Tables } from "@/lib/db/types"
 
 type SettingsRepositoryResult = {
   id: string

@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { CompactVideoCard } from './CompactVideoCard'
 import { FullscreenImageViewModal } from './FullscreenImageViewModal'
-import { VideoGalleryService } from '../services/gallery.service'
+import { VideoGalleryService } from '@/lib/services/gallery.service'
 import { generateAnimationPrompt } from '../services/animation-prompt.service'
 import { ANIMATION_MODELS, getVideoModelIcon } from '../config/models.config'
 import { getModelIcon } from '@/features/shot-creator/constants/model-icons'

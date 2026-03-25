@@ -5,8 +5,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { getClient } from '@/lib/db/client'
-import { GalleryService } from '@/lib/services/gallery.service'
-import { VideoGalleryService } from '../services/gallery.service'
+import { GalleryService, VideoGalleryService } from '@/lib/services/gallery.service'
 import type { GeneratedVideo } from '../types'
 import { GalleryRow } from '@/lib/db/types'
 import { logger } from '@/lib/logger'

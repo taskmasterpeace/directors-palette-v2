@@ -3,4 +3,4 @@
  */
 
 export { VideoGenerationService } from './video-generation.service'
-export { VideoGalleryService } from './gallery.service'
+export { VideoGalleryService } from '@/lib/services/gallery.service'
