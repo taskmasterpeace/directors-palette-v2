@@ -1,114 +1,184 @@
 'use client'
 
-import { useState, useMemo, useRef, useCallback } from 'react'
-import { Layers, Plus, Check, Star, Camera } from 'lucide-react'
-import { COMMUNITY_LORAS, useLoraStore } from '../../store/lora.store'
+import { useState, useMemo, useRef, useCallback, useEffect } from 'react'
+import { Layers, Plus, Check, Star, Camera, Trash2, User } from 'lucide-react'
+import { COMMUNITY_LORAS, BUILT_IN_LORA_IDS, useLoraStore, type LoraItem } from '../../store/lora.store'
 import { cn } from '@/utils/utils'
 import { toast } from 'sonner'
 
-type FilterType = 'all' | 'character' | 'style'
+type SectionFilter = 'all' | 'mine' | 'community'
 
 export function LoraCommunityBrowser() {
-    const [filter, setFilter] = useState<FilterType>('all')
-    // Subscribe to `loras` directly for proper reactivity (not just methods)
+    const [section, setSection] = useState<SectionFilter>('all')
     const loras = useLoraStore(s => s.loras)
     const loraThumbnails = useLoraStore(s => s.loraThumbnails)
     const addFromCommunity = useLoraStore(s => s.addFromCommunity)
     const removeFromCollection = useLoraStore(s => s.removeFromCollection)
+    const removeLoraFromDb = useLoraStore(s => s.removeLoraFromDb)
     const isLoraUsed = useLoraStore(s => s.isLoraUsed)
     const getLoraRating = useLoraStore(s => s.getLoraRating)
     const rateLora = useLoraStore(s => s.rateLora)
     const setLoraThumbnail = useLoraStore(s => s.setLoraThumbnail)
+    const fetchUserLoras = useLoraStore(s => s.fetchUserLoras)
 
-    // Compute collection membership reactively from loras array
+    // Fetch user LoRAs on mount
+    useEffect(() => {
+        fetchUserLoras()
+    }, [fetchUserLoras])
+
     const collectionIds = useMemo(() => new Set(loras.map(l => l.id)), [loras])
+    const communityIds = useMemo(() => new Set(COMMUNITY_LORAS.map(l => l.id)), [])
 
-    const filtered = COMMUNITY_LORAS.filter((lora) => {
-        if (filter === 'all') return true
-        return (lora.type ?? 'style') === filter
-    })
+    // User's personal LoRAs = in store, not built-in, not community
+    const myLoras = useMemo(() =>
+        loras.filter(l => !BUILT_IN_LORA_IDS.has(l.id) && !communityIds.has(l.id)),
+        [loras, communityIds]
+    )
 
-    const characterCount = COMMUNITY_LORAS.filter(l => (l.type ?? 'style') === 'character').length
-    const styleCount = COMMUNITY_LORAS.filter(l => (l.type ?? 'style') === 'style').length
+    const showCommunity = section === 'all' || section === 'community'
+    const showMine = section === 'all' || section === 'mine'
 
     return (
         <div className="h-full flex flex-col">
             {/* Header */}
             <div className="mb-3">
-                <h3 className="text-sm font-medium text-white mb-1">Community LoRAs</h3>
+                <h3 className="text-sm font-medium text-white mb-1">LoRA Browser</h3>
                 <p className="text-xs text-muted-foreground">
-                    Browse and add LoRAs to your collection for use during generation
+                    Browse community LoRAs and manage your personal collection
                 </p>
             </div>
 
-            {/* Filter pills */}
+            {/* Section pills */}
             <div className="flex gap-1.5 mb-3">
                 <FilterPill
                     label="All"
+                    count={COMMUNITY_LORAS.length + myLoras.length}
+                    active={section === 'all'}
+                    onClick={() => setSection('all')}
+                />
+                <FilterPill
+                    label="My LoRAs"
+                    count={myLoras.length}
+                    active={section === 'mine'}
+                    onClick={() => setSection('mine')}
+                    accent="amber"
+                />
+                <FilterPill
+                    label="Community"
                     count={COMMUNITY_LORAS.length}
-                    active={filter === 'all'}
-                    onClick={() => setFilter('all')}
-                />
-                <FilterPill
-                    label="Characters"
-                    count={characterCount}
-                    active={filter === 'character'}
-                    onClick={() => setFilter('character')}
-                />
-                <FilterPill
-                    label="Styles"
-                    count={styleCount}
-                    active={filter === 'style'}
-                    onClick={() => setFilter('style')}
+                    active={section === 'community'}
+                    onClick={() => setSection('community')}
                 />
             </div>
 
-            {/* Grid */}
-            <div className="flex-1 overflow-y-auto">
-                {filtered.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-                        <Layers className="w-8 h-8 mb-2 opacity-40" />
-                        <p className="text-sm">No LoRAs in this category yet</p>
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto space-y-4">
+                {/* My LoRAs section */}
+                {showMine && (
+                    <div>
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-1.5">
+                                <User className="w-3.5 h-3.5 text-amber-400" />
+                                <span className="text-xs font-medium text-amber-400 uppercase tracking-wide">My LoRAs</span>
+                                {myLoras.length > 0 && (
+                                    <span className="text-[10px] text-amber-400/60 tabular-nums">({myLoras.length})</span>
+                                )}
+                            </div>
+                        </div>
+                        {myLoras.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-6 text-muted-foreground border border-dashed border-border rounded-lg">
+                                <User className="w-6 h-6 mb-2 opacity-40" />
+                                <p className="text-xs">No personal LoRAs yet</p>
+                                <p className="text-[10px] text-muted-foreground/60 mt-0.5">Upload from the LoRA section in settings</p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
+                                {myLoras.map((lora) => {
+                                    const used = isLoraUsed(lora.id)
+                                    const rating = getLoraRating(lora.id)
+                                    const customThumb = loraThumbnails[lora.id] || lora.thumbnailUrl
+                                    return (
+                                        <LoraCard
+                                            key={lora.id}
+                                            lora={lora}
+                                            thumbnailUrl={customThumb}
+                                            added={true}
+                                            isPersonal={true}
+                                            used={used}
+                                            rating={rating?.rating ?? null}
+                                            onToggle={async () => {
+                                                if (window.confirm(`Delete "${lora.name}" permanently?`)) {
+                                                    const ok = await removeLoraFromDb(lora.id)
+                                                    if (ok) toast.success(`Deleted "${lora.name}"`)
+                                                    else toast.error('Failed to delete')
+                                                }
+                                            }}
+                                            onRate={(stars) => {
+                                                rateLora(lora.id, stars)
+                                                toast.success(`Rated "${lora.name}" ${stars}/5`)
+                                            }}
+                                            onSetThumbnail={(url) => {
+                                                setLoraThumbnail(lora.id, url)
+                                                toast.success(`Thumbnail set for "${lora.name}"`)
+                                            }}
+                                        />
+                                    )
+                                })}
+                            </div>
+                        )}
                     </div>
-                ) : (
-                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
-                        {filtered.map((lora) => {
-                            const added = collectionIds.has(lora.id)
-                            const used = isLoraUsed(lora.id)
-                            const rating = getLoraRating(lora.id)
-                            // Check loraThumbnails map, then the user's lora object, then the static default
-                            const userLora = loras.find(l => l.id === lora.id)
-                            const customThumb = loraThumbnails[lora.id] || userLora?.thumbnailUrl
-                            return (
-                                <CommunityLoraCard
-                                    key={lora.id}
-                                    name={lora.name}
-                                    type={lora.type ?? 'style'}
-                                    thumbnailUrl={customThumb || lora.thumbnailUrl}
-                                    referenceTag={lora.referenceTag}
-                                    added={added}
-                                    used={used}
-                                    rating={rating?.rating ?? null}
-                                    onToggle={() => {
-                                        if (added) {
-                                            removeFromCollection(lora.id)
-                                            toast.success(`Removed "${lora.name}" from collection`)
-                                        } else {
-                                            addFromCommunity(lora.id)
-                                            toast.success(`Added "${lora.name}" to collection`)
-                                        }
-                                    }}
-                                    onRate={(stars) => {
-                                        rateLora(lora.id, stars)
-                                        toast.success(`Rated "${lora.name}" ${stars}/5`)
-                                    }}
-                                    onSetThumbnail={(url) => {
-                                        setLoraThumbnail(lora.id, url)
-                                        toast.success(`Thumbnail set for "${lora.name}"`)
-                                    }}
-                                />
-                            )
-                        })}
+                )}
+
+                {/* Divider */}
+                {showMine && showCommunity && (
+                    <div className="border-t border-border/50" />
+                )}
+
+                {/* Community section */}
+                {showCommunity && (
+                    <div>
+                        <div className="flex items-center gap-1.5 mb-2">
+                            <Layers className="w-3.5 h-3.5 text-cyan-400" />
+                            <span className="text-xs font-medium text-cyan-400 uppercase tracking-wide">Community</span>
+                            <span className="text-[10px] text-cyan-400/60 tabular-nums">({COMMUNITY_LORAS.length})</span>
+                        </div>
+                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
+                            {COMMUNITY_LORAS.map((lora) => {
+                                const added = collectionIds.has(lora.id)
+                                const used = isLoraUsed(lora.id)
+                                const rating = getLoraRating(lora.id)
+                                const userLora = loras.find(l => l.id === lora.id)
+                                const customThumb = loraThumbnails[lora.id] || userLora?.thumbnailUrl
+                                return (
+                                    <LoraCard
+                                        key={lora.id}
+                                        lora={lora}
+                                        thumbnailUrl={customThumb || lora.thumbnailUrl}
+                                        added={added}
+                                        isPersonal={false}
+                                        used={used}
+                                        rating={rating?.rating ?? null}
+                                        onToggle={() => {
+                                            if (added) {
+                                                removeFromCollection(lora.id)
+                                                toast.success(`Removed "${lora.name}" from collection`)
+                                            } else {
+                                                addFromCommunity(lora.id)
+                                                toast.success(`Added "${lora.name}" to collection`)
+                                            }
+                                        }}
+                                        onRate={(stars) => {
+                                            rateLora(lora.id, stars)
+                                            toast.success(`Rated "${lora.name}" ${stars}/5`)
+                                        }}
+                                        onSetThumbnail={(url) => {
+                                            setLoraThumbnail(lora.id, url)
+                                            toast.success(`Thumbnail set for "${lora.name}"`)
+                                        }}
+                                    />
+                                )
+                            })}
+                        </div>
                     </div>
                 )}
             </div>
@@ -116,27 +186,32 @@ export function LoraCommunityBrowser() {
     )
 }
 
-function FilterPill({ label, count, active, onClick }: {
+function FilterPill({ label, count, active, onClick, accent }: {
     label: string
     count: number
     active: boolean
     onClick: () => void
+    accent?: 'amber' | 'cyan'
 }) {
+    const color = accent === 'amber'
+        ? { active: 'bg-amber-500/20 text-amber-400 border-amber-500/40', count: 'text-amber-400/70' }
+        : { active: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40', count: 'text-cyan-400/70' }
+
     return (
         <button
             onClick={onClick}
             className={cn(
-                'px-2.5 py-1 rounded-full text-xs font-medium transition-all',
+                'px-2.5 py-1 rounded-full text-xs font-medium transition-all border',
                 active
-                    ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40'
-                    : 'bg-card/50 text-muted-foreground border border-border hover:border-border/80 hover:text-foreground'
+                    ? color.active
+                    : 'bg-card/50 text-muted-foreground border-border hover:border-border/80 hover:text-foreground'
             )}
         >
             {label}
             {count > 0 && (
                 <span className={cn(
                     'ml-1 tabular-nums',
-                    active ? 'text-cyan-400/70' : 'text-muted-foreground/60'
+                    active ? color.count : 'text-muted-foreground/60'
                 )}>
                     {count}
                 </span>
@@ -145,12 +220,11 @@ function FilterPill({ label, count, active, onClick }: {
     )
 }
 
-function CommunityLoraCard({ name, type, thumbnailUrl, referenceTag, added, used, rating, onToggle, onRate, onSetThumbnail }: {
-    name: string
-    type: 'character' | 'style'
+function LoraCard({ lora, thumbnailUrl, added, isPersonal, used, rating, onToggle, onRate, onSetThumbnail }: {
+    lora: LoraItem
     thumbnailUrl?: string
-    referenceTag?: string
     added: boolean
+    isPersonal: boolean
     used: boolean
     rating: number | null
     onToggle: () => void
@@ -159,6 +233,7 @@ function CommunityLoraCard({ name, type, thumbnailUrl, referenceTag, added, used
 }) {
     const [showRating, setShowRating] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const loraType = lora.type ?? 'style'
 
     const handleThumbnailPick = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
@@ -167,10 +242,8 @@ function CommunityLoraCard({ name, type, thumbnailUrl, referenceTag, added, used
             toast.error('Please select an image file')
             return
         }
-        // Read as data URL and save — small enough for localStorage
         const reader = new FileReader()
         reader.onload = () => {
-            // Create a canvas to crop to square
             const img = new Image()
             img.onload = () => {
                 const size = Math.min(img.width, img.height)
@@ -187,7 +260,6 @@ function CommunityLoraCard({ name, type, thumbnailUrl, referenceTag, added, used
             img.src = reader.result as string
         }
         reader.readAsDataURL(file)
-        // Reset input so same file can be picked again
         e.target.value = ''
     }, [onSetThumbnail])
 
@@ -195,7 +267,9 @@ function CommunityLoraCard({ name, type, thumbnailUrl, referenceTag, added, used
         <div className={cn(
             'rounded-lg border transition-all group relative overflow-hidden',
             added
-                ? 'border-cyan-500/40 bg-cyan-950/20'
+                ? isPersonal
+                    ? 'border-amber-500/40 bg-amber-950/10'
+                    : 'border-cyan-500/40 bg-cyan-950/20'
                 : 'border-border bg-card/50 hover:border-border/80'
         )}>
             {/* Thumbnail area */}
@@ -203,26 +277,30 @@ function CommunityLoraCard({ name, type, thumbnailUrl, referenceTag, added, used
                 {thumbnailUrl ? (
                     <img
                         src={thumbnailUrl}
-                        alt={name}
+                        alt={lora.name}
                         className="w-full h-full object-cover"
                     />
                 ) : (
                     <div className="flex items-center justify-center w-full h-full bg-cyan-950/20">
-                        <Layers className="w-8 h-8 text-cyan-500/40" />
+                        {isPersonal ? (
+                            <User className="w-8 h-8 text-amber-500/40" />
+                        ) : (
+                            <Layers className="w-8 h-8 text-cyan-500/40" />
+                        )}
                     </div>
                 )}
 
                 {/* Type badge */}
                 <span className={cn(
                     'absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide',
-                    type === 'character'
+                    loraType === 'character'
                         ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                         : 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
                 )}>
-                    {type}
+                    {loraType}
                 </span>
 
-                {/* Set Thumbnail button — bottom-right, shows on hover */}
+                {/* Set Thumbnail button */}
                 <button
                     onClick={() => fileInputRef.current?.click()}
                     className="absolute bottom-1.5 right-1.5 w-7 h-7 rounded-md flex items-center justify-center bg-black/60 text-white/80 hover:bg-cyan-500 hover:text-white opacity-0 group-hover:opacity-100 transition-all"
@@ -248,18 +326,22 @@ function CommunityLoraCard({ name, type, thumbnailUrl, referenceTag, added, used
                     </button>
                 )}
 
-                {/* Add/Remove button */}
+                {/* Add/Remove/Delete button */}
                 <button
                     onClick={onToggle}
                     className={cn(
                         'absolute top-1.5 right-1.5 w-7 h-7 rounded-md flex items-center justify-center transition-all',
-                        added
-                            ? 'bg-cyan-500 text-white hover:bg-red-500'
-                            : 'bg-black/60 text-white/80 hover:bg-cyan-500 hover:text-white opacity-0 group-hover:opacity-100'
+                        isPersonal
+                            ? 'bg-red-500/80 text-white hover:bg-red-600 opacity-0 group-hover:opacity-100'
+                            : added
+                                ? 'bg-cyan-500 text-white hover:bg-red-500'
+                                : 'bg-black/60 text-white/80 hover:bg-cyan-500 hover:text-white opacity-0 group-hover:opacity-100'
                     )}
-                    title={added ? 'Remove from collection' : 'Add to collection'}
+                    title={isPersonal ? 'Delete LoRA' : added ? 'Remove from collection' : 'Add to collection'}
                 >
-                    {added ? (
+                    {isPersonal ? (
+                        <Trash2 className="w-3.5 h-3.5" />
+                    ) : added ? (
                         <Check className="w-3.5 h-3.5" />
                     ) : (
                         <Plus className="w-3.5 h-3.5" />
@@ -270,8 +352,7 @@ function CommunityLoraCard({ name, type, thumbnailUrl, referenceTag, added, used
             {/* Info + rating */}
             <div className="px-2.5 py-2">
                 <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-foreground truncate">{name}</p>
-                    {/* Show rating stars if rated */}
+                    <p className="text-sm font-medium text-foreground truncate">{lora.name}</p>
                     {rating !== null && (
                         <button
                             onClick={() => setShowRating(true)}
@@ -283,10 +364,14 @@ function CommunityLoraCard({ name, type, thumbnailUrl, referenceTag, added, used
                         </button>
                     )}
                 </div>
-                {referenceTag && (
-                    <p className="text-[11px] text-muted-foreground font-mono">@{referenceTag}</p>
+                {lora.referenceTag && (
+                    <p className="text-[11px] text-muted-foreground font-mono">@{lora.referenceTag}</p>
                 )}
-                {/* Inline star picker */}
+                {lora.compatibleModels && lora.compatibleModels.length > 0 && (
+                    <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                        {lora.compatibleModels.map(m => m.replace('flux-2-', '').replace('-', ' ')).join(', ')}
+                    </p>
+                )}
                 {showRating && (
                     <div className="flex items-center gap-0.5 mt-1">
                         {[1, 2, 3, 4, 5].map((star) => (
