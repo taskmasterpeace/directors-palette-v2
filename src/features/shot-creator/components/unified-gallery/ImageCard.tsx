@@ -13,7 +13,7 @@ import { MetadataBar } from "./MetadataBar"
 import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/utils/utils"
 import type { GridSize } from "../../store/unified-gallery-store"
-import { AlertCircle, RefreshCw, Trash2 } from "lucide-react"
+import { AlertCircle, RefreshCw, Trash2, Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ClapperboardSpinner } from "./ClapperboardSpinner"
 
@@ -42,8 +42,10 @@ interface ImageCardProps {
   folders?: FolderWithCount[]
   showActions?: boolean
   useNativeAspectRatio?: boolean
+  showPrompt?: boolean
   gridSize?: GridSize
   onRetry?: () => void
+  onToggleFavorite?: () => void
 }
 
 /**
@@ -74,8 +76,10 @@ const ImageCardComponent = ({
   folders = [],
   showActions = true,
   useNativeAspectRatio = false,
+  showPrompt = true,
   gridSize = 'medium',
-  onRetry
+  onRetry,
+  onToggleFavorite
 }: ImageCardProps) => {
   const { handleCopyPrompt, handleCopyImage } = useImageActions()
   const [dropdownOpen, setDropdownOpen] = useState(false)
@@ -126,7 +130,7 @@ const ImageCardComponent = ({
                 size="sm"
                 variant="outline"
                 onClick={onRetry}
-                className="text-xs h-8 px-2 border-violet-500/50 hover:bg-violet-500/20 bg-violet-500/10"
+                className="text-xs h-8 px-2 border-cyan-500/50 hover:bg-cyan-500/20 bg-cyan-500/10"
               >
                 <RefreshCw className="w-3.5 h-3.5 mr-1" />
                 Retry
@@ -204,6 +208,22 @@ const ImageCardComponent = ({
       {/* Source badge (shows which module generated the image) */}
       <SourceBadge source={image.source} />
 
+      {/* Favorite star */}
+      {onToggleFavorite && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onToggleFavorite() }}
+          className={cn(
+            "absolute bottom-2 left-2 z-10 p-1 rounded-full transition-all",
+            image.isFavorite
+              ? "text-amber-400 opacity-100"
+              : "text-white/60 opacity-0 group-hover:opacity-100 hover:text-amber-400"
+          )}
+          title={image.isFavorite ? "Remove from favorites" : "Add to favorites"}
+        >
+          <Star className={cn("w-4 h-4", image.isFavorite && "fill-amber-400")} />
+        </button>
+      )}
+
       {/* Action menu button - always visible on mobile, hover on desktop */}
       {showActions && (
         <div className="absolute top-2 right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
@@ -245,8 +265,8 @@ const ImageCardComponent = ({
         gridSize={gridSize}
       />
 
-      {/* Prompt preview below image */}
-      {image.prompt && (
+      {/* Prompt preview below image (toggleable) */}
+      {showPrompt && image.prompt && (
         <div className="px-2 py-1.5 bg-card border-t border-border">
           <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
             {image.prompt}
@@ -264,10 +284,12 @@ export const ImageCard = memo(ImageCardComponent, (prevProps, nextProps) => {
     prevProps.image.id === nextProps.image.id &&
     prevProps.image.url === nextProps.image.url &&
     prevProps.image.status === nextProps.image.status &&
+    prevProps.image.isFavorite === nextProps.image.isFavorite &&
     prevProps.isSelected === nextProps.isSelected &&
     prevProps.isSelectionMode === nextProps.isSelectionMode &&
     prevProps.showActions === nextProps.showActions &&
     prevProps.useNativeAspectRatio === nextProps.useNativeAspectRatio &&
+    prevProps.showPrompt === nextProps.showPrompt &&
     prevProps.gridSize === nextProps.gridSize
   )
 })

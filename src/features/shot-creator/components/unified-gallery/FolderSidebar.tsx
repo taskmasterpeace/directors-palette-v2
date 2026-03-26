@@ -19,6 +19,7 @@ import {
   MoreVertical,
   Pencil,
   Trash2,
+  Star,
 } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import type { FolderWithCount } from '../../types/folder.types'
@@ -28,6 +29,7 @@ interface FolderSidebarProps {
   folders: FolderWithCount[]
   currentFolderId: string | null
   uncategorizedCount: number
+  favoritesCount: number
   totalImages: number
   isLoading?: boolean
   onFolderSelect: (folderId: string | null) => void
@@ -42,6 +44,7 @@ export function FolderSidebar({
   folders,
   currentFolderId,
   uncategorizedCount,
+  favoritesCount,
   totalImages,
   isLoading = false,
   onFolderSelect,
@@ -53,6 +56,7 @@ export function FolderSidebar({
 }: FolderSidebarProps) {
   const isAllImagesActive = currentFolderId === null
   const isUncategorizedActive = currentFolderId === SPECIAL_FOLDERS.UNCATEGORIZED
+  const isFavoritesActive = currentFolderId === SPECIAL_FOLDERS.FAVORITES
 
   return (
     <div
@@ -122,6 +126,31 @@ export function FolderSidebar({
                     className="ml-auto"
                   >
                     {totalImages}
+                  </Badge>
+                </>
+              )}
+            </button>
+
+            {/* Favorites */}
+            <button
+              onClick={() => onFolderSelect(SPECIAL_FOLDERS.FAVORITES)}
+              className={cn(
+                'w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors',
+                isFavoritesActive
+                  ? 'bg-primary text-primary-foreground'
+                  : 'hover:bg-accent hover:text-accent-foreground text-muted-foreground'
+              )}
+              title={collapsed ? 'Favorites' : undefined}
+            >
+              <Star className={cn("h-4 w-4 flex-shrink-0", isFavoritesActive ? "fill-current" : "fill-none")} />
+              {!collapsed && (
+                <>
+                  <span className="flex-1 text-left font-medium">Favorites</span>
+                  <Badge
+                    variant={isFavoritesActive ? 'secondary' : 'outline'}
+                    className="ml-auto"
+                  >
+                    {favoritesCount}
                   </Badge>
                 </>
               )}

@@ -17,9 +17,11 @@ interface SourceOption {
 const SOURCE_OPTIONS: SourceOption[] = [
   { value: null, label: 'All', icon: '🖼️', bgColor: 'bg-zinc-600', textColor: 'text-zinc-200' },
   { value: 'shot-creator', label: 'Shot Creator', icon: '📸', bgColor: 'bg-blue-600', textColor: 'text-blue-200' },
-{ value: 'storybook', label: 'Storybook', icon: '📖', bgColor: 'bg-amber-600', textColor: 'text-amber-200' },
+  { value: 'storybook', label: 'Storybook', icon: '📖', bgColor: 'bg-amber-600', textColor: 'text-amber-200' },
   { value: 'storyboard', label: 'Storyboard', icon: '🎬', bgColor: 'bg-sky-600', textColor: 'text-sky-200' },
   { value: 'artist-dna', label: 'Artist DNA', icon: '🧬', bgColor: 'bg-rose-600', textColor: 'text-rose-200' },
+  { value: 'layout-annotation', label: 'Layout', icon: '📐', bgColor: 'bg-emerald-600', textColor: 'text-emerald-200' },
+  { value: 'shot-animator', label: 'Animator', icon: '🎥', bgColor: 'bg-purple-600', textColor: 'text-purple-200' },
 ]
 
 interface SourceFilterProps {

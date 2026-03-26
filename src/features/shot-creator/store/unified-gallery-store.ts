@@ -40,6 +40,7 @@ export interface GeneratedImage {
   }
   createdAt?: string
   timestamp: number // NEW: Timestamp for compatibility with GalleryImage
+  isFavorite?: boolean
   tags: string[]
   width?: number
   height?: number
@@ -59,6 +60,7 @@ export interface GeneratedImage {
 }
 
 export type GridSize = 'small' | 'medium' | 'large'
+export type SortBy = 'newest' | 'oldest' | 'model'
 
 interface UnifiedGalleryState {
   images: GeneratedImage[]
@@ -85,6 +87,8 @@ interface UnifiedGalleryState {
   useNativeAspectRatio: boolean
   searchQuery: string // NEW: Server-side search query
   sourceFilter: GeneratedImage['source'] | null // NEW: Filter by source module
+  sortBy: 'newest' | 'oldest' | 'model'
+  showPrompts: boolean
 
   // Folder state
   folders: FolderWithCount[]
@@ -112,6 +116,9 @@ interface UnifiedGalleryState {
   setUseNativeAspectRatio: (value: boolean) => void
   setSearchQuery: (query: string) => void
   setSourceFilter: (source: GeneratedImage['source'] | null) => void
+  setSortBy: (sort: 'newest' | 'oldest' | 'model') => void
+  setShowPrompts: (show: boolean) => void
+  toggleFavorite: (imageId: string) => Promise<void>
 
   // Infinite scroll actions
   appendImages: (images: GeneratedImage[], hasMore: boolean) => void
@@ -170,6 +177,8 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
   useNativeAspectRatio: false,
   searchQuery: '',
   sourceFilter: null, // null = all sources
+  sortBy: 'newest' as const,
+  showPrompts: true,
 
   // Folder state
   folders: [],
@@ -391,6 +400,46 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
   setSourceFilter: (source) => {
     set({ sourceFilter: source, currentPage: 1, offset: 0, images: [] }) // Reset list on filter change
     get().refreshGallery()
+  },
+
+  setSortBy: (sort) => {
+    set({ sortBy: sort })
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('gallery-sort-by', sort)
+    }
+  },
+
+  setShowPrompts: (show) => {
+    set({ showPrompts: show })
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('gallery-show-prompts', String(show))
+    }
+  },
+
+  toggleFavorite: async (imageId) => {
+    const state = get()
+    const image = state.images.find(img => img.id === imageId)
+    if (!image) return
+
+    const newFavorite = !image.isFavorite
+
+    // Update local state immediately (optimistic)
+    set((state) => ({
+      images: state.images.map(img =>
+        img.id === imageId ? { ...img, isFavorite: newFavorite } : img
+      ),
+      fullscreenImage: state.fullscreenImage?.id === imageId
+        ? { ...state.fullscreenImage, isFavorite: newFavorite }
+        : state.fullscreenImage
+    }))
+
+    // Persist to database via metadata update
+    try {
+      const { ImageGalleryService: GalleryService } = await import('@/lib/services/gallery.service')
+      await GalleryService.updateFavorite(imageId, newFavorite)
+    } catch (error) {
+      logger.shotCreator.error('Failed to toggle favorite', { error: error instanceof Error ? error.message : String(error) })
+    }
   },
 
   getAllReferences: () => {
@@ -682,13 +731,17 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
     const savedGridSize = localStorage.getItem('gallery-grid-size')
     const savedSidebarCollapsed = localStorage.getItem('gallery-sidebar-collapsed')
     const savedNativeAspectRatio = localStorage.getItem('gallery-native-aspect-ratio')
+    const savedSortBy = localStorage.getItem('gallery-sort-by')
+    const savedShowPrompts = localStorage.getItem('gallery-show-prompts')
 
     set({
       gridSize: (savedGridSize === 'small' || savedGridSize === 'medium' || savedGridSize === 'large')
         ? savedGridSize
         : 'medium',
       isSidebarCollapsed: savedSidebarCollapsed !== 'false',
-      useNativeAspectRatio: savedNativeAspectRatio === 'true'
+      useNativeAspectRatio: savedNativeAspectRatio === 'true',
+      sortBy: (savedSortBy === 'newest' || savedSortBy === 'oldest' || savedSortBy === 'model') ? savedSortBy : 'newest',
+      showPrompts: savedShowPrompts !== 'false',
     })
   }
 }))

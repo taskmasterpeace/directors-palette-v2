@@ -69,6 +69,7 @@ export const FOLDER_COLORS = [
 export const SPECIAL_FOLDERS = {
   ALL: 'all-images',
   UNCATEGORIZED: 'uncategorized',
+  FAVORITES: 'favorites',
 } as const;
 
 /**

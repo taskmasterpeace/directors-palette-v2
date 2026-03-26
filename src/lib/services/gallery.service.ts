@@ -563,6 +563,40 @@ export class ImageGalleryService {
   }
 
   /**
+   * Update favorite status for a gallery image
+   */
+  static async updateFavorite(galleryId: string, isFavorite: boolean): Promise<{ success: boolean; error?: string }> {
+    try {
+      const supabase = await getClient()
+      if (!supabase) {
+        throw new Error('Supabase client not available')
+      }
+
+      // Read current metadata
+      const { data: current, error: readError } = await supabase
+        .from('gallery')
+        .select('metadata')
+        .eq('id', galleryId)
+        .single()
+
+      if (readError) throw readError
+
+      // Merge favorite flag into metadata
+      const metadata = { ...(current?.metadata as Record<string, unknown> || {}), isFavorite }
+
+      const { error } = await supabase
+        .from('gallery')
+        .update({ metadata })
+        .eq('id', galleryId)
+
+      if (error) throw error
+      return { success: true }
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+    }
+  }
+
+  /**
    * Transform database row to GeneratedImage
    */
   static transformToGeneratedImage(item: GalleryRow): GeneratedImage {
@@ -616,6 +650,9 @@ export class ImageGalleryService {
     const isGrid = (metadata as { isGrid?: boolean }).isGrid || undefined
     const gridType = (metadata as { gridType?: 'angles' | 'broll' }).gridType || undefined
 
+    // Extract favorite status
+    const isFavorite = (metadata as { isFavorite?: boolean }).isFavorite || false
+
     // Extract LoRA metadata — build combined name+scale string for multi-LoRA display
     const loraScalesArr = modelSettings.loraScales as number[] | undefined
     const loraScale = (modelSettings.loraScale as number) || (loraScalesArr?.[0]) || undefined
@@ -639,6 +676,7 @@ export class ImageGalleryService {
       reference,
       folderId,
       folderName,
+      isFavorite,
       settings: {
         aspectRatio,
         resolution,

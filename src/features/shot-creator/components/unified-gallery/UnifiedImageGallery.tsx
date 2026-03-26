@@ -134,6 +134,12 @@ export function UnifiedImageGallery({
     const [removingBackgroundId, setRemovingBackgroundId] = useState<string | null>(null)
     const [generatingCinematicId, setGeneratingCinematicId] = useState<string | null>(null)
     const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false)
+    // Sort + UI prefs from store (persisted)
+    const sortBy = useUnifiedGalleryStore(state => state.sortBy)
+    const setSortBy = useUnifiedGalleryStore(state => state.setSortBy)
+    const showPrompts = useUnifiedGalleryStore(state => state.showPrompts)
+    const setShowPrompts = useUnifiedGalleryStore(state => state.setShowPrompts)
+    const toggleFavorite = useUnifiedGalleryStore(state => state.toggleFavorite)
 
 
     // Handle background removal
@@ -367,8 +373,9 @@ CRITICAL RULES:
         useUnifiedGalleryStore.getState().loadFolders()
     }, [])
 
-    // Get uncategorized count
+    // Get uncategorized and favorites count
     const uncategorizedCount = getUncategorizedCount()
+    const favoritesCount = useMemo(() => images.filter(img => img.isFavorite).length, [images])
 
     // Handle moving single image to folder
     const handleMoveToFolder = useCallback(async (imageId: string, folderId: string | null) => {
@@ -830,6 +837,21 @@ CRITICAL RULES:
         handleRemoveBackground, handleRetryGeneration, handleShare, handleMakeFigurine, isGridImage, removingBackgroundId,
     ])
 
+    // Filter for favorites view
+    const displayImages = useMemo(() => {
+        if (currentFolderId === 'favorites') {
+            return paginatedImages.filter(img => img.isFavorite)
+        }
+        return paginatedImages
+    }, [currentFolderId, paginatedImages])
+
+    // Get current folder name for display
+    const currentFolderName = currentFolderId === 'favorites'
+        ? 'Favorites'
+        : currentFolderId
+            ? folders.find(f => f.id === currentFolderId)?.name || 'Uncategorized'
+            : undefined
+
     // Minimal mode for embedded use
     if (mode === 'minimal') {
         return (
@@ -881,11 +903,6 @@ CRITICAL RULES:
         )
     }
 
-    // Get current folder name for display
-    const currentFolderName = currentFolderId
-        ? folders.find(f => f.id === currentFolderId)?.name || 'Uncategorized'
-        : undefined
-
     // Determine if we're in selection mode (any images selected)
     const isSelectionMode = selectedImages.length > 0
 
@@ -922,6 +939,7 @@ CRITICAL RULES:
                         folders={folders}
                         currentFolderId={currentFolderId}
                         uncategorizedCount={uncategorizedCount}
+                        favoritesCount={favoritesCount}
                         totalImages={totalDatabaseCount}
                         isLoading={isFoldersLoading}
                         onFolderSelect={setCurrentFolder}
@@ -953,6 +971,10 @@ CRITICAL RULES:
                         onGridSizeChange={setGridSize}
                         onAspectRatioChange={setUseNativeAspectRatio}
                         onSourceFilterChange={setSourceFilter}
+                        sortBy={sortBy}
+                        showPrompts={showPrompts}
+                        onSortChange={setSortBy}
+                        onShowPromptsChange={setShowPrompts}
                         onOpenMobileMenu={() => setIsMobileFolderMenuOpen(true)}
                     />
 
@@ -965,16 +987,19 @@ CRITICAL RULES:
                         ) : (
                             <GalleryGrid
                                 images={images}
-                                paginatedImages={paginatedImages}
+                                paginatedImages={displayImages}
                                 selectedImages={selectedImages}
                                 isSelectionMode={isSelectionMode}
                                 isMobile={isMobile}
                                 gridSize={gridSize}
                                 useNativeAspectRatio={useNativeAspectRatio}
+                                showPrompts={showPrompts}
+                                sortBy={sortBy}
                                 folders={folders}
                                 hasMore={hasMore}
                                 isLoadingMore={isLoadingMore}
                                 onLoadMore={() => loadMoreImages()}
+                                onToggleFavorite={toggleFavorite}
                                 callbacks={gridCallbacks}
                             />
                         )}

@@ -24,7 +24,7 @@ export function GalleryEmptyState({ isLoading, hasImages }: GalleryEmptyStatePro
         <ImageIcon className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
         <p className="text-muted-foreground">No images generated yet</p>
         <p className="text-sm text-muted-foreground mt-2">
-          Start creating images in Shot Creator or Shot Editor
+          Start creating images in Shot Creator to see them here
         </p>
       </div>
     )
