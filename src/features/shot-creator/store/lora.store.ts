@@ -178,42 +178,7 @@ const ALL_BUILT_IN_LORAS = [...BUILT_IN_LORAS, ...FLUX2_9B_LORAS]
 export const BUILT_IN_LORA_IDS = new Set(ALL_BUILT_IN_LORAS.map(l => l.id))
 
 /** All available LoRAs users can browse in the community tab */
-export const COMMUNITY_LORAS: LoraItem[] = [
-    {
-        id: 'nava-style',
-        name: 'Nava',
-        type: 'style',
-        referenceTag: 'nava',
-        triggerWord: 'in the style of nava',
-        weightsUrl: `${LORA_STORAGE_BASE}/nava-style/nava_lora_weights.safetensors`,
-        thumbnailUrl: '/images/lora/nava-style.png',
-        defaultGuidanceScale: 1.0,
-        defaultLoraScale: 1.3,
-        createdAt: 0,
-    },
-    {
-        id: 'pixar-style',
-        name: 'Pixar',
-        type: 'style',
-        referenceTag: 'pixar',
-        triggerWord: 'DisneyIZT,,',
-        weightsUrl: `${LORA_STORAGE_BASE}/pixar-style/pixar_disney_lora_weights.safetensors`,
-        defaultGuidanceScale: 1.0,
-        defaultLoraScale: 1.0,
-        createdAt: 0,
-    },
-    {
-        id: 'dc-animation',
-        name: 'DC Animation',
-        type: 'style',
-        referenceTag: 'dc-animation',
-        triggerWord: 'dcan1me style American animation',
-        weightsUrl: `${LORA_STORAGE_BASE}/dc-animation/dc_animation_lora_weights.safetensors`,
-        defaultGuidanceScale: 1.0,
-        defaultLoraScale: 1.0,
-        createdAt: 0,
-    },
-]
+export const COMMUNITY_LORAS: LoraItem[] = []
 
 export const useLoraStore = create<LoraStore>()(
     persist(
