@@ -209,7 +209,7 @@ function LoraDialog({ onClose, editingLora }: {
     const [defaultGuidance, setDefaultGuidance] = useState(editingLora?.defaultGuidanceScale ?? 1.0)
     const fileInputRef = useRef<HTMLInputElement>(null)
     const thumbnailInputRef = useRef<HTMLInputElement>(null)
-    const { addLora, updateLora } = useLoraStore()
+    const { updateLora } = useLoraStore()
 
     const handleThumbnailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const f = e.target.files?.[0]

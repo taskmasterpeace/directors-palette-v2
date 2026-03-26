@@ -369,9 +369,10 @@ export const useLoraStore = create<LoraStore>()(
                         createdAt: new Date(row.created_at as string).getTime(),
                     }))
                     set((state) => {
-                        // Merge: keep built-in/community LoRAs (createdAt === 0), replace user LoRAs with DB
-                        const builtIns = state.loras.filter(l => l.createdAt === 0)
-                        return { loras: [...builtIns, ...mapped] }
+                        // Merge: keep existing LoRAs, add/update DB LoRAs by ID
+                        const dbIds = new Set(mapped.map(l => l.id))
+                        const existing = state.loras.filter(l => !dbIds.has(l.id))
+                        return { loras: [...existing, ...mapped] }
                     })
                 } catch { /* silent — offline fallback to cached state */ }
             },
