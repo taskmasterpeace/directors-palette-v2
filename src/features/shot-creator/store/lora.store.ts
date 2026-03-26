@@ -178,7 +178,9 @@ const ALL_BUILT_IN_LORAS = [...BUILT_IN_LORAS, ...FLUX2_9B_LORAS]
 export const BUILT_IN_LORA_IDS = new Set(ALL_BUILT_IN_LORAS.map(l => l.id))
 
 /** All available LoRAs users can browse in the community tab */
-export const COMMUNITY_LORAS: LoraItem[] = []
+export const COMMUNITY_LORAS: LoraItem[] = [
+    ...FLUX2_9B_LORAS,
+]
 
 export const useLoraStore = create<LoraStore>()(
     persist(

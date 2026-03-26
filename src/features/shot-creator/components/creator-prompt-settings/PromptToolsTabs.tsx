@@ -3,15 +3,17 @@
 import { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
-import { BookOpen, Shuffle, FlaskConical, Palette } from 'lucide-react'
+import { BookOpen, Shuffle, FlaskConical, Palette, Layers } from 'lucide-react'
 import { PromptLibrary } from './PromptLibrary'
 import { RecipeBuilder } from '../recipe/RecipeBuilder'
 import { WildCardManager } from '../wildcard/WildCardManager'
 import StyleSelector from './StyleSelector'
+import { LoraCommunityBrowser } from '../lora/LoraCommunityBrowser'
 import { cn } from '@/utils/utils'
 import { useRecipes } from '../../hooks/useRecipes'
 import { useWildCardStore } from '../../store/wildcard.store'
 import { usePromptLibraryStore } from '../../store/prompt-library-store'
+import { COMMUNITY_LORAS } from '../../store/lora.store'
 
 interface PromptToolsTabsProps {
   onSelectPrompt: (prompt: string) => void
@@ -71,6 +73,16 @@ export function PromptToolsTabs({
             <Palette className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Styles</span>
           </TabsTrigger>
+          <TabsTrigger
+            value="loras"
+            className="text-xs gap-1.5 data-[state=active]:bg-background"
+          >
+            <Layers className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">LoRAs</span>
+            <Badge variant="secondary" className="h-4 px-1 text-[10px] hidden lg:inline-flex bg-cyan-500/20 text-cyan-400">
+              {COMMUNITY_LORAS.length}
+            </Badge>
+          </TabsTrigger>
         </TabsList>
 
         <div className="p-4">
@@ -99,6 +111,9 @@ export function PromptToolsTabs({
             <StylesTab />
           </TabsContent>
 
+          <TabsContent value="loras" className="mt-0 h-[60vh] lg:h-[400px]">
+            <LoraCommunityBrowser />
+          </TabsContent>
         </div>
       </Tabs>
     </div>
