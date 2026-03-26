@@ -103,12 +103,27 @@ export function useGalleryLogic(
   }, [handleSelectRecent])
 
   const handleDeleteSelected = async () => {
+    // Skip favorited images
+    const favoriteUrls = new Set(
+      images.filter(img => img.isFavorite).map(img => img.url)
+    )
+    const deletable = selectedImages.filter(url => !favoriteUrls.has(url))
+    const skippedCount = selectedImages.length - deletable.length
+
+    if (deletable.length === 0 && skippedCount > 0) {
+      toast({
+        title: "Cannot Delete Favorites",
+        description: `All ${skippedCount} selected images are favorited. Unfavorite them first to delete.`,
+      })
+      return
+    }
+
     let successCount = 0
     let failedCount = 0
 
     // Delete images in parallel, but await all results
     const results = await Promise.all(
-      selectedImages.map(async (url) => {
+      deletable.map(async (url) => {
         const success = await removeImage(url)
         return success
       })
@@ -124,10 +139,12 @@ export function useGalleryLogic(
 
     selectNone()
 
+    const skippedMsg = skippedCount > 0 ? ` (${skippedCount} favorited images kept)` : ''
+
     if (failedCount === 0) {
       toast({
         title: "Images Deleted Permanently",
-        description: `${successCount} images removed from database and storage`
+        description: `${successCount} images removed from database and storage${skippedMsg}`
       })
     } else if (successCount === 0) {
       toast({
@@ -138,7 +155,7 @@ export function useGalleryLogic(
     } else {
       toast({
         title: "Partial Delete",
-        description: `Deleted ${successCount} images, but ${failedCount} failed.`,
+        description: `Deleted ${successCount} images, but ${failedCount} failed.${skippedMsg}`,
         variant: "destructive"
       })
     }
@@ -246,6 +263,16 @@ export function useGalleryLogic(
   }
 
   const handleDeleteImage = async (imageUrl: string) => {
+    // Block deletion of favorited images
+    const image = images.find(img => img.url === imageUrl)
+    if (image?.isFavorite) {
+      toast({
+        title: "Cannot Delete Favorite",
+        description: "Unfavorite this image first to delete it.",
+      })
+      return
+    }
+
     const success = await removeImage(imageUrl)
     if (success) {
       // Remove from selection if it was selected
