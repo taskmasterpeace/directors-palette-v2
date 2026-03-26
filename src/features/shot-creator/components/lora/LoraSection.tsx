@@ -261,12 +261,13 @@ function LoraDialog({ onClose, editingLora }: {
                 throw new Error(err.error || 'Upload failed')
             }
 
-            const { weightsUrl } = await res.json()
+            const { weightsUrl, storagePath } = await res.json()
 
-            addLora({
+            await useLoraStore.getState().addLoraToDb({
                 name: name.trim(),
                 triggerWord: triggerWord.trim(),
                 weightsUrl,
+                storagePath,
                 thumbnailUrl: thumbnailPreview || undefined,
                 defaultGuidanceScale: defaultGuidance,
                 defaultLoraScale: defaultScale,
@@ -279,7 +280,7 @@ function LoraDialog({ onClose, editingLora }: {
         } finally {
             setUploading(false)
         }
-    }, [name, triggerWord, file, thumbnailPreview, defaultScale, defaultGuidance, addLora, updateLora, onClose, isEditing, editingLora])
+    }, [name, triggerWord, file, thumbnailPreview, defaultScale, defaultGuidance, updateLora, onClose, isEditing, editingLora])
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
@@ -451,6 +452,14 @@ export function LoraSection({ selectedModel }: { selectedModel?: string }) {
     const { loras, activeLoraIds, toggleActiveLora, removeLora, updateLora, rateLora, getLoraRating, isLoraUsed, loraThumbnails, ensureAdminLoras } = useLoraStore()
     const { isAdmin } = useAdminAuth()
     const [showDialog, setShowDialog] = useState(false)
+
+    // Hydrate user LoRAs from database on mount
+    useEffect(() => {
+        const store = useLoraStore.getState()
+        store.migrateFromLocalStorage().then(() => {
+            store.fetchUserLoras()
+        })
+    }, [])
 
     // Admin gets all built-in LoRAs automatically
     useEffect(() => {

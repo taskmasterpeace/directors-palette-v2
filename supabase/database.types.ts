@@ -469,6 +469,51 @@ export type Database = {
           }
         ]
       }
+      user_loras: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          lora_type: string
+          trigger_word: string | null
+          weights_url: string
+          storage_path: string | null
+          thumbnail_url: string | null
+          default_lora_scale: number
+          default_guidance_scale: number
+          compatible_models: string[]
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          lora_type?: string
+          trigger_word?: string | null
+          weights_url: string
+          storage_path?: string | null
+          thumbnail_url?: string | null
+          default_lora_scale?: number
+          default_guidance_scale?: number
+          compatible_models?: string[]
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          lora_type?: string
+          trigger_word?: string | null
+          weights_url?: string
+          storage_path?: string | null
+          thumbnail_url?: string | null
+          default_lora_scale?: number
+          default_guidance_scale?: number
+          compatible_models?: string[]
+          created_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

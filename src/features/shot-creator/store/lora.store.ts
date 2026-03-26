@@ -13,6 +13,7 @@ export interface LoraItem {
     referenceTag?: string              // e.g. 'nava', 'pixar' - used as @tag in prompts
     triggerWord: string
     weightsUrl: string       // Supabase Storage public URL
+    storagePath?: string     // Supabase Storage path for deletion
     thumbnailUrl?: string
     defaultGuidanceScale: number  // e.g. 1.0
     defaultLoraScale: number      // e.g. 1.0
@@ -55,6 +56,12 @@ interface LoraStore {
 
     // Admin
     ensureAdminLoras: () => void  // Adds all built-in LoRAs for admin users
+
+    // DB-backed actions
+    fetchUserLoras: () => Promise<void>
+    addLoraToDb: (lora: Omit<LoraItem, 'id' | 'createdAt'>) => Promise<string | null>
+    removeLoraFromDb: (id: string) => Promise<boolean>
+    migrateFromLocalStorage: () => Promise<void>
 
     // Computed
     getActiveLoras: () => LoraItem[]
@@ -341,26 +348,135 @@ export const useLoraStore = create<LoraStore>()(
                 if (activeLoraIds.length === 0) return null
                 return loras.find((l) => l.id === activeLoraIds[0]) ?? null
             },
+
+            fetchUserLoras: async () => {
+                try {
+                    const res = await fetch('/api/lora/list')
+                    if (!res.ok) return
+                    const { loras: dbLoras } = await res.json()
+                    if (!Array.isArray(dbLoras)) return
+                    const mapped: LoraItem[] = dbLoras.map((row: Record<string, unknown>) => ({
+                        id: row.id as string,
+                        name: row.name as string,
+                        type: (row.lora_type as 'character' | 'style') || 'style',
+                        triggerWord: (row.trigger_word as string) || '',
+                        weightsUrl: row.weights_url as string,
+                        storagePath: row.storage_path as string | undefined,
+                        thumbnailUrl: row.thumbnail_url as string | undefined,
+                        defaultGuidanceScale: Number(row.default_guidance_scale) || 3.5,
+                        defaultLoraScale: Number(row.default_lora_scale) || 1.0,
+                        compatibleModels: (row.compatible_models as string[]) || [],
+                        createdAt: new Date(row.created_at as string).getTime(),
+                    }))
+                    set((state) => {
+                        // Merge: keep built-in/community LoRAs (createdAt === 0), replace user LoRAs with DB
+                        const builtIns = state.loras.filter(l => l.createdAt === 0)
+                        return { loras: [...builtIns, ...mapped] }
+                    })
+                } catch { /* silent — offline fallback to cached state */ }
+            },
+
+            addLoraToDb: async (lora) => {
+                try {
+                    const res = await fetch('/api/lora/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: lora.name,
+                            loraType: lora.type || 'style',
+                            triggerWord: lora.triggerWord,
+                            weightsUrl: lora.weightsUrl,
+                            storagePath: lora.storagePath,
+                            thumbnailUrl: lora.thumbnailUrl,
+                            defaultLoraScale: lora.defaultLoraScale,
+                            defaultGuidanceScale: lora.defaultGuidanceScale,
+                            compatibleModels: lora.compatibleModels,
+                        }),
+                    })
+                    if (!res.ok) return null
+                    const row = await res.json()
+                    const newLora: LoraItem = {
+                        id: row.id,
+                        name: row.name,
+                        type: row.lora_type || 'style',
+                        triggerWord: row.trigger_word || '',
+                        weightsUrl: row.weights_url,
+                        storagePath: row.storage_path,
+                        thumbnailUrl: row.thumbnail_url,
+                        defaultGuidanceScale: Number(row.default_guidance_scale) || 3.5,
+                        defaultLoraScale: Number(row.default_lora_scale) || 1.0,
+                        compatibleModels: row.compatible_models || [],
+                        createdAt: new Date(row.created_at).getTime(),
+                    }
+                    set((state) => ({ loras: [...state.loras, newLora] }))
+                    return row.id
+                } catch { return null }
+            },
+
+            removeLoraFromDb: async (id) => {
+                try {
+                    const res = await fetch(`/api/lora/${id}`, { method: 'DELETE' })
+                    if (!res.ok) return false
+                    set((state) => ({
+                        loras: state.loras.filter(l => l.id !== id),
+                        activeLoraIds: state.activeLoraIds.filter(lid => lid !== id),
+                    }))
+                    return true
+                } catch { return false }
+            },
+
+            migrateFromLocalStorage: async () => {
+                // One-time: sync localStorage LoRAs to DB if DB is empty
+                const state = get()
+                const userLoras = state.loras.filter(l => l.createdAt !== 0)
+                if (userLoras.length === 0) return
+
+                // Check if DB already has LoRAs
+                const res = await fetch('/api/lora/list')
+                if (!res.ok) return
+                const { loras: dbLoras } = await res.json()
+                if (dbLoras && dbLoras.length > 0) return // Already migrated
+
+                // Sync each localStorage LoRA to DB
+                for (const lora of userLoras) {
+                    await fetch('/api/lora/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: lora.name,
+                            loraType: lora.type || 'style',
+                            triggerWord: lora.triggerWord,
+                            weightsUrl: lora.weightsUrl,
+                            thumbnailUrl: lora.thumbnailUrl,
+                            defaultLoraScale: lora.defaultLoraScale,
+                            defaultGuidanceScale: lora.defaultGuidanceScale,
+                            compatibleModels: lora.compatibleModels,
+                        }),
+                    })
+                }
+
+                // Re-fetch to get DB-assigned IDs
+                await get().fetchUserLoras()
+            },
         }),
         {
             name: 'directors-palette-lora-store',
-            version: 19,
+            version: 20,
+            partialize: (state) => ({
+                // Only persist UI state — LoRA items come from DB
+                activeLoraIds: state.activeLoraIds,
+                loraRatings: state.loraRatings,
+                usedLoraIds: state.usedLoraIds,
+                loraThumbnails: state.loraThumbnails,
+            }),
             migrate: (persisted: unknown) => {
                 const state = persisted as Record<string, unknown>
-                const loras = (state?.loras as LoraItem[]) || []
-                // v19: Remove all built-in LoRAs — users start empty, add from community
-                // Keep only user-added LoRAs (createdAt !== 0)
-                const filtered = loras.filter(l => l.createdAt !== 0)
-                // Ensure rating fields exist (v9)
-                const loraRatings = (state?.loraRatings as Record<string, LoraRating>) || {}
-                const usedLoraIds = (state?.usedLoraIds as string[]) || []
-                // Migrate activeLoraId (string|null) → activeLoraIds (string[]) (v10)
-                const oldActiveId = state?.activeLoraId as string | null | undefined
-                const activeLoraIds = (state?.activeLoraIds as string[]) || (oldActiveId ? [oldActiveId] : [])
-                // Deactivate any built-in LoRAs that were removed
-                const filteredIds = new Set(filtered.map(l => l.id))
-                const cleanActiveIds = activeLoraIds.filter(id => filteredIds.has(id))
-                return { ...state, loras: filtered, loraRatings, usedLoraIds, activeLoraIds: cleanActiveIds }
+                return {
+                    activeLoraIds: (state?.activeLoraIds as string[]) || [],
+                    loraRatings: (state?.loraRatings as Record<string, LoraRating>) || {},
+                    usedLoraIds: (state?.usedLoraIds as string[]) || [],
+                    loraThumbnails: (state?.loraThumbnails as Record<string, string>) || {},
+                }
             },
         }
     )

@@ -14,9 +14,9 @@ export async function GET(request: NextRequest) {
   )
 
   const { data } = await supabase
-    .from('loras')
+    .from('user_loras')
     .select('*')
-    .or(`user_id.eq.${auth.userId},is_community.eq.true`)
+    .eq('user_id', auth.userId)
     .order('created_at', { ascending: false })
 
   const loras = (data || []).map((row: Record<string, unknown>) => ({
@@ -24,9 +24,8 @@ export async function GET(request: NextRequest) {
     name: row.name,
     type: row.lora_type || 'style',
     trigger_word: row.trigger_word,
-    compatible_models: ['flux-2-klein-9b'],
+    compatible_models: row.compatible_models || ['flux-2-klein-9b'],
     thumbnail_url: row.thumbnail_url,
-    is_community: row.is_community,
   }))
 
   await apiKeyService.logUsage({
