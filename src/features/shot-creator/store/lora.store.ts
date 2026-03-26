@@ -213,8 +213,6 @@ export const COMMUNITY_LORAS: LoraItem[] = [
         defaultLoraScale: 1.0,
         createdAt: 0,
     },
-    // Flux 2 Klein 9B LoRAs (routed through fal.ai)
-    ...FLUX2_9B_LORAS,
 ]
 
 export const useLoraStore = create<LoraStore>()(
