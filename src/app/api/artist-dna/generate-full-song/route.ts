@@ -124,10 +124,10 @@ function buildFullSongPrompt(body: GenerateFullSongBody): string {
   if (artistDna.persona?.likes?.length > 0) parts.push(`Themes they gravitate toward: ${artistDna.persona.likes.join(', ')}`)
   if (artistDna.persona?.dislikes?.length > 0) parts.push(`Themes they avoid: ${artistDna.persona.dislikes.join(', ')}`)
 
-  // Lexicon
-  if (artistDna.lexicon?.signaturePhrases?.length > 0) parts.push(`Signature phrases: ${artistDna.lexicon.signaturePhrases.join(', ')}`)
-  if (artistDna.lexicon?.slang?.length > 0) parts.push(`Slang/vocabulary: ${artistDna.lexicon.slang.join(', ')}`)
-  if (artistDna.lexicon?.adLibs?.length > 0) parts.push(`Ad-libs: ${artistDna.lexicon.adLibs.join(', ')}`)
+  // Lexicon — use sparingly across the whole song
+  if (artistDna.lexicon?.signaturePhrases?.length > 0) parts.push(`Signature phrases (use at most 1-2 in the ENTIRE song, not in every section): ${artistDna.lexicon.signaturePhrases.join(', ')}`)
+  if (artistDna.lexicon?.slang?.length > 0) parts.push(`Slang/vocabulary (distribute naturally, don't repeat the same slang in every verse): ${artistDna.lexicon.slang.join(', ')}`)
+  if (artistDna.lexicon?.adLibs?.length > 0) parts.push(`Ad-libs (use at most 2-3 total across the whole song): ${artistDna.lexicon.adLibs.join(', ')}`)
   if (artistDna.lexicon?.bannedWords?.length > 0) parts.push(`NEVER use these words: ${artistDna.lexicon.bannedWords.join(', ')}`)
 
   // Catalog genome

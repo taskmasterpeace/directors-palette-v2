@@ -29,15 +29,24 @@ function buildSystemPrompt(
   lines.push(`Backstory: ${dna.identity.backstory}`)
   lines.push('')
 
-  // Living context
+  // Real-world time — always injected so the artist knows when it is
+  const now = new Date()
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+  const dayName = days[now.getDay()]
+  const hour = now.getHours()
+  const timeOfDay = hour < 6 ? 'late night' : hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : hour < 21 ? 'evening' : 'night'
+  const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+  lines.push(`CURRENT TIME: ${dayName}, ${timeStr} (${timeOfDay}). Be aware of this — reference time naturally if relevant.`)
+
+  // Living context (scene details from AI generation)
   if (context) {
-    lines.push(`RIGHT NOW: It's ${context.dayOfWeek}, ${context.currentTime}. You're ${context.currentActivity} at ${context.currentLocation}.`)
+    lines.push(`SCENE: You're ${context.currentActivity} at ${context.currentLocation}.`)
     lines.push(`Mood: ${context.currentMood}. Wearing: ${context.environment.clothing}.`)
     if (context.whoTheyreWith?.length) {
       lines.push(`You're with: ${context.whoTheyreWith.join(', ')}`)
     }
-    lines.push('')
   }
+  lines.push('')
 
   // Speech profile
   lines.push('HOW YOU TALK:')
@@ -69,15 +78,15 @@ function buildSystemPrompt(
 
   // Lexicon
   if (dna.lexicon?.signaturePhrases?.length) {
-    lines.push(`SIGNATURE PHRASES: ${dna.lexicon.signaturePhrases.join(', ')}`)
+    lines.push(`SIGNATURE PHRASES (use sparingly — max 1 per message, skip most of the time): ${dna.lexicon.signaturePhrases.join(', ')}`)
   }
   if (dna.lexicon?.slang?.length) {
-    lines.push(`SLANG: ${dna.lexicon.slang.join(', ')}`)
+    lines.push(`SLANG (use naturally, don't overdo it): ${dna.lexicon.slang.join(', ')}`)
   }
   if (dna.lexicon?.adLibs?.length) {
-    lines.push(`AD-LIBS: ${dna.lexicon.adLibs.join(', ')}`)
+    lines.push(`AD-LIBS (use max 1-2 per message, none in most messages): ${dna.lexicon.adLibs.join(', ')}`)
   }
-  if (dna.lexicon.bannedWords?.length) {
+  if (dna.lexicon?.bannedWords?.length) {
     lines.push(`BANNED WORDS — never use these: ${dna.lexicon.bannedWords.join(', ')}`)
   }
   if (dna.persona?.likes?.length) {
@@ -112,6 +121,7 @@ function buildSystemPrompt(
   lines.push('- When you want to share lyrics, wrap them in [LYRICS]...[/LYRICS] tags.')
   lines.push('- When you feel like sending a photo, say [PHOTO:description of what you\'d show]')
   lines.push('- Keep responses conversational and natural. Vary length based on your typing style.')
+  lines.push('- LYRICS VARIETY: When writing lyrics, do NOT overuse signature phrases, ad-libs, or catchphrases. Use them at most once in an entire verse. Focus on fresh, original wordplay and imagery each time.')
   if (dna.persona?.dislikes?.length) {
     lines.push(`- Never positively reference these topics (artist dislikes them): ${dna.persona.dislikes.join(', ')}`)
   }

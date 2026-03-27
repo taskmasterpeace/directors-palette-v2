@@ -158,15 +158,15 @@ function buildSystemPrompt(body: GenerateOptionsBody): string {
     parts.push(`Themes they avoid: ${artistDna.persona.dislikes.join(', ')}`)
   }
 
-  // Lexicon
+  // Lexicon — distribute across options, don't repeat in all 4
   if (artistDna.lexicon?.signaturePhrases?.length > 0) {
-    parts.push(`Signature phrases to weave in naturally: ${artistDna.lexicon.signaturePhrases.join(', ')}`)
+    parts.push(`Signature phrases (available but use SPARINGLY — at most 1 option out of 4 should include one, the other 3 should NOT): ${artistDna.lexicon.signaturePhrases.join(', ')}`)
   }
   if (artistDna.lexicon?.slang?.length > 0) {
-    parts.push(`Slang/vocabulary to use: ${artistDna.lexicon.slang.join(', ')}`)
+    parts.push(`Slang/vocabulary (distribute across options — each option should use different slang, not all the same): ${artistDna.lexicon.slang.join(', ')}`)
   }
   if (artistDna.lexicon?.adLibs?.length > 0) {
-    parts.push(`Ad-libs to sprinkle in: ${artistDna.lexicon.adLibs.join(', ')}`)
+    parts.push(`Ad-libs (use in at most 1-2 of the 4 options, leave the others clean): ${artistDna.lexicon.adLibs.join(', ')}`)
   }
   if (artistDna.lexicon?.bannedWords?.length > 0) {
     parts.push(`NEVER use these words: ${artistDna.lexicon.bannedWords.join(', ')}`)
@@ -261,7 +261,11 @@ function buildSystemPrompt(body: GenerateOptionsBody): string {
   }
 
   // Variety directive
-  parts.push('Make each of the 4 options DISTINCTLY different: different imagery, rhythm, opening lines, rhyme schemes.')
+  parts.push('CRITICAL — VARIETY RULES FOR THE 4 OPTIONS:')
+  parts.push('- Each option must have DIFFERENT imagery, rhythm, opening lines, and rhyme schemes.')
+  parts.push('- Do NOT put the same catchphrase, ad-lib, or signature phrase in multiple options. If you use one in option A, the other 3 must NOT have it.')
+  parts.push('- At least 2 of the 4 options should have ZERO signature phrases or ad-libs — let the raw lyrics shine.')
+  parts.push('- Vary the mood: one could be aggressive, one introspective, one playful, one raw.')
   parts.push(`NEVER use these AI-sounding words: ${BANNED_AI_PHRASES.join(', ')}`)
   parts.push('Write like a human songwriter, not an AI. Use concrete, specific imagery from the artist\'s world.')
   if (!rhymePatterns?.length) {
