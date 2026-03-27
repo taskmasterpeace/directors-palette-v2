@@ -307,7 +307,7 @@ Generate one or more images asynchronously.
 | `prompt` | string | Yes | Text prompt describing the image |
 | `aspect_ratio` | string | No | Aspect ratio. Default: `"16:9"`. Options: `1:1`, `16:9`, `9:16`, `4:3`, `3:4`, `21:9`, `3:2`, `2:3` |
 | `num_images` | integer | No | Number of images to generate, 1-5. Default: `1` |
-| `loras` | array | No | Array of LoRA objects. Only for `flux-2-klein-9b` |
+| `loras` | array | No | Array of LoRA objects `[{"url": "...", "scale": 1.0}]`. Only for `flux-2-klein-9b`. See [LoRA Generation](#lora-generation) |
 | `reference_image` | string | No | URL of a reference image for img2img |
 | `reference_strength` | number | No | Strength of reference image influence (overrides model default) |
 | `reference_tag` | string | No | Auto-tag the generated image with this @reference (e.g., `"@sasha-foxworth"`) |
@@ -350,6 +350,84 @@ Multiple images (`num_images` > 1) -- returns an array:
 **Errors:**
 - `422` -- Missing `model` or `prompt`, unknown model, `num_images` out of range, LoRA used with wrong model, editing model missing `reference_image`
 - `402` -- Insufficient pts balance
+
+#### LoRA Generation
+
+LoRAs (Low-Rank Adaptations) apply custom styles or character likenesses to generated images. They are only supported with the `flux-2-klein-9b` model.
+
+**LoRA format:**
+
+```json
+{
+  "loras": [
+    { "url": "https://..../weights.safetensors", "scale": 1.0 }
+  ]
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `url` | string | Yes | Public URL to a `.safetensors` weights file |
+| `scale` | number | No | LoRA strength, 0.1-2.0. Default: `1.0` |
+
+**Important notes:**
+- LoRA generation routes through fal.ai (not Replicate) for quality. Jobs complete **synchronously** -- the response includes the final image URL directly, no polling needed.
+- You can stack multiple LoRAs (e.g., a character + a style).
+- Use `GET /api/v2/loras` to list your available LoRA URLs and trigger words.
+- Include the LoRA's **trigger word** in your prompt for best results.
+
+**Example -- single LoRA (character):**
+
+```bash
+curl -X POST https://directorspalette.com/api/v2/images/generate \
+  -H "Authorization: Bearer dp_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "flux-2-klein-9b",
+    "prompt": "TWORK, a bald Black man in a red hoodie, standing on a battle rap stage, cinematic lighting",
+    "aspect_ratio": "16:9",
+    "loras": [
+      { "url": "https://tarohelkwuurakbxjyxm.supabase.co/storage/v1/object/public/directors-palette/loras/.../twork-character.safetensors", "scale": 1.3 }
+    ]
+  }'
+```
+
+**Example -- stacked LoRAs (character + style):**
+
+```bash
+curl -X POST https://directorspalette.com/api/v2/images/generate \
+  -H "Authorization: Bearer dp_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "flux-2-klein-9b",
+    "prompt": "TWORK, DC animation style, with bold outlines, cel-shaded, muted color palette, standing in a dark alley",
+    "aspect_ratio": "16:9",
+    "loras": [
+      { "url": "https://.../twork-character.safetensors", "scale": 0.9 },
+      { "url": "https://.../dcau_lora_weights.safetensors", "scale": 0.5 }
+    ]
+  }'
+```
+
+**Response (LoRA jobs return completed immediately):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "job_id": "fal_v2_...",
+    "status": "completed",
+    "type": "image",
+    "cost": 4,
+    "created_at": "2026-03-26T12:00:00Z",
+    "completed_at": "2026-03-26T12:00:12Z",
+    "result": {
+      "url": "https://storage.example.com/images/fal_v2_abc123.png"
+    },
+    "error_message": null
+  }
+}
+```
 
 ---
 

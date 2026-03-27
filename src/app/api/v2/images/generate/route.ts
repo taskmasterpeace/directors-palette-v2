@@ -7,9 +7,83 @@ import { MODEL_CONFIGS, ASPECT_RATIO_SIZES, getModelCost, type ModelId } from '@
 import { creditsService } from '@/features/credits'
 import { validateV2ApiKey, isAuthContext } from '../../_lib/middleware'
 import { successResponse, errors } from '../../_lib/response'
-import { createJob, formatJobResponse } from '../../_lib/job-manager'
+import { createJob, formatJobResponse, updateJobById } from '../../_lib/job-manager'
+import { StorageService } from '@/features/generation/services/storage.service'
+import { lognog } from '@/lib/lognog'
 
 const replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN })
+
+/** Aspect ratio → fal.ai image_size mapping */
+const FAL_SIZE_MAP: Record<string, string> = {
+  '1:1': 'square_hd',
+  '16:9': 'landscape_16_9',
+  '9:16': 'portrait_16_9',
+  '4:3': 'landscape_4_3',
+  '3:4': 'portrait_4_3',
+}
+
+/**
+ * Call fal.ai Klein 9B + LoRA (text-to-image or edit)
+ */
+async function callFalAiKleinLora(params: {
+  prompt: string
+  loras: { path: string; scale: number }[]
+  imageUrls?: string[]
+  imageSize?: string
+  outputFormat: string
+  numInferenceSteps?: number
+  guidanceScale?: number
+}): Promise<{ images: { url: string; width: number; height: number }[]; seed: number }> {
+  const falKey = process.env.FAL_KEY
+  if (!falKey) throw new Error('FAL_KEY not configured')
+
+  const isEdit = params.imageUrls && params.imageUrls.length > 0
+  const endpoint = isEdit
+    ? 'https://fal.run/fal-ai/flux-2/klein/9b/base/edit/lora'
+    : 'https://fal.run/fal-ai/flux-2/klein/9b/base/lora'
+
+  const body: Record<string, unknown> = {
+    prompt: params.prompt,
+    loras: params.loras,
+    output_format: params.outputFormat === 'jpg' ? 'jpeg' : params.outputFormat,
+    num_inference_steps: params.numInferenceSteps || 28,
+    guidance_scale: params.guidanceScale || 5,
+    num_images: 1,
+    enable_safety_checker: false,
+  }
+
+  if (isEdit) {
+    body.image_urls = params.imageUrls
+  }
+
+  if (params.imageSize) {
+    body.image_size = params.imageSize
+  }
+
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Key ${falKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    lognog.error('fal.ai v2 API error', {
+      status: response.status,
+      error: errorText,
+      type: 'integration',
+      integration: 'fal',
+    })
+    throw new Error(`fal.ai API error (${response.status}): ${errorText}`)
+  }
+
+  return response.json()
+}
+
+export const maxDuration = 120
 
 export async function POST(request: NextRequest) {
   try {
@@ -49,6 +123,20 @@ export async function POST(request: NextRequest) {
       return errors.validation('loras only supported for flux-2-klein-9b')
     }
 
+    // Validate LoRA format
+    if (loras) {
+      if (!Array.isArray(loras)) return errors.validation('loras must be an array')
+      for (let i = 0; i < loras.length; i++) {
+        const l = loras[i]
+        if (!l.url || typeof l.url !== 'string') {
+          return errors.validation(`loras[${i}].url is required and must be a string`)
+        }
+        if (!l.url.startsWith('http')) {
+          return errors.validation(`loras[${i}].url must be a valid HTTP URL`)
+        }
+      }
+    }
+
     // Cost calculation
     const costPerImage = Math.round(getModelCost(model as ModelId) * 100)
     const totalCost = costPerImage * num_images
@@ -61,10 +149,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const webhookUrl = process.env.WEBHOOK_URL
-      ? `${process.env.WEBHOOK_URL}/api/webhooks/replicate`
-      : null
-
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -73,6 +157,154 @@ export async function POST(request: NextRequest) {
     const loraActive = !!(loras && loras.length > 0)
     const hasRef = !!reference_image
     const jobs = []
+
+    // ── Klein 9B + LoRA: route through fal.ai (synchronous) ──
+    if (model === 'flux-2-klein-9b' && loraActive) {
+      const falLoras = loras.map((l: { url: string; scale?: number }) => ({
+        path: l.url,
+        scale: l.scale ?? 1.0,
+      }))
+
+      for (let i = 0; i < num_images; i++) {
+        // Deduct credits
+        await creditsService.deductCredits(auth.userId, model, {
+          generationType: 'image',
+          useServiceRole: true,
+          user_email: auth.email,
+        })
+
+        // Create a placeholder prediction ID for fal.ai jobs
+        const falJobId = `fal_v2_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+
+        // Build metadata
+        const metadata = {
+          prompt,
+          model,
+          aspect_ratio,
+          loras: loras.map((l: { url: string; scale?: number }) => ({
+            url: l.url,
+            scale: l.scale ?? 1.0,
+          })),
+          source: 'api_v2',
+          via: 'fal.ai',
+        }
+
+        // Create gallery entry
+        const { data: gallery } = await supabase
+          .from('gallery')
+          .insert({
+            user_id: auth.userId,
+            prediction_id: falJobId,
+            generation_type: 'image',
+            status: 'pending',
+            metadata,
+          })
+          .select()
+          .single()
+
+        // Create API job
+        const job = await createJob({
+          userId: auth.userId,
+          apiKeyId: auth.apiKeyId,
+          type: 'image',
+          predictionId: falJobId,
+          galleryId: gallery?.id,
+          cost: costPerImage,
+          input: { model, prompt, aspect_ratio, loras, seed },
+          webhookUrl: webhook_url,
+        })
+
+        try {
+          // Call fal.ai synchronously
+          const falResult = await callFalAiKleinLora({
+            prompt,
+            loras: falLoras,
+            imageUrls: reference_image ? [reference_image] : undefined,
+            imageSize: FAL_SIZE_MAP[aspect_ratio] || 'landscape_16_9',
+            outputFormat: 'png',
+          })
+
+          if (!falResult.images?.length) {
+            throw new Error('fal.ai returned no images')
+          }
+
+          // Download from fal.ai and upload to Supabase Storage
+          const falImageUrl = falResult.images[0].url
+          const { buffer } = await StorageService.downloadAsset(falImageUrl)
+          const { ext, mimeType } = StorageService.getMimeType(falImageUrl, 'png')
+          const { publicUrl, storagePath, fileSize } = await StorageService.uploadToStorage(
+            buffer,
+            auth.userId,
+            falJobId,
+            ext,
+            mimeType
+          )
+
+          // Update gallery
+          if (gallery?.id) {
+            await supabase
+              .from('gallery')
+              .update({
+                status: 'completed',
+                public_url: publicUrl,
+                storage_path: storagePath,
+                file_size: fileSize,
+                mime_type: mimeType,
+              })
+              .eq('id', gallery.id)
+
+            // Auto-tag with reference if requested
+            if (reference_tag) {
+              const normalizedTag = reference_tag.startsWith('@') ? reference_tag : `@${reference_tag}`
+              const tagName = normalizedTag.replace(/^@/, '')
+              await supabase
+                .from('gallery')
+                .update({ metadata: { ...metadata, reference: normalizedTag } })
+                .eq('id', gallery.id)
+              await supabase
+                .from('reference')
+                .insert({
+                  id: crypto.randomUUID(),
+                  gallery_id: gallery.id,
+                  category: reference_category,
+                  tags: [tagName],
+                  created_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString(),
+                })
+            }
+          }
+
+          // Complete the job
+          if (job) {
+            await updateJobById(job.id, {
+              status: 'completed',
+              result: { url: publicUrl },
+              completedAt: new Date().toISOString(),
+            })
+            const updatedJob = { ...formatJobResponse(job), status: 'completed', result: { url: publicUrl }, completed_at: new Date().toISOString() }
+            jobs.push(updatedJob)
+          }
+        } catch (falError) {
+          // Mark job as failed
+          if (job) {
+            const errMsg = falError instanceof Error ? falError.message : 'fal.ai generation failed'
+            await updateJobById(job.id, {
+              status: 'failed',
+              errorMessage: errMsg,
+              completedAt: new Date().toISOString(),
+            })
+            jobs.push({ ...formatJobResponse(job), status: 'failed', error_message: errMsg })
+          }
+        }
+      }
+
+      return successResponse(jobs.length === 1 ? jobs[0] : jobs, 201)
+    }
+
+    // ── Standard Replicate path (no LoRAs) ──
+    const webhookUrl = process.env.WEBHOOK_URL
+      ? `${process.env.WEBHOOK_URL}/api/webhooks/replicate`
+      : null
 
     for (let i = 0; i < num_images; i++) {
       // Deduct credits
