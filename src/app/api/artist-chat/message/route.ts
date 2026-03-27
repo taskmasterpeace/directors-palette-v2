@@ -25,7 +25,7 @@ function buildSystemPrompt(
   const lines: string[] = []
 
   // Core identity
-  lines.push(`You are ${dna.identity.stageName}, a ${dna.persona.traits.join(', ')} artist from ${dna.identity.city}, ${dna.identity.state}.`)
+  lines.push(`You are ${dna.identity.stageName}, a ${dna.persona?.traits?.join(', ') || 'versatile'} artist from ${dna.identity.city}, ${dna.identity.state}.`)
   lines.push(`Backstory: ${dna.identity.backstory}`)
   lines.push('')
 
@@ -33,7 +33,7 @@ function buildSystemPrompt(
   if (context) {
     lines.push(`RIGHT NOW: It's ${context.dayOfWeek}, ${context.currentTime}. You're ${context.currentActivity} at ${context.currentLocation}.`)
     lines.push(`Mood: ${context.currentMood}. Wearing: ${context.environment.clothing}.`)
-    if (context.whoTheyreWith.length) {
+    if (context.whoTheyreWith?.length) {
       lines.push(`You're with: ${context.whoTheyreWith.join(', ')}`)
     }
     lines.push('')
@@ -44,7 +44,7 @@ function buildSystemPrompt(
   lines.push(`- Tone: ${print.speech.tone}, Pace: ${print.speech.pace}, Formality: ${print.speech.formality}`)
   lines.push(`- Slang level: ${print.speech.slangLevel}/100, Cursing: ${print.speech.cursingLevel}/100`)
   lines.push(`- Vocabulary: ${print.speech.vocabularyLevel}, Sentence style: ${print.speech.sentenceComplexity}`)
-  if (print.speech.specialCharacteristics.length) {
+  if (print.speech?.specialCharacteristics?.length) {
     lines.push(`- Special: ${print.speech.specialCharacteristics.join(', ')}`)
   }
   lines.push(`- Typing style: ${print.nonVerbal.typingStyle}`)
@@ -68,19 +68,19 @@ function buildSystemPrompt(
   lines.push('')
 
   // Lexicon
-  if (dna.lexicon.signaturePhrases.length) {
+  if (dna.lexicon?.signaturePhrases?.length) {
     lines.push(`SIGNATURE PHRASES: ${dna.lexicon.signaturePhrases.join(', ')}`)
   }
-  if (dna.lexicon.slang.length) {
+  if (dna.lexicon?.slang?.length) {
     lines.push(`SLANG: ${dna.lexicon.slang.join(', ')}`)
   }
-  if (dna.lexicon.adLibs.length) {
+  if (dna.lexicon?.adLibs?.length) {
     lines.push(`AD-LIBS: ${dna.lexicon.adLibs.join(', ')}`)
   }
-  if (dna.lexicon.bannedWords.length) {
+  if (dna.lexicon.bannedWords?.length) {
     lines.push(`BANNED WORDS — never use these: ${dna.lexicon.bannedWords.join(', ')}`)
   }
-  if (dna.persona.likes.length) {
+  if (dna.persona?.likes?.length) {
     lines.push(`Topics you're passionate about: ${dna.persona.likes.join(', ')}`)
   }
   lines.push('')
@@ -90,13 +90,13 @@ function buildSystemPrompt(
     if (memory.aboutUser.name) {
       lines.push(`You know the user as: ${memory.aboutUser.name}`)
     }
-    if (memory.aboutUser.preferences.length) {
+    if (memory.aboutUser?.preferences?.length) {
       lines.push(`User preferences: ${memory.aboutUser.preferences.join(', ')}`)
     }
-    if (memory.aboutUser.musicTaste.length) {
+    if (memory.aboutUser?.musicTaste?.length) {
       lines.push(`User music taste: ${memory.aboutUser.musicTaste.join(', ')}`)
     }
-    if (memory.relationship.insideJokes.length) {
+    if (memory.relationship?.insideJokes?.length) {
       lines.push(`Inside jokes: ${memory.relationship.insideJokes.join(', ')}`)
     }
     lines.push(`Rapport level: ${memory.relationship.rapportLevel}/100, Trust: ${memory.relationship.trust}/100`)
@@ -112,7 +112,7 @@ function buildSystemPrompt(
   lines.push('- When you want to share lyrics, wrap them in [LYRICS]...[/LYRICS] tags.')
   lines.push('- When you feel like sending a photo, say [PHOTO:description of what you\'d show]')
   lines.push('- Keep responses conversational and natural. Vary length based on your typing style.')
-  if (dna.persona.dislikes.length) {
+  if (dna.persona?.dislikes?.length) {
     lines.push(`- Never positively reference these topics (artist dislikes them): ${dna.persona.dislikes.join(', ')}`)
   }
 
