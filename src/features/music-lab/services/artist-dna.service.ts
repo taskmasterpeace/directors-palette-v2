@@ -138,6 +138,35 @@ class ArtistDnaService {
     const supabase = await getArtistClient()
     if (!supabase) return false
 
+    // Cascade: delete related records from all tables (order doesn't matter, no FK constraints)
+    const deletions = await Promise.allSettled([
+      supabase.from('artist_chat_messages').delete().eq('artist_id', id),
+      supabase.from('artist_memories').delete().eq('artist_id', id),
+      supabase.from('artist_personality_prints').delete().eq('artist_id', id),
+      supabase.from('sound_studio_presets').delete().eq('artist_id', id),
+    ])
+
+    // Log any failures but don't block deletion
+    deletions.forEach((result, i) => {
+      if (result.status === 'rejected') {
+        logger.musicLab.error(`Cascade delete failed for table ${i}`, { error: result.reason })
+      }
+    })
+
+    // Clean up storage images (portraits, character sheets, gallery, header bg)
+    try {
+      const { data: files } = await supabase.storage
+        .from('directors-palette')
+        .list(`artists/${id}`)
+      if (files?.length) {
+        const paths = files.map((f: { name: string }) => `artists/${id}/${f.name}`)
+        await supabase.storage.from('directors-palette').remove(paths)
+      }
+    } catch {
+      // Storage cleanup is best-effort
+    }
+
+    // Delete the artist profile itself
     const { error } = await supabase
       .from('artist_profiles')
       .delete()
@@ -145,7 +174,7 @@ class ArtistDnaService {
       .eq('user_id', userId)
 
     if (error) {
-      logger.musicLab.error('Error deleting artist profile', { error: error })
+      logger.musicLab.error('Error deleting artist profile', { error })
       return false
     }
 
