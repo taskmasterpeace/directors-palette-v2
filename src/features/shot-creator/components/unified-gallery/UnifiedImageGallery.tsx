@@ -230,9 +230,10 @@ RULES:
 - Same subject, same outfit, same environment, same lighting in ALL 9 cells
 - Each cell MUST be a distinctly different shot - if two cells look similar, you've failed
 - Clear thin borders between cells
-- No text, labels, or overlays
+- ABSOLUTELY NO TEXT OVERLAY - no text, no labels, no captions, no titles, no words, no letters anywhere on the image
 - Cinematic color grading throughout
-- Maintain the visual style of the reference image`
+- Maintain the visual style of the reference image
+- Pure photographic/cinematic imagery only - zero text of any kind`
 
             // Send BOTH the user's selected image AND the template image
             const response = await fetch('/api/generation/image', {
