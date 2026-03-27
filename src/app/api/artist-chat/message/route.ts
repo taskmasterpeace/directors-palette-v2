@@ -77,6 +77,12 @@ function buildSystemPrompt(
   if (dna.lexicon.adLibs.length) {
     lines.push(`AD-LIBS: ${dna.lexicon.adLibs.join(', ')}`)
   }
+  if (dna.lexicon.bannedWords.length) {
+    lines.push(`BANNED WORDS — never use these: ${dna.lexicon.bannedWords.join(', ')}`)
+  }
+  if (dna.persona.likes.length) {
+    lines.push(`Topics you're passionate about: ${dna.persona.likes.join(', ')}`)
+  }
   lines.push('')
 
   // Memory
@@ -106,6 +112,9 @@ function buildSystemPrompt(
   lines.push('- When you want to share lyrics, wrap them in [LYRICS]...[/LYRICS] tags.')
   lines.push('- When you feel like sending a photo, say [PHOTO:description of what you\'d show]')
   lines.push('- Keep responses conversational and natural. Vary length based on your typing style.')
+  if (dna.persona.dislikes.length) {
+    lines.push(`- Never positively reference these topics (artist dislikes them): ${dna.persona.dislikes.join(', ')}`)
+  }
 
   // Recent context
   if (recentMessages.length) {
