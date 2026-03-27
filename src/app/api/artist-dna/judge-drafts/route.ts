@@ -61,6 +61,7 @@ function buildJudgePrompt(body: JudgeDraftsBody): string {
     const label = rhymeDensity <= 25 ? 'SPARSE' : rhymeDensity <= 50 ? 'MODERATE' : rhymeDensity <= 75 ? 'DENSE' : 'EVERY LINE'
     parts.push(`Your rhyme density preference: ${label}`)
   }
+  if (artistDna.sound?.flowStyle) parts.push(`Flow style: ${artistDna.sound.flowStyle}`)
 
   // Genome essence for voice matching
   if (artistDna.catalog?.genome?.essenceStatement) {

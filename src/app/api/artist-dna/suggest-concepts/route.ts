@@ -56,6 +56,19 @@ function buildArtistProfile(dna: ArtistDNA): string {
     lines.push(`EXISTING SONGS (don't repeat these themes): ${existing}`)
   }
 
+  const dominantThemes = dna.catalog?.genome?.dominantThemes
+  if (dominantThemes && dominantThemes.length > 0) {
+    lines.push(`Dominant catalog themes: ${dominantThemes.join(', ')}`)
+  }
+  const suggestExploring = dna.catalog?.genome?.blueprint?.suggestExploring
+  if (suggestExploring && suggestExploring.length > 0) {
+    lines.push(`EXPLORE THESE (genome recommends new territory): ${suggestExploring.join('; ')}`)
+  }
+  const avoidRepeating = dna.catalog?.genome?.blueprint?.avoidRepeating
+  if (avoidRepeating && avoidRepeating.length > 0) {
+    lines.push(`Avoid repeating (overused in catalog): ${avoidRepeating.join('; ')}`)
+  }
+
   return lines.join('\n')
 }
 

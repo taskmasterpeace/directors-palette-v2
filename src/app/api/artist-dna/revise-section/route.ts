@@ -68,6 +68,14 @@ function buildRevisionPrompt(body: ReviseSectionBody): string {
     }
   }
 
+  if (artistDna.sound?.flowStyle) parts.push(`Flow style: ${artistDna.sound.flowStyle}`)
+  if (artistDna.sound?.language && artistDna.sound.language !== 'English') {
+    parts.push(`Primary language: ${artistDna.sound.language}`)
+  }
+  if (artistDna.sound?.secondaryLanguages?.length > 0) {
+    parts.push(`Also writes in: ${artistDna.sound.secondaryLanguages.join(', ')}`)
+  }
+
   if (artistDna.catalog?.genome?.essenceStatement) {
     parts.push(`\nArtist writing DNA: ${artistDna.catalog.genome.essenceStatement}`)
   }
