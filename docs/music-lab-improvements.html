@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Music Lab - Improvement Recommendations</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #0d1117; --surface: #161b22; --surface2: #1c2129;
+    --border: #30363d; --text: #e6edf3; --text-muted: #8b949e;
+    --amber: #d29922; --amber-bg: rgba(210,153,34,0.08);
+    --green: #3fb950; --green-bg: rgba(63,185,80,0.08);
+    --red: #f85149; --red-bg: rgba(248,81,73,0.08);
+    --cyan: #58a6ff; --cyan-bg: rgba(88,166,255,0.08);
+    --purple: #bc8cff; --purple-bg: rgba(188,140,255,0.08);
+  }
+  body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* Header */
+  .header { padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
+  .header h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.025em; }
+  .header .stats { display: flex; gap: 12px; margin-left: auto; font-size: 13px; }
+  .stat { display: flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; }
+  .stat.total { background: var(--surface2); color: var(--text-muted); }
+  .stat.approved { background: var(--green-bg); color: var(--green); }
+  .stat.rejected { background: var(--red-bg); color: var(--red); }
+  .stat.pending { background: var(--amber-bg); color: var(--amber); }
+
+  /* Main layout */
+  .main { display: flex; flex: 1; overflow: hidden; }
+
+  /* Category panel */
+  .categories { width: 220px; border-right: 1px solid var(--border); padding: 12px; overflow-y: auto; flex-shrink: 0; }
+  .cat-item { padding: 10px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 8px; margin-bottom: 4px; transition: all 0.15s; }
+  .cat-item:hover { background: var(--surface2); }
+  .cat-item.active { background: var(--cyan-bg); color: var(--cyan); }
+  .cat-icon { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .cat-count { margin-left: auto; font-size: 11px; color: var(--text-muted); background: var(--surface2); padding: 2px 7px; border-radius: 10px; }
+
+  /* Suggestions list */
+  .suggestions { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+
+  .suggestion-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; transition: all 0.15s; cursor: default; }
+  .suggestion-card:hover { border-color: #484f58; }
+  .suggestion-card.status-approved { border-left: 3px solid var(--green); }
+  .suggestion-card.status-rejected { border-left: 3px solid var(--red); opacity: 0.5; }
+  .suggestion-card.status-pending { border-left: 3px solid var(--amber); }
+
+  .card-header { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+  .card-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+  .badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 500; white-space: nowrap; }
+  .badge.priority-critical { background: var(--red-bg); color: var(--red); }
+  .badge.priority-high { background: rgba(210,153,34,0.15); color: var(--amber); }
+  .badge.priority-medium { background: var(--cyan-bg); color: var(--cyan); }
+  .badge.priority-low { background: var(--surface2); color: var(--text-muted); }
+  .badge.category { background: var(--purple-bg); color: var(--purple); }
+  .badge.effort-small { background: rgba(63,185,80,0.1); color: var(--green); }
+  .badge.effort-medium { background: rgba(210,153,34,0.1); color: var(--amber); }
+  .badge.effort-large { background: rgba(248,81,73,0.1); color: var(--red); }
+
+  .card-title { font-size: 14px; font-weight: 600; margin-bottom: 6px; line-height: 1.4; }
+  .card-desc { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 10px; }
+  .card-fields { font-size: 12px; color: var(--text-muted); background: var(--surface2); padding: 8px 10px; border-radius: 6px; margin-bottom: 10px; font-family: 'SF Mono', 'Cascadia Code', monospace; line-height: 1.5; }
+  .card-impact { font-size: 12px; color: var(--cyan); margin-bottom: 12px; }
+
+  .card-actions { display: flex; gap: 8px; }
+  .btn { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-size: 12px; cursor: pointer; transition: all 0.15s; font-weight: 500; }
+  .btn:hover { border-color: #484f58; background: #262c36; }
+  .btn.approve { border-color: rgba(63,185,80,0.3); color: var(--green); }
+  .btn.approve:hover { background: var(--green-bg); }
+  .btn.approve.active { background: var(--green-bg); border-color: var(--green); }
+  .btn.reject { border-color: rgba(248,81,73,0.3); color: var(--red); }
+  .btn.reject:hover { background: var(--red-bg); }
+  .btn.reject.active { background: var(--red-bg); border-color: var(--red); }
+  .btn.reset { color: var(--text-muted); }
+
+  .card-comment { margin-top: 10px; }
+  .card-comment textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 8px; font-size: 12px; font-family: system-ui; resize: vertical; min-height: 40px; }
+  .card-comment textarea:focus { outline: none; border-color: var(--cyan); }
+  .card-comment textarea::placeholder { color: #484f58; }
+
+  /* Right panel - details */
+  .detail-panel { width: 380px; border-left: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+  .detail-header { padding: 16px; border-bottom: 1px solid var(--border); }
+  .detail-header h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .detail-header p { font-size: 12px; color: var(--text-muted); }
+  .detail-content { flex: 1; overflow-y: auto; padding: 16px; }
+
+  .summary-box { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+  .summary-box h4 { font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--cyan); }
+  .summary-list { font-size: 12px; color: var(--text-muted); line-height: 1.8; }
+  .summary-list li { list-style: none; padding-left: 16px; position: relative; }
+  .summary-list li::before { content: ''; position: absolute; left: 0; top: 8px; width: 6px; height: 6px; border-radius: 50%; }
+  .summary-list li.green::before { background: var(--green); }
+  .summary-list li.amber::before { background: var(--amber); }
+  .summary-list li.red::before { background: var(--red); }
+
+  /* Prompt output */
+  .prompt-bar { border-top: 1px solid var(--border); padding: 12px 24px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; background: var(--surface); }
+  .prompt-bar .prompt-text { flex: 1; font-size: 12px; color: var(--text-muted); max-height: 80px; overflow-y: auto; white-space: pre-wrap; font-family: 'SF Mono', 'Cascadia Code', monospace; line-height: 1.5; }
+  .copy-btn { padding: 8px 20px; border-radius: 6px; border: none; background: var(--cyan); color: var(--bg); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+  .copy-btn:hover { filter: brightness(1.1); }
+  .copy-btn.copied { background: var(--green); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #484f58; }
+
+  /* Filter tabs */
+  .filter-tabs { display: flex; gap: 4px; padding: 12px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .filter-tab { padding: 5px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; color: var(--text-muted); transition: all 0.15s; border: none; background: none; }
+  .filter-tab:hover { background: var(--surface2); color: var(--text); }
+  .filter-tab.active { background: var(--cyan-bg); color: var(--cyan); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Music Lab Improvements</h1>
+  <div style="font-size:12px;color:var(--text-muted)">Based on field audit &mdash; approve what to implement</div>
+  <div class="stats">
+    <span class="stat total" id="stat-total"></span>
+    <span class="stat pending" id="stat-pending"></span>
+    <span class="stat approved" id="stat-approved"></span>
+    <span class="stat rejected" id="stat-rejected"></span>
+  </div>
+</div>
+
+<div class="main">
+  <div class="categories" id="categories"></div>
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+    <div class="filter-tabs" id="filter-tabs"></div>
+    <div class="suggestions" id="suggestions"></div>
+  </div>
+  <div class="detail-panel">
+    <div class="detail-header">
+      <h3>Decision Summary</h3>
+      <p>Approve or reject improvements, then copy the prompt</p>
+    </div>
+    <div class="detail-content" id="detail-content"></div>
+  </div>
+</div>
+
+<div class="prompt-bar">
+  <div class="prompt-text" id="prompt-output">Approve improvements to generate an implementation prompt.</div>
+  <button class="copy-btn" id="copy-btn" onclick="copyPrompt()">Copy Prompt</button>
+</div>
+
+<script>
+const improvements = [
+  // === DEAD FIELDS ===
+  {
+    id: 1,
+    title: "Wire flowStyle into Writing Studio prompts",
+    description: "flowStyle (rap flow or singing phrasing style) is editable in the Sound tab but NO API ever reads it. Users fill this in and the data goes nowhere. Should influence how lyrics are structured — flowing vs choppy, melodic phrasing vs staccato delivery.",
+    fields: "sound.flowStyle → generate-options, generate-full-song, judge-drafts, revise-section",
+    impact: "Users who carefully set their flow style will finally see it reflected in generated lyrics",
+    category: "dead-fields",
+    priority: "high",
+    effort: "small",
+    status: "pending",
+    userComment: ""
+  },
+  {
+    id: 2,
+    title: "Wire keyCollaborators into concept suggestions",
+    description: "keyCollaborators is editable but never consumed. Could drive collaboration-themed concepts ('a track with [collaborator] energy'), feature verse suggestions, or influence the style when a known collaborator's vibe is relevant.",
+    fields: "sound.keyCollaborators → suggest-concepts, generate-options",
+    impact: "Concepts become more contextual — references to real creative relationships",
+    category: "dead-fields",
+    priority: "medium",
+    effort: "small",
+    status: "pending",
+    userComment: ""
+  },
+  {
+    id: 3,
+    title: "Wire secondaryLanguages into Writing Studio",
+    description: "secondaryLanguages is editable but never read. For bilingual artists (Bad Bunny, Rosalia, etc.), this should trigger code-switching in lyrics — mixing primary and secondary languages naturally.",
+    fields: "sound.secondaryLanguages → generate-options, generate-full-song, revise-section",
+    impact: "Bilingual artists get authentic multilingual lyrics instead of English-only output",
+    category: "dead-fields",
+    priority: "medium",
+    effort: "small",
+    status: "pending",
+    userComment: ""
+  },
+  {
+    id: 4,
+    title: "Wire genreEvolution into era-aware writing",
+    description: "genreEvolution tracks how an artist's sound changed over time (e.g., Beyonce across 5 eras) but is display-only in the UI. Writing Studio should let users pick an era and generate lyrics matching that period's style.",
+    fields: "sound.genreEvolution → generate-options, generate-full-song (as optional era context)",
+    impact: "Artists with rich histories can write in the style of any era — early career vs current sound",
+    category: "dead-fields",
+    priority: "low",
+    effort: "medium",
+    status: "pending",
+    userComment: ""
+  },
+
+  // === MISSING CONSTRAINTS ===
+  {
+    id: 5,
+    title: "Enforce bannedWords in Artist Chat",
+    description: "bannedWords is treated as a HARD constraint in Writing Studio ('NEVER use these words') but is completely absent from the Artist Chat system prompt. The chat persona freely uses words the artist explicitly bans. This is a consistency bug.",
+    fields: "lexicon.bannedWords → /api/artist-chat/message/route.ts system prompt",
+    impact: "Chat responses stay in character — artist never says words they'd never say",
+    category: "missing-constraints",
+    priority: "critical",
+    effort: "small",
+    status: "pending",
+    userComment: ""
+  },
+  {
+    id: 6,
+    title: "Wire dislikes into Artist Chat personality",
+    description: "dislikes is used in Writing Studio ('themes they avoid') but NOT in chat. The artist should express opinions about things they dislike in conversation — refusing topics, expressing distaste, staying in character.",
+    fields: "persona.dislikes → /api/artist-chat/message/route.ts system prompt",
+    impact: "Chat feels more authentic — artist has real opinions, not just positive vibes",
+    category: "missing-constraints",
+    priority: "high",
+    effort: "small",
+    status: "pending",
+    userComment: ""
+  },
+
+  // === UNDERUSED GENOME FIELDS ===
+  {
+    id: 7,
+    title: "Feed genome.blueprint.suggestExploring into concept suggestions",
+    description: "The genome calculates 'suggestExploring' (new creative directions) but NO generation endpoint ever reads it. This should feed directly into concept suggestions — actively recommending unexplored territory.",
+    fields: "catalog.genome.blueprint.suggestExploring → suggest-concepts",
+    impact: "Concept suggestions push the artist into new territory informed by their catalog analysis",
+    category: "genome-gaps",
+    priority: "high",
+    effort: "small",
+    status: "pending",
+    userComment: ""
+  },
+  {
+    id: 8,
+    title: "Feed genome.dominantThemes into concept deduplication",
+    description: "dominantThemes (top 3-5 recurring themes) is displayed in GenomePanel but not used to avoid repetition. Concept suggestions should deprioritize themes the artist has already explored heavily.",
+    fields: "catalog.genome.dominantThemes → suggest-concepts (negative guidance)",
+    impact: "Prevents suggesting the same themes the artist keeps writing about",
+    category: "genome-gaps",
+    priority: "medium",
+    effort: "small",
+    status: "pending",
+    userComment: ""
+  },
+  {
+    id: 9,
+    title: "Use genome.dominantMood as default tone in Writing Studio",
+    description: "dominantMood captures the artist's overall emotional character but isn't used as a default. When starting a new section, the tone controls could pre-select the dominant mood as the starting point.",
+    fields: "catalog.genome.dominantMood → writing-studio.store.ts (default tone)",
+    impact: "Writing Studio starts closer to the artist's natural emotional territory",
+    category: "genome-gaps",
+    priority: "low",
+    effort: "small",
+    status: "pending",
+    userComment: ""
+  },
+
+  // === UNDERUSED FIELDS ===
+  {
+    id: 10,
+    title: "Wire significantEvents into Writing Studio prompts",
+    description: "significantEvents (career milestones with years) is only used in concept suggestions and mix generation. But the Writing Studio core endpoints (generate-options, generate-full-song) never see them. These are prime lyric material.",
+    fields: "identity.significantEvents → generate-options, generate-full-song",
+    impact: "Generated lyrics can reference real life events — more personal, more authentic",
+    category: "underused-fields",
+    priority: "high",
+    effort: "small",
+    status: "pending",
+    userComment: ""
+  },
+  {
+    id: 11,
+    title: "Wire language field into Writing Studio output language",
+    description: "language is barely used (only suggestion context). It should set the output language for all Writing Studio generation — if the artist's primary language is Spanish, lyrics should be in Spanish.",
+    fields: "sound.language → generate-options, generate-full-song, revise-section",
+    impact: "Non-English artists get lyrics in their actual language",
+    category: "underused-fields",
+    priority: "high",
+    effort: "small",
+    status: "pending",
+    userComment: ""
+  },
+  {
+    id: 12,
+    title: "Wire soundDescription into header bg generation",
+    description: "soundDescription (3-4 sentences painting sonic identity) could enrich the header background generation. Currently only fashionStyle and genres feed the visual — but 'dark, moody, bass-heavy trap' should produce a very different atmosphere than 'bright, uplifting pop'.",
+    fields: "sound.soundDescription → generate-header-bg prompt",
+    impact: "Header backgrounds better match the artist's sonic world, not just their fashion",
+    category: "underused-fields",
+    priority: "low",
+    effort: "small",
+    status: "pending",
+    userComment: ""
+  },
+  {
+    id: 13,
+    title: "Wire microgenres into Suno prompt builder",
+    description: "microgenres feeds Sound Studio settings but is NOT included in the Suno prompt builder (suno-prompt-builder.ts). The Mix output should include microgenres for more specific Suno results.",
+    fields: "sound.microgenres → suno-prompt-builder.ts buildMusicStylePrompt()",
+    impact: "Suno prompts become more specific — 'melodic trap' vs just 'trap'",
+    category: "underused-fields",
+    priority: "medium",
+    effort: "small",
+    status: "pending",
+    userComment: ""
+  },
+
+  // === DELETION & DATA INTEGRITY ===
+  {
+    id: 14,
+    title: "Cascade artist deletion to all related tables",
+    description: "Deleting an artist only removes the artist_profiles row. Chat messages, memories, personality prints, and sound studio presets are orphaned. Need to cascade delete to: artist_chat_messages, artist_memories, artist_personality_prints, sound_studio_presets.",
+    fields: "artist-dna.service.ts deleteArtist() → add cascading deletes to 4 tables",
+    impact: "Clean data — no orphaned records consuming storage and potentially leaking into queries",
+    category: "deletion",
+    priority: "critical",
+    effort: "medium",
+    status: "pending",
+    userComment: ""
+  },
+  {
+    id: 15,
+    title: "Clean up Supabase Storage images on artist delete",
+    description: "When an artist is deleted, their portrait, character sheets, photo shoot images, and header backgrounds remain in Supabase Storage. Need to enumerate gallery items + portraitUrl + characterSheetUrl + headerBackgroundUrl and delete from storage.",
+    fields: "artist-dna.service.ts deleteArtist() → Supabase Storage cleanup",
+    impact: "Prevents storage bloat — images from deleted artists are cleaned up",
+    category: "deletion",
+    priority: "high",
+    effort: "medium",
+    status: "pending",
+    userComment: ""
+  },
+  {
+    id: 16,
+    title: "Add delete button inside artist editor",
+    description: "Currently artists can only be deleted from the card list view (hover → trash icon). Should also be available inside the editor — a 'Delete Artist' option in the editor header or a danger zone at the bottom.",
+    fields: "ArtistEditor.tsx → add delete action with confirmation dialog",
+    impact: "Users don't have to close the editor and find the card to delete an artist",
+    category: "deletion",
+    priority: "medium",
+    effort: "small",
+    status: "pending",
+    userComment: ""
+  },
+  {
+    id: 17,
+    title: "Add bulk delete for multiple artists",
+    description: "No way to select and delete multiple artists at once. With many test/experimental artists, users need multi-select + batch delete.",
+    fields: "ArtistList.tsx → add selection mode, select all, batch delete with confirmation",
+    impact: "Managing large artist collections becomes practical",
+    category: "deletion",
+    priority: "medium",
+    effort: "medium",
+    status: "pending",
+    userComment: ""
+  },
+
+  // === EXPORT ===
+  {
+    id: 18,
+    title: "Export artist as JSON",
+    description: "No way to export an artist profile for backup, sharing, or migration. Should export the full ArtistDNA object (identity, sound, persona, lexicon, look metadata, catalog entries) as a downloadable .json file. Image URLs should be included as references.",
+    fields: "ArtistEditor.tsx or ArtistCard → 'Export JSON' action → downloads artist-name.json",
+    impact: "Users can back up artists, share profiles, move between accounts",
+    category: "export",
+    priority: "high",
+    effort: "small",
+    status: "pending",
+    userComment: ""
+  },
+  {
+    id: 19,
+    title: "Import artist from JSON",
+    description: "Complement to export — let users import a .json file to create a new artist. Should validate the JSON structure, merge with defaults for missing fields, and create as a new artist (new ID).",
+    fields: "ArtistList.tsx → 'Import Artist' button → file picker → validate → create",
+    impact: "Artists become portable — share with collaborators, restore from backup",
+    category: "export",
+    priority: "high",
+    effort: "medium",
+    status: "pending",
+    userComment: ""
+  },
+
+  // === UX IMPROVEMENTS ===
+  {
+    id: 20,
+    title: "Show field usage indicators in editor",
+    description: "Users have no idea which fields are actually consumed by generation. Add subtle indicators (e.g., small icons or tooltips) showing where each field is used: 'Used in: Writing Studio, Chat, Suno Prompt'. Dead fields should show 'Not yet connected'.",
+    fields: "All tab components (IdentityTab, SoundTab, PersonaTab, LexiconTab, LookTab)",
+    impact: "Users know what matters — focus effort on fields that actually drive output",
+    category: "ux",
+    priority: "medium",
+    effort: "large",
+    status: "pending",
+    userComment: ""
+  },
+  {
+    id: 21,
+    title: "Add DNA completion score",
+    description: "No overall indicator of how complete an artist profile is. Add a completion percentage that weights fields by their actual usage (heavily-used fields count more). Show in ArtistCard and editor header.",
+    fields: "constellation/utils.ts already calculates ring fill % — extend to overall score",
+    impact: "Users see at a glance which artists need more work",
+    category: "ux",
+    priority: "low",
+    effort: "medium",
+    status: "pending",
+    userComment: ""
+  },
+  {
+    id: 22,
+    title: "Remove or label dead fields in editor",
+    description: "If we're NOT going to wire flowStyle, keyCollaborators, and secondaryLanguages into prompts, they should either be removed from the editor or labeled 'Coming soon — not yet used in generation'. Users filling dead fields is wasted effort.",
+    fields: "SoundTab.tsx → either remove fields or add 'not yet connected' badge",
+    impact: "No more wasted user effort on fields that go nowhere",
+    category: "ux",
+    priority: "high",
+    effort: "small",
+    status: "pending",
+    userComment: ""
+  }
+];
+
+const categories = [
+  { id: "all", label: "All Improvements", color: "#8b949e" },
+  { id: "dead-fields", label: "Dead Fields", color: "#f85149" },
+  { id: "missing-constraints", label: "Missing Constraints", color: "#d29922" },
+  { id: "genome-gaps", label: "Genome Gaps", color: "#bc8cff" },
+  { id: "underused-fields", label: "Underused Fields", color: "#58a6ff" },
+  { id: "deletion", label: "Deletion & Cleanup", color: "#f85149" },
+  { id: "export", label: "Export / Import", color: "#3fb950" },
+  { id: "ux", label: "UX Improvements", color: "#58a6ff" }
+];
+
+let state = {
+  activeCategory: "all",
+  activeFilter: "all",
+  improvements: improvements.map(i => ({...i}))
+};
+
+function getFiltered() {
+  let items = state.improvements;
+  if (state.activeCategory !== "all") {
+    items = items.filter(i => i.category === state.activeCategory);
+  }
+  if (state.activeFilter !== "all") {
+    items = items.filter(i => i.status === state.activeFilter);
+  }
+  return items;
+}
+
+function renderCategories() {
+  const el = document.getElementById('categories');
+  el.innerHTML = categories.map(c => {
+    const count = c.id === "all" ? state.improvements.length : state.improvements.filter(i => i.category === c.id).length;
+    return `<div class="cat-item ${state.activeCategory === c.id ? 'active' : ''}" onclick="setCategory('${c.id}')">
+      <span class="cat-icon" style="background:${c.color}"></span>
+      <span>${c.label}</span>
+      <span class="cat-count">${count}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderFilterTabs() {
+  const el = document.getElementById('filter-tabs');
+  const filters = [
+    { id: "all", label: "All" },
+    { id: "pending", label: "Pending" },
+    { id: "approved", label: "Approved" },
+    { id: "rejected", label: "Rejected" }
+  ];
+  el.innerHTML = filters.map(f => {
+    const count = state.activeCategory === "all"
+      ? (f.id === "all" ? state.improvements.length : state.improvements.filter(i => i.status === f.id).length)
+      : (f.id === "all" ? state.improvements.filter(i => i.category === state.activeCategory).length : state.improvements.filter(i => i.category === state.activeCategory && i.status === f.id).length);
+    return `<button class="filter-tab ${state.activeFilter === f.id ? 'active' : ''}" onclick="setFilter('${f.id}')">${f.label} (${count})</button>`;
+  }).join('');
+}
+
+function renderSuggestions() {
+  const el = document.getElementById('suggestions');
+  const items = getFiltered();
+
+  if (items.length === 0) {
+    el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">No improvements match this filter.</div>';
+    return;
+  }
+
+  el.innerHTML = items.map(item => `
+    <div class="suggestion-card status-${item.status}" id="card-${item.id}">
+      <div class="card-header">
+        <div class="card-badges">
+          <span class="badge priority-${item.priority}">${item.priority}</span>
+          <span class="badge effort-${item.effort}">${item.effort} effort</span>
+          <span class="badge category">${item.category.replace(/-/g, ' ')}</span>
+        </div>
+      </div>
+      <div class="card-title">${item.title}</div>
+      <div class="card-desc">${item.description}</div>
+      <div class="card-fields">${item.fields}</div>
+      <div class="card-impact">Impact: ${item.impact}</div>
+      <div class="card-actions">
+        ${item.status === 'pending' ? `
+          <button class="btn approve" onclick="setStatus(${item.id}, 'approved')">Approve</button>
+          <button class="btn reject" onclick="setStatus(${item.id}, 'rejected')">Reject</button>
+        ` : `
+          <button class="btn ${item.status === 'approved' ? 'approve active' : 'reject active'}">${item.status === 'approved' ? 'Approved' : 'Rejected'}</button>
+          <button class="btn reset" onclick="setStatus(${item.id}, 'pending')">Reset</button>
+        `}
+      </div>
+      <div class="card-comment">
+        <textarea placeholder="Add a note (optional)..." oninput="setComment(${item.id}, this.value)">${item.userComment}</textarea>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderStats() {
+  const total = state.improvements.length;
+  const approved = state.improvements.filter(i => i.status === 'approved').length;
+  const rejected = state.improvements.filter(i => i.status === 'rejected').length;
+  const pending = state.improvements.filter(i => i.status === 'pending').length;
+  document.getElementById('stat-total').textContent = `${total} total`;
+  document.getElementById('stat-pending').textContent = `${pending} pending`;
+  document.getElementById('stat-approved').textContent = `${approved} approved`;
+  document.getElementById('stat-rejected').textContent = `${rejected} rejected`;
+}
+
+function renderDetailPanel() {
+  const el = document.getElementById('detail-content');
+  const approved = state.improvements.filter(i => i.status === 'approved');
+  const rejected = state.improvements.filter(i => i.status === 'rejected');
+
+  const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+  approved.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+
+  let html = '';
+
+  if (approved.length > 0) {
+    html += `<div class="summary-box"><h4>Approved (${approved.length})</h4><ul class="summary-list">`;
+    approved.forEach(i => {
+      html += `<li class="green">${i.title}${i.userComment ? ' — <em>' + escapeHtml(i.userComment) + '</em>' : ''}</li>`;
+    });
+    html += '</ul></div>';
+
+    // Effort breakdown
+    const small = approved.filter(i => i.effort === 'small').length;
+    const medium = approved.filter(i => i.effort === 'medium').length;
+    const large = approved.filter(i => i.effort === 'large').length;
+    html += `<div class="summary-box"><h4>Effort Estimate</h4><ul class="summary-list">`;
+    if (small) html += `<li class="green">${small} small (quick wire-up)</li>`;
+    if (medium) html += `<li class="amber">${medium} medium (new logic needed)</li>`;
+    if (large) html += `<li class="red">${large} large (significant UI work)</li>`;
+    html += '</ul></div>';
+  }
+
+  if (rejected.length > 0) {
+    html += `<div class="summary-box" style="opacity:0.6"><h4>Rejected (${rejected.length})</h4><ul class="summary-list">`;
+    rejected.forEach(i => {
+      html += `<li class="red">${i.title}${i.userComment ? ' — <em>' + escapeHtml(i.userComment) + '</em>' : ''}</li>`;
+    });
+    html += '</ul></div>';
+  }
+
+  if (approved.length === 0 && rejected.length === 0) {
+    html = '<div style="text-align:center;padding:40px;color:var(--text-muted);font-size:13px">Review and approve improvements to see a summary here.</div>';
+  }
+
+  el.innerHTML = html;
+}
+
+function updatePrompt() {
+  const el = document.getElementById('prompt-output');
+  const approved = state.improvements.filter(i => i.status === 'approved');
+
+  if (approved.length === 0) {
+    el.textContent = 'Approve improvements to generate an implementation prompt.';
+    return;
+  }
+
+  const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+  approved.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+
+  let prompt = `Implement the following ${approved.length} improvements to the Music Lab Artist DNA system:\n\n`;
+
+  approved.forEach((item, idx) => {
+    prompt += `${idx + 1}. [${item.priority.toUpperCase()}] ${item.title}\n`;
+    prompt += `   ${item.fields}\n`;
+    if (item.userComment.trim()) {
+      prompt += `   Note: ${item.userComment.trim()}\n`;
+    }
+    prompt += '\n';
+  });
+
+  const byCategory = {};
+  approved.forEach(i => {
+    if (!byCategory[i.category]) byCategory[i.category] = [];
+    byCategory[i.category].push(i);
+  });
+
+  prompt += 'Implementation order: ';
+  const order = [];
+  if (byCategory['missing-constraints']) order.push('fix missing constraints first (quick wins, consistency bugs)');
+  if (byCategory['dead-fields']) order.push('wire dead fields into prompts');
+  if (byCategory['deletion']) order.push('fix deletion cascade');
+  if (byCategory['export']) order.push('add export/import');
+  if (byCategory['genome-gaps']) order.push('connect genome sub-fields');
+  if (byCategory['underused-fields']) order.push('wire underused fields');
+  if (byCategory['ux']) order.push('UX improvements last');
+  prompt += order.join(' → ') + '.';
+
+  el.textContent = prompt;
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function setCategory(id) {
+  state.activeCategory = id;
+  state.activeFilter = "all";
+  renderAll();
+}
+
+function setFilter(id) {
+  state.activeFilter = id;
+  renderAll();
+}
+
+function setStatus(id, status) {
+  const item = state.improvements.find(i => i.id === id);
+  if (item) item.status = status;
+  renderAll();
+}
+
+function setComment(id, comment) {
+  const item = state.improvements.find(i => i.id === id);
+  if (item) item.userComment = comment;
+  updatePrompt();
+  renderDetailPanel();
+}
+
+function copyPrompt() {
+  const text = document.getElementById('prompt-output').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = 'Copy Prompt';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+
+function renderAll() {
+  renderCategories();
+  renderFilterTabs();
+  renderSuggestions();
+  renderStats();
+  renderDetailPanel();
+  updatePrompt();
+}
+
+renderAll();
+</script>
+</body>
+</html>

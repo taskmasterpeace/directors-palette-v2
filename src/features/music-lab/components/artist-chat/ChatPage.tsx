@@ -15,15 +15,21 @@ import {
   RefreshCw,
   Sparkles,
   ArrowLeft,
+  Copy,
+  Check,
+  PenLine,
+  Music,
+  Headphones,
+  ScrollText,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-// ScrollArea available if needed for future use
 
 import { useArtistChatStore } from '@/features/music-lab/store/artist-chat.store'
 import { useArtistDnaStore } from '@/features/music-lab/store/artist-dna.store'
+import { useWritingStudioStore } from '@/features/music-lab/store/writing-studio.store'
 import { useLayoutStore } from '@/store/layout.store'
-import type { ChatMessage, ChatReaction } from '@/features/music-lab/types/artist-chat.types'
+import type { ChatMessage, ChatReaction, ChatActionData } from '@/features/music-lab/types/artist-chat.types'
 import type { LivingContext } from '@/features/music-lab/types/living-context.types'
 import { useState } from 'react'
 
@@ -105,49 +111,87 @@ function ChatHeader({
   )
 }
 
+// ─── Action Icons ────────────────────────────────────────────────────────────
+
+function getActionIcon(type: ChatActionData['type']) {
+  switch (type) {
+    case 'start-song': return Music
+    case 'check-beat': return Headphones
+    case 'view-lyrics': return ScrollText
+    case 'work-on-hook': return Sparkles
+    default: return Music
+  }
+}
+
 // ─── Chat Message Bubble ──────────────────────────────────────────────────────
 
 function ChatBubble({
   message,
   onReact,
+  onAction,
+  onSendLyricsToStudio,
 }: {
   message: ChatMessage
   onReact: (messageId: string, reaction: ChatReaction) => void
+  onAction: (action: ChatActionData) => void
+  onSendLyricsToStudio: (lyrics: string) => void
 }) {
   const isUser = message.role === 'user'
   const isPhoto = message.messageType === 'photo'
   const isAction = message.messageType === 'action'
+  const isLyrics = message.messageType === 'lyrics'
+  const [copied, setCopied] = useState(false)
 
-  return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-3`}>
-      <div className={`max-w-[80%] ${isUser ? 'order-1' : 'order-1'}`}>
-        {isPhoto && message.photoUrl ? (
-          <div className="rounded-2xl overflow-hidden border border-border">
-            <img
-              src={message.photoUrl}
-              alt="Shared photo"
-              className="max-w-[280px] w-full object-cover"
-            />
-          </div>
-        ) : isAction && message.actionData ? (
-          <button className="px-4 py-2.5 rounded-2xl bg-amber-500/20 border border-amber-500/30 text-amber-300 text-sm font-medium hover:bg-amber-500/30 transition-colors">
-            {message.actionData.label}
-          </button>
-        ) : (
-          <div
-            className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
-              isUser
-                ? 'bg-amber-500 text-background rounded-br-md'
-                : 'bg-muted/30 text-foreground border border-border rounded-bl-md'
-            }`}
-          >
-            {message.content}
-          </div>
-        )}
+  const handleCopy = async (text: string) => {
+    await navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
-        {/* Reactions (only on artist messages) */}
-        {!isUser && message.messageType !== 'action' && (
-          <div className="flex items-center gap-1 mt-1 ml-1">
+  const timestamp = (
+    <span className="text-[10px] text-muted-foreground/60">
+      {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+    </span>
+  )
+
+  // ── Lyrics bubble ──
+  if (isLyrics && !isUser) {
+    return (
+      <div className="flex justify-start mb-3">
+        <div className="max-w-[85%] space-y-1.5">
+          {/* Lyrics card with amber accent */}
+          <div className="rounded-2xl overflow-hidden bg-amber-500/[0.06] border border-amber-500/20 shadow-[0_2px_12px_rgba(245,158,11,0.06)]">
+            <div className="flex">
+              <div className="w-1 bg-gradient-to-b from-amber-400 to-amber-600 shrink-0 rounded-l-full" />
+              <div className="px-3.5 py-3 flex-1 min-w-0">
+                <pre className="font-mono text-[13px] leading-relaxed whitespace-pre-wrap break-words text-foreground/90">
+                  {message.content.split('\n').map((line, i) => (
+                    <span key={i} className="block">{line || '\u00A0'}</span>
+                  ))}
+                </pre>
+              </div>
+            </div>
+          </div>
+
+          {/* Lyrics action bar: Copy + Send to Studio + Reactions */}
+          <div className="flex items-center gap-1 ml-1 flex-wrap">
+            <button
+              onClick={() => handleCopy(message.content)}
+              className="flex items-center gap-1 px-2 py-1 rounded-md text-xs transition-colors hover:bg-muted/40 text-muted-foreground/60"
+              title="Copy lyrics"
+            >
+              {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
+              <span>{copied ? 'Copied' : 'Copy'}</span>
+            </button>
+            <button
+              onClick={() => onSendLyricsToStudio(message.content)}
+              className="flex items-center gap-1 px-2 py-1 rounded-md text-xs transition-colors hover:bg-amber-500/20 text-amber-400/80 hover:text-amber-400"
+              title="Send to Writing Studio"
+            >
+              <PenLine className="w-3 h-3" />
+              <span>Edit in Studio</span>
+            </button>
+            <div className="w-px h-3 bg-border/40 mx-0.5" />
             <button
               onClick={() => onReact(message.id, message.reaction === 'thumbs-up' ? null : 'thumbs-up')}
               className={`p-1 rounded-md transition-colors ${
@@ -168,19 +212,114 @@ function ChatBubble({
             >
               <ThumbsDown className="w-3 h-3" />
             </button>
-            <span className="text-[10px] text-muted-foreground/60 ml-1">
-              {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </span>
+            {timestamp}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Action button ──
+  if (isAction && message.actionData && !isUser) {
+    const ActionIcon = getActionIcon(message.actionData.type)
+    return (
+      <div className="flex justify-start mb-3">
+        <div className="space-y-1">
+          <button
+            onClick={() => onAction(message.actionData!)}
+            className="group/action flex items-center gap-2.5 w-full max-w-[280px] rounded-xl px-3.5 py-2.5 bg-amber-500/[0.06] border border-amber-500/25 hover:bg-amber-500/[0.12] hover:border-amber-500/40 hover:shadow-[0_0_16px_rgba(245,158,11,0.1)] transition-all duration-200 text-left"
+          >
+            <div className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0 bg-amber-500/15 group-hover/action:bg-amber-500/25 transition-colors duration-200">
+              <ActionIcon className="w-4 h-4 text-amber-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-foreground truncate">{message.actionData.label}</p>
+              <p className="text-[11px] text-muted-foreground/70 capitalize">{message.actionData.type.replace(/-/g, ' ')}</p>
+            </div>
+            <div className="w-6 h-6 rounded-full flex items-center justify-center bg-amber-500/10 group-hover/action:bg-amber-500/20 transition-colors duration-200">
+              <svg className="w-3 h-3 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </button>
+          <div className="ml-1">{timestamp}</div>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Photo ──
+  if (isPhoto && message.photoUrl) {
+    return (
+      <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-3`}>
+        <div className="max-w-[80%] space-y-1">
+          <div className="rounded-2xl overflow-hidden border border-border">
+            <img src={message.photoUrl} alt="Shared photo" className="max-w-[280px] w-full object-cover" />
+          </div>
+          {!isUser && (
+            <div className="flex items-center gap-1 ml-1">
+              <button
+                onClick={() => onReact(message.id, message.reaction === 'thumbs-up' ? null : 'thumbs-up')}
+                className={`p-1 rounded-md transition-colors ${message.reaction === 'thumbs-up' ? 'bg-amber-500/20 text-amber-400' : 'hover:bg-muted/40 text-muted-foreground/60'}`}
+              >
+                <ThumbsUp className="w-3 h-3" />
+              </button>
+              <button
+                onClick={() => onReact(message.id, message.reaction === 'thumbs-down' ? null : 'thumbs-down')}
+                className={`p-1 rounded-md transition-colors ${message.reaction === 'thumbs-down' ? 'bg-red-500/20 text-red-400' : 'hover:bg-muted/40 text-muted-foreground/60'}`}
+              >
+                <ThumbsDown className="w-3 h-3" />
+              </button>
+              {timestamp}
+            </div>
+          )}
+          {isUser && <div className="flex justify-end mr-1">{timestamp}</div>}
+        </div>
+      </div>
+    )
+  }
+
+  // ── Default: text bubble ──
+  return (
+    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-3`}>
+      <div className="max-w-[80%] space-y-1">
+        <div
+          className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
+            isUser
+              ? 'bg-amber-500 text-background rounded-br-md'
+              : 'bg-muted/30 text-foreground border border-border rounded-bl-md'
+          }`}
+        >
+          {message.content}
+        </div>
+
+        {!isUser && (
+          <div className="flex items-center gap-1 ml-1">
+            <button
+              onClick={() => onReact(message.id, message.reaction === 'thumbs-up' ? null : 'thumbs-up')}
+              className={`p-1 rounded-md transition-colors ${
+                message.reaction === 'thumbs-up'
+                  ? 'bg-amber-500/20 text-amber-400'
+                  : 'hover:bg-muted/40 text-muted-foreground/60'
+              }`}
+            >
+              <ThumbsUp className="w-3 h-3" />
+            </button>
+            <button
+              onClick={() => onReact(message.id, message.reaction === 'thumbs-down' ? null : 'thumbs-down')}
+              className={`p-1 rounded-md transition-colors ${
+                message.reaction === 'thumbs-down'
+                  ? 'bg-red-500/20 text-red-400'
+                  : 'hover:bg-muted/40 text-muted-foreground/60'
+              }`}
+            >
+              <ThumbsDown className="w-3 h-3" />
+            </button>
+            {timestamp}
           </div>
         )}
 
-        {isUser && (
-          <div className="flex justify-end mt-0.5 mr-1">
-            <span className="text-[10px] text-muted-foreground/60">
-              {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </span>
-          </div>
-        )}
+        {isUser && <div className="flex justify-end mr-1">{timestamp}</div>}
       </div>
     </div>
   )
@@ -192,10 +331,14 @@ function ChatMessageList({
   messages,
   isSending,
   onReact,
+  onAction,
+  onSendLyricsToStudio,
 }: {
   messages: ChatMessage[]
   isSending: boolean
   onReact: (messageId: string, reaction: ChatReaction) => void
+  onAction: (action: ChatActionData) => void
+  onSendLyricsToStudio: (lyrics: string) => void
 }) {
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -224,7 +367,13 @@ function ChatMessageList({
   return (
     <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
       {messages.map((msg) => (
-        <ChatBubble key={msg.id} message={msg} onReact={onReact} />
+        <ChatBubble
+          key={msg.id}
+          message={msg}
+          onReact={onReact}
+          onAction={onAction}
+          onSendLyricsToStudio={onSendLyricsToStudio}
+        />
       ))}
 
       {isSending && (
@@ -363,6 +512,7 @@ export function ChatPage({ userId }: ChatPageProps) {
   } = useArtistDnaStore()
 
   const { setActiveTab, setMusicLabSubTab } = useLayoutStore()
+  const { importSections, setActiveArtistId: setStudioArtistId, resetStudio, addSection } = useWritingStudioStore()
 
   const [showInspiration, setShowInspiration] = useState(false)
   const [showContext, setShowContext] = useState(false)
@@ -415,6 +565,63 @@ export function ChatPage({ userId }: ChatPageProps) {
     if (!activeArtist) return
     await requestPhoto('selfie requested by user', activeArtist.dna)
   }, [activeArtist, requestPhoto])
+
+  // Navigate to writing studio with context
+  const navigateToStudio = useCallback((sectionType?: 'hook' | 'verse') => {
+    if (activeArtistId) setStudioArtistId(activeArtistId)
+    if (sectionType) addSection(sectionType)
+    setActiveTab('music-lab')
+    setMusicLabSubTab('writing-studio')
+  }, [activeArtistId, setStudioArtistId, addSection, setActiveTab, setMusicLabSubTab])
+
+  // Handle action button clicks from chat
+  const handleAction = useCallback((action: ChatActionData) => {
+    switch (action.type) {
+      case 'start-song':
+        if (activeArtistId) setStudioArtistId(activeArtistId)
+        resetStudio()
+        setActiveTab('music-lab')
+        setMusicLabSubTab('writing-studio')
+        break
+      case 'work-on-hook':
+        navigateToStudio('hook')
+        break
+      case 'check-beat':
+        setActiveTab('music-lab')
+        setMusicLabSubTab('sound-studio')
+        break
+      case 'view-lyrics':
+        navigateToStudio()
+        break
+    }
+  }, [activeArtistId, setStudioArtistId, resetStudio, navigateToStudio, setActiveTab, setMusicLabSubTab])
+
+  // Send lyrics from chat directly to writing studio import
+  const handleSendLyricsToStudio = useCallback(async (lyrics: string) => {
+    if (activeArtistId) setStudioArtistId(activeArtistId)
+
+    // Call the analyze-lyrics API to detect sections
+    try {
+      const response = await fetch('/api/artist-dna/analyze-lyrics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lyrics }),
+      })
+
+      if (response.ok) {
+        const { sections: detected } = await response.json()
+        if (detected?.length) {
+          importSections(detected)
+        }
+      }
+    } catch {
+      // Fallback: import as a single verse section if API fails
+      importSections([{ type: 'verse', label: 'Verse 1', lines: lyrics.split('\n') }])
+    }
+
+    setActiveTab('music-lab')
+    setMusicLabSubTab('writing-studio')
+  }, [activeArtistId, setStudioArtistId, importSections, setActiveTab, setMusicLabSubTab])
 
   // ── No artist selected: show artist picker ────────────────────────────────
   if (!activeArtistId || !activeArtist) {
@@ -546,6 +753,8 @@ export function ChatPage({ userId }: ChatPageProps) {
             messages={messages}
             isSending={isSending}
             onReact={handleReact}
+            onAction={handleAction}
+            onSendLyricsToStudio={handleSendLyricsToStudio}
           />
 
           <ChatInput
