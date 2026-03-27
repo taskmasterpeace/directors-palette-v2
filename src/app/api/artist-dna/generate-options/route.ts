@@ -89,6 +89,12 @@ function buildSystemPrompt(body: GenerateOptionsBody): string {
   if (artistDna.identity?.backstory) {
     parts.push(`Backstory: ${artistDna.identity.backstory.substring(0, 300)}`)
   }
+  if (artistDna.identity?.significantEvents?.length > 0) {
+    parts.push(`Significant life events: ${artistDna.identity.significantEvents.slice(0, 5).join('; ')}`)
+  }
+  if (artistDna.identity?.ethnicity) {
+    parts.push(`Cultural background: ${artistDna.identity.ethnicity}`)
+  }
 
   // Sound profile
   if (artistDna.sound?.melodyBias !== undefined) {
@@ -106,8 +112,17 @@ function buildSystemPrompt(body: GenerateOptionsBody): string {
   if (artistDna.sound?.subgenres?.length > 0) {
     parts.push(`Sub-genres: ${artistDna.sound.subgenres.join(', ')}`)
   }
+  if (artistDna.sound?.genreEvolution?.length > 0) {
+    const evoDesc = artistDna.sound.genreEvolution
+      .map(e => `${e.era}: ${e.genres.join(', ')}`)
+      .join(' → ')
+    parts.push(`Sound evolution: ${evoDesc}`)
+  }
   if (artistDna.sound?.artistInfluences?.length > 0) {
     parts.push(`Influenced by: ${artistDna.sound.artistInfluences.join(', ')}. Channel their energy without copying.`)
+  }
+  if (artistDna.sound?.keyCollaborators?.length > 0) {
+    parts.push(`Key collaborators: ${artistDna.sound.keyCollaborators.join(', ')}`)
   }
   if (artistDna.sound?.productionPreferences?.length > 0) {
     parts.push(`Production vibe: ${artistDna.sound.productionPreferences.join(', ')}`)
@@ -117,6 +132,13 @@ function buildSystemPrompt(body: GenerateOptionsBody): string {
   }
   if (artistDna.sound?.instruments?.length > 0) {
     parts.push(`Preferred instruments: ${artistDna.sound.instruments.join(', ')}. Reference these instruments naturally in imagery or rhythm.`)
+  }
+  if (artistDna.sound?.flowStyle) parts.push(`Flow style: ${artistDna.sound.flowStyle}`)
+  if (artistDna.sound?.language && artistDna.sound.language !== 'English') {
+    parts.push(`Primary language: ${artistDna.sound.language}`)
+  }
+  if (artistDna.sound?.secondaryLanguages?.length > 0) {
+    parts.push(`Also writes in: ${artistDna.sound.secondaryLanguages.join(', ')}. Mix in words/phrases from these languages naturally.`)
   }
 
   // Persona
@@ -162,6 +184,9 @@ function buildSystemPrompt(body: GenerateOptionsBody): string {
       if (genome.blueprint.mustInclude.length > 0) parts.push(`Must include: ${genome.blueprint.mustInclude.join('; ')}`)
       if (genome.blueprint.shouldInclude.length > 0) parts.push(`Should include: ${genome.blueprint.shouldInclude.join('; ')}`)
       if (genome.blueprint.avoidRepeating.length > 0) parts.push(`Avoid repeating: ${genome.blueprint.avoidRepeating.join('; ')}`)
+      if (genome.blueprint.suggestExploring.length > 0) {
+        parts.push(`Fresh territory to explore: ${genome.blueprint.suggestExploring.join('; ')}`)
+      }
     }
     parts.push('Use this genome to understand the artist\'s established style. Build on it, don\'t repeat it.')
   } else if (artistDna.catalog?.entries?.length > 0) {

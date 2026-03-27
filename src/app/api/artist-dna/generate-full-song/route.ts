@@ -77,6 +77,12 @@ function buildFullSongPrompt(body: GenerateFullSongBody): string {
   if (artistDna.identity?.backstory) {
     parts.push(`Backstory: ${artistDna.identity.backstory.substring(0, 300)}`)
   }
+  if (artistDna.identity?.significantEvents?.length > 0) {
+    parts.push(`Significant life events: ${artistDna.identity.significantEvents.slice(0, 5).join('; ')}`)
+  }
+  if (artistDna.identity?.ethnicity) {
+    parts.push(`Cultural background: ${artistDna.identity.ethnicity}`)
+  }
 
   // Sound profile
   if (artistDna.sound?.melodyBias !== undefined) {
@@ -90,10 +96,26 @@ function buildFullSongPrompt(body: GenerateFullSongBody): string {
   }
   if (artistDna.sound?.genres?.length > 0) parts.push(`Genres: ${artistDna.sound.genres.join(', ')}`)
   if (artistDna.sound?.subgenres?.length > 0) parts.push(`Sub-genres: ${artistDna.sound.subgenres.join(', ')}`)
+  if (artistDna.sound?.genreEvolution?.length > 0) {
+    const evoDesc = artistDna.sound.genreEvolution
+      .map(e => `${e.era}: ${e.genres.join(', ')}`)
+      .join(' → ')
+    parts.push(`Sound evolution: ${evoDesc}`)
+  }
   if (artistDna.sound?.artistInfluences?.length > 0) parts.push(`Influenced by: ${artistDna.sound.artistInfluences.join(', ')}. Channel their energy without copying.`)
+  if (artistDna.sound?.keyCollaborators?.length > 0) {
+    parts.push(`Key collaborators: ${artistDna.sound.keyCollaborators.join(', ')}`)
+  }
   if (artistDna.sound?.productionPreferences?.length > 0) parts.push(`Production vibe: ${artistDna.sound.productionPreferences.join(', ')}`)
   if (artistDna.sound?.vocalTextures?.length > 0) parts.push(`Vocal texture: ${artistDna.sound.vocalTextures.join(', ')}`)
   if (artistDna.sound?.instruments?.length > 0) parts.push(`Preferred instruments: ${artistDna.sound.instruments.join(', ')}`)
+  if (artistDna.sound?.flowStyle) parts.push(`Flow style: ${artistDna.sound.flowStyle}`)
+  if (artistDna.sound?.language && artistDna.sound.language !== 'English') {
+    parts.push(`Primary language: ${artistDna.sound.language}`)
+  }
+  if (artistDna.sound?.secondaryLanguages?.length > 0) {
+    parts.push(`Also writes in: ${artistDna.sound.secondaryLanguages.join(', ')}. Mix in words/phrases from these languages naturally.`)
+  }
 
   // Persona
   if (artistDna.persona?.attitude) parts.push(`Artist attitude: ${artistDna.persona.attitude}`)
@@ -120,6 +142,9 @@ function buildFullSongPrompt(body: GenerateFullSongBody): string {
       if (genome.blueprint.mustInclude.length > 0) parts.push(`Must include: ${genome.blueprint.mustInclude.join('; ')}`)
       if (genome.blueprint.shouldInclude.length > 0) parts.push(`Should include: ${genome.blueprint.shouldInclude.join('; ')}`)
       if (genome.blueprint.avoidRepeating.length > 0) parts.push(`Avoid repeating: ${genome.blueprint.avoidRepeating.join('; ')}`)
+      if (genome.blueprint.suggestExploring.length > 0) {
+        parts.push(`Fresh territory to explore: ${genome.blueprint.suggestExploring.join('; ')}`)
+      }
     }
   }
 
