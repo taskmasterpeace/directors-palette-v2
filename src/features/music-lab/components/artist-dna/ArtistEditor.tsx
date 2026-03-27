@@ -4,6 +4,16 @@ import { useEffect, useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import { Save, Check, Loader2, Sparkles } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { useArtistDnaStore } from '../../store/artist-dna.store'
 import { ARTIST_DNA_TABS } from '../../types/artist-dna.types'
 import { IdentityTab } from './tabs/IdentityTab'
@@ -55,9 +65,10 @@ function getLowConfidenceTabCounts(fields: string[]): Record<string, number> {
 }
 
 export function ArtistEditor() {
-  const { activeTab, setActiveTab, suggestionCache, setSuggestions, draft, isDirty, saveArtist } = useArtistDnaStore()
+  const { activeTab, setActiveTab, suggestionCache, setSuggestions, draft, isDirty, saveArtist, deleteArtist, activeArtistId, closeEditor } = useArtistDnaStore()
   const lcfCounts = getLowConfidenceTabCounts(draft.lowConfidenceFields || [])
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const handleSave = useCallback(async () => {
     if (!isDirty && saveState !== 'idle') return
@@ -123,7 +134,7 @@ export function ArtistEditor() {
   return (
     <div className="space-y-2">
       {/* Constellation with overlaid controls (Back, Name, Save) */}
-      <ConstellationWidget />
+      <ConstellationWidget onDeleteRequest={() => setShowDeleteConfirm(true)} />
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
         <TabsList className="w-full overflow-x-auto flex-nowrap justify-start scrollbar-hide">
@@ -199,6 +210,31 @@ export function ArtistEditor() {
           </div>
         </div>
       )}
+
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Artist?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this artist and all their data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={async () => {
+                if (activeArtistId) {
+                  await deleteArtist(activeArtistId)
+                  closeEditor()
+                }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

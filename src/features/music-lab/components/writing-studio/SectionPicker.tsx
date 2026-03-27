@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Plus, GripVertical, Lock, Trash2, ChevronUp, ChevronDown } from 'lucide-react'
 import { useWritingStudioStore } from '../../store/writing-studio.store'
+import { useArtistDnaStore } from '../../store/artist-dna.store'
 import type { SectionType } from '../../types/writing-studio.types'
 
 const SECTION_LABELS: Record<SectionType, string> = {
@@ -37,6 +38,7 @@ export function SectionPicker() {
     setActiveSection,
     reorderSections,
   } = useWritingStudioStore()
+  const genome = useArtistDnaStore((s) => s.draft.catalog.genome)
 
   const moveSection = (index: number, direction: 'up' | 'down') => {
     const newIndex = direction === 'up' ? index - 1 : index + 1
@@ -56,7 +58,7 @@ export function SectionPicker() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             {(Object.keys(SECTION_LABELS) as SectionType[]).map((type) => (
-              <DropdownMenuItem key={type} onClick={() => addSection(type)}>
+              <DropdownMenuItem key={type} onClick={() => addSection(type, genome?.dominantMood)}>
                 {SECTION_LABELS[type]}
               </DropdownMenuItem>
             ))}

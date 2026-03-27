@@ -50,7 +50,7 @@ interface WritingStudioState {
   revisionNotes: string
 
   // Section management
-  addSection: (type: SectionType) => void
+  addSection: (type: SectionType, defaultEmotion?: string) => void
   removeSection: (id: string) => void
   reorderSections: (fromIndex: number, toIndex: number) => void
   setActiveSection: (id: string | null) => void
@@ -126,12 +126,12 @@ export const useWritingStudioStore = create<WritingStudioState>()(
       isRevising: false,
       revisionNotes: '',
 
-      addSection: (type: SectionType) => {
+      addSection: (type: SectionType, defaultEmotion?: string) => {
         const barDefaults = BAR_COUNT_RANGES[type]
         const section: SongSection = {
           id: crypto.randomUUID(),
           type,
-          tone: { ...DEFAULT_TONE, barCount: barDefaults.default },
+          tone: { ...DEFAULT_TONE, emotion: defaultEmotion || DEFAULT_TONE.emotion, barCount: barDefaults.default },
           selectedDraft: null,
           isLocked: false,
         }

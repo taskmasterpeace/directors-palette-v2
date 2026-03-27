@@ -6,11 +6,15 @@ export const sa = <T = string>(val: unknown): T[] => Array.isArray(val) ? val as
 
 export function calculateRingFill(dna: ArtistDNA) {
   const sound =
-    (sa(dna.sound.genres).length > 0 ? 0.2 : 0) +
-    (sa(dna.sound.vocalTextures).length > 0 ? 0.2 : 0) +
-    (sa(dna.sound.productionPreferences).length > 0 ? 0.2 : 0) +
-    (sa(dna.sound.artistInfluences).length > 0 ? 0.2 : 0) +
-    (dna.sound.soundDescription ? 0.2 : 0)
+    (sa(dna.sound.genres).length > 0 ? 0.15 : 0) +
+    (sa(dna.sound.vocalTextures).length > 0 ? 0.15 : 0) +
+    (sa(dna.sound.productionPreferences).length > 0 ? 0.15 : 0) +
+    (sa(dna.sound.artistInfluences).length > 0 ? 0.15 : 0) +
+    (dna.sound.soundDescription ? 0.1 : 0) +
+    (dna.sound.flowStyle ? 0.1 : 0) +
+    (sa(dna.sound.instruments).length > 0 ? 0.1 : 0) +
+    (sa(dna.sound.microgenres).length > 0 ? 0.05 : 0) +
+    (sa(dna.sound.keyCollaborators).length > 0 ? 0.05 : 0)
 
   const influences =
     (sa(dna.sound.artistInfluences).length > 0 ? 0.5 : 0) +
@@ -18,10 +22,11 @@ export function calculateRingFill(dna: ArtistDNA) {
     (sa(dna.sound.subgenres).length > 0 ? 0.25 : 0)
 
   const persona =
-    (sa(dna.persona.traits).length > 0 ? 0.25 : 0) +
-    (sa(dna.persona.likes).length > 0 ? 0.25 : 0) +
-    (dna.persona.attitude ? 0.25 : 0) +
-    (dna.persona.worldview ? 0.25 : 0)
+    (sa(dna.persona.traits).length > 0 ? 0.2 : 0) +
+    (sa(dna.persona.likes).length > 0 ? 0.2 : 0) +
+    (sa(dna.persona.dislikes).length > 0 ? 0.2 : 0) +
+    (dna.persona.attitude ? 0.2 : 0) +
+    (dna.persona.worldview ? 0.2 : 0)
 
   const lexicon =
     (sa(dna.lexicon.signaturePhrases).length > 0 ? 0.25 : 0) +
@@ -32,9 +37,10 @@ export function calculateRingFill(dna: ArtistDNA) {
   const profile =
     (dna.identity.stageName || dna.identity.realName ? 0.2 : 0) +
     (dna.identity.backstory ? 0.2 : 0) +
-    (dna.identity.city ? 0.2 : 0) +
-    (dna.look.visualDescription ? 0.2 : 0) +
-    (Array.isArray(dna.catalog.entries) && dna.catalog.entries.length > 0 ? 0.2 : 0)
+    (dna.identity.city ? 0.15 : 0) +
+    (dna.look.visualDescription ? 0.15 : 0) +
+    (Array.isArray(dna.catalog.entries) && dna.catalog.entries.length > 0 ? 0.15 : 0) +
+    (sa(dna.identity.significantEvents).length > 0 ? 0.15 : 0)
 
   return { sound, influences, persona, lexicon, profile }
 }

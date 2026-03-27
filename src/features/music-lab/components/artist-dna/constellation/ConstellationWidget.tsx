@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useEffect, useRef } from 'react'
-import { Star, ChevronUp, ChevronDown, ArrowLeft, Save, User, Sparkles, X, Dna, Loader2, Wand2 } from 'lucide-react'
+import { Star, ChevronUp, ChevronDown, ArrowLeft, Save, User, Sparkles, X, Dna, Loader2, Wand2, Trash2 } from 'lucide-react'
 import { Canvas } from '@react-three/fiber'
 import { Button } from '@/components/ui/button'
 import {
@@ -16,7 +16,7 @@ import { RING_COLORS, RING_LABELS, RING_TAB_MAP } from './constants'
 import { calculateRingFill } from './utils'
 import { ConstellationScene } from './ConstellationScene'
 
-export function ConstellationWidget() {
+export function ConstellationWidget({ onDeleteRequest }: { onDeleteRequest?: () => void } = {}) {
   const [expanded, setExpanded] = useState(true)
   const {
     draft, isDirty, saveArtist, closeEditor, artists,
@@ -151,22 +151,38 @@ export function ConstellationWidget() {
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-1 px-2 py-1 rounded-md bg-black/50 backdrop-blur-sm hover:bg-black/70 transition-colors">
                   <span className="text-sm font-semibold text-white/90">{artistName}</span>
-                  {otherArtists.length > 0 && (
+                  {(otherArtists.length > 0 || onDeleteRequest) && (
                     <ChevronDown className="w-3 h-3 text-white/50" />
                   )}
                   {isDirty && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 ml-1" />}
                 </button>
               </DropdownMenuTrigger>
-              {otherArtists.length > 0 && (
+              {(otherArtists.length > 0 || onDeleteRequest) && (
                 <DropdownMenuContent align="start">
-                  <p className="px-2 py-1 text-[10px] text-muted-foreground font-medium">Switch Artist</p>
-                  {otherArtists.map((a) => (
-                    <DropdownMenuItem key={a.id} onClick={() => loadArtistIntoDraft(a.id)} className="text-sm">
-                      {a.name}
-                    </DropdownMenuItem>
-                  ))}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={startNewArtist} className="text-sm">+ New Artist</DropdownMenuItem>
+                  {otherArtists.length > 0 && (
+                    <>
+                      <p className="px-2 py-1 text-[10px] text-muted-foreground font-medium">Switch Artist</p>
+                      {otherArtists.map((a) => (
+                        <DropdownMenuItem key={a.id} onClick={() => loadArtistIntoDraft(a.id)} className="text-sm">
+                          {a.name}
+                        </DropdownMenuItem>
+                      ))}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={startNewArtist} className="text-sm">+ New Artist</DropdownMenuItem>
+                    </>
+                  )}
+                  {onDeleteRequest && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        className="text-red-400 focus:text-red-300"
+                        onClick={() => onDeleteRequest?.()}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete Artist
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               )}
             </DropdownMenu>
