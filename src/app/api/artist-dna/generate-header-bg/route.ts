@@ -69,6 +69,11 @@ function buildPrompt(dna: ArtistDNA): string {
     }
   }
 
+  // Sound description (user's own words about the vibe)
+  if (dna.sound.soundDescription) {
+    parts.push(dna.sound.soundDescription)
+  }
+
   // Mood from attitude
   if (dna.persona.attitude) {
     const key = dna.persona.attitude.toLowerCase()

@@ -64,6 +64,16 @@ export function buildMusicStylePrompt(dna: ArtistDNA): string {
     tags.push(...sa(dna.sound.subgenres).slice(0, 2))
   }
 
+  // Microgenres
+  if (sa(dna.sound.microgenres).length > 0) {
+    tags.push(...sa(dna.sound.microgenres).slice(0, 2))
+  }
+
+  // Instruments
+  if (sa(dna.sound.instruments).length > 0) {
+    tags.push(...sa(dna.sound.instruments).slice(0, 2))
+  }
+
   // Production preferences
   if (sa(dna.sound.productionPreferences).length > 0) {
     tags.push(...sa(dna.sound.productionPreferences).slice(0, 2))
