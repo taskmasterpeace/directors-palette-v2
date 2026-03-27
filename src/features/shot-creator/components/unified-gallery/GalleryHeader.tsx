@@ -290,17 +290,17 @@ export function GalleryHeader({
             onSelectAll={onSelectAll}
             onClearSelection={onClearSelection}
           />
-        </div>
 
-        {/* Row 3: Search bar — full width */}
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-          <Input
-            placeholder="Search prompts..."
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-8 w-full h-7 text-xs"
-          />
+          {/* Search — inline next to select */}
+          <div className="relative flex-1 min-w-[120px]">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+            <Input
+              placeholder="Search prompts..."
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="pl-8 w-full h-7 text-xs"
+            />
+          </div>
         </div>
       </div>
     </CardHeader>
