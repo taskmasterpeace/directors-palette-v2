@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Sparkles, Loader2 } from 'lucide-react'
+import { Plus, Sparkles, Loader2, Upload } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,7 +34,7 @@ const LOADING_PHASES = [
 ]
 
 export function ArtistList() {
-  const { artists, isLoading, startNewArtist, startFromArtist, isSeedingFromArtist, loadArtistIntoDraft, deleteArtist } =
+  const { artists, isLoading, startNewArtist, startFromArtist, isSeedingFromArtist, loadArtistIntoDraft, deleteArtist, exportArtist, importArtist } =
     useArtistDnaStore()
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
   const [seedInput, setSeedInput] = useState('')
@@ -97,6 +97,7 @@ export function ArtistList() {
             artist={artist}
             onClick={() => loadArtistIntoDraft(artist.id)}
             onDelete={() => setDeleteTarget(artist.id)}
+            onExport={() => exportArtist(artist.id)}
           />
         ))}
 
@@ -115,6 +116,23 @@ export function ArtistList() {
           <Sparkles className="w-8 h-8" />
           <span className="font-medium">Start from Real Artist</span>
         </button>
+
+        <label className="cursor-pointer flex items-center gap-2 rounded-xl border border-dashed border-border/50 p-3 hover:border-cyan-500/30 hover:bg-cyan-500/5 transition-colors text-sm text-muted-foreground hover:text-cyan-400">
+          <Upload className="w-4 h-4" />
+          Import Artist
+          <input
+            type="file"
+            accept=".json"
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0]
+              if (!file) return
+              const text = await file.text()
+              await importArtist(text)
+              e.target.value = ''
+            }}
+          />
+        </label>
       </div>
 
       {/* Seed from Artist Dialog */}

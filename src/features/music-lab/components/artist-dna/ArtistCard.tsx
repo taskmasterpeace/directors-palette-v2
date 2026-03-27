@@ -3,16 +3,17 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Trash2 } from 'lucide-react'
+import { Download, Trash2 } from 'lucide-react'
 import type { UserArtistProfile } from '../../types/artist-dna.types'
 
 interface ArtistCardProps {
   artist: UserArtistProfile
   onClick: () => void
   onDelete: () => void
+  onExport?: () => void
 }
 
-export function ArtistCard({ artist, onClick, onDelete }: ArtistCardProps) {
+export function ArtistCard({ artist, onClick, onDelete, onExport }: ArtistCardProps) {
   const initials = artist.name
     .split(' ')
     .map((w) => w[0])
@@ -43,18 +44,27 @@ export function ArtistCard({ artist, onClick, onDelete }: ArtistCardProps) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold truncate">{artist.name}</h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive h-7 w-7 p-0"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onDelete()
-                }}
-                aria-label={`Delete ${artist.name}`}
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={(e) => { e.stopPropagation(); onExport?.() }}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-md hover:bg-cyan-500/10 text-muted-foreground hover:text-cyan-400"
+                  title="Export artist DNA"
+                >
+                  <Download className="w-4 h-4" />
+                </button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive h-7 w-7 p-0"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onDelete()
+                  }}
+                  aria-label={`Delete ${artist.name}`}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
             {city && <p className="text-sm text-muted-foreground">{city}</p>}
             {genres.length > 0 && (

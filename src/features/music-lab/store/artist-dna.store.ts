@@ -101,6 +101,10 @@ interface ArtistDnaState {
   generateMix: () => Promise<void>
   toggleCombineMode: () => void
 
+  // Actions - Export / Import
+  exportArtist: (artistId: string) => void
+  importArtist: (jsonString: string) => Promise<boolean>
+
   // Actions - Navigation
   closeEditor: () => void
 }
@@ -690,6 +694,49 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
             : null
           return { combineVocalAndStyle: newCombine, sunoOutput: output }
         })
+      },
+
+      exportArtist: (artistId: string) => {
+        const artist = get().artists.find(a => a.id === artistId)
+        if (!artist) return
+
+        const exportData = {
+          version: 1,
+          exportedAt: new Date().toISOString(),
+          artist: {
+            name: artist.name,
+            dna: artist.dna,
+          },
+        }
+
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `${artist.name.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}-dna.json`
+        a.click()
+        URL.revokeObjectURL(url)
+      },
+
+      importArtist: async (jsonString: string) => {
+        try {
+          const data = JSON.parse(jsonString)
+          if (!data?.artist?.dna || !data?.artist?.name) {
+            console.error('Invalid artist export format')
+            return false
+          }
+
+          set({
+            draft: { ...data.artist.dna, identity: { ...data.artist.dna.identity } },
+            activeArtistId: null,
+            editorOpen: true,
+            isDirty: true,
+          })
+          return true
+        } catch {
+          console.error('Failed to parse artist JSON')
+          return false
+        }
       },
 
       closeEditor: () => {
