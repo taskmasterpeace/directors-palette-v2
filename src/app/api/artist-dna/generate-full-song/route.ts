@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { creditsService } from '@/features/credits/services/credits.service'
 import type { SectionType, ToneSettings } from '@/features/music-lab/types/writing-studio.types'
+import { SECTION_GUIDANCE } from '@/features/music-lab/types/writing-studio.types'
 import type { ArtistDNA } from '@/features/music-lab/types/artist-dna.types'
 import { logger } from '@/lib/logger'
 
@@ -197,13 +198,7 @@ function buildFullSongPrompt(body: GenerateFullSongBody): string {
 }
 
 function getSectionGuidance(type: SectionType): string {
-  switch (type) {
-    case 'intro': return 'Set the scene, establish mood.'
-    case 'hook': return 'Catchy, memorable, repeatable. The emotional anchor of the song.'
-    case 'verse': return 'Storytelling, vivid detail, narrative progression. Pack each line with meaning.'
-    case 'bridge': return 'Shift perspective, build tension, offer new insight.'
-    case 'outro': return 'Wrap up, leave a lasting impression.'
-  }
+  return SECTION_GUIDANCE[type] || 'Write this section with appropriate style and energy.'
 }
 
 export async function POST(request: NextRequest) {

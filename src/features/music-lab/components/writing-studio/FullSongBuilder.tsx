@@ -47,15 +47,26 @@ import { EMOTIONS, DELIVERIES, ENERGY_ZONES, BAR_COUNT_RANGES } from '../../type
 // ─── Section styling ────────────────────────────────────────────────────────
 
 const SECTION_CHIP_STYLES: Record<SectionType, { bg: string; border: string; text: string; glow: string }> = {
-  intro:  { bg: 'bg-blue-500/15',   border: 'border-blue-500/40',   text: 'text-blue-400',   glow: 'shadow-blue-500/20' },
-  verse:  { bg: 'bg-green-500/15',  border: 'border-green-500/40',  text: 'text-green-400',  glow: 'shadow-green-500/20' },
-  hook:   { bg: 'bg-amber-500/15',  border: 'border-amber-500/40',  text: 'text-amber-400',  glow: 'shadow-amber-500/20' },
-  bridge: { bg: 'bg-cyan-500/15', border: 'border-cyan-500/40', text: 'text-cyan-400', glow: 'shadow-cyan-500/20' },
-  outro:  { bg: 'bg-rose-500/15',   border: 'border-rose-500/40',   text: 'text-rose-400',   glow: 'shadow-rose-500/20' },
+  intro:          { bg: 'bg-blue-500/15',    border: 'border-blue-500/40',    text: 'text-blue-400',    glow: 'shadow-blue-500/20' },
+  verse:          { bg: 'bg-green-500/15',   border: 'border-green-500/40',   text: 'text-green-400',   glow: 'shadow-green-500/20' },
+  'pre-chorus':   { bg: 'bg-purple-500/15',  border: 'border-purple-500/40',  text: 'text-purple-400',  glow: 'shadow-purple-500/20' },
+  hook:           { bg: 'bg-amber-500/15',   border: 'border-amber-500/40',   text: 'text-amber-400',   glow: 'shadow-amber-500/20' },
+  chorus:         { bg: 'bg-yellow-500/15',  border: 'border-yellow-500/40',  text: 'text-yellow-400',  glow: 'shadow-yellow-500/20' },
+  'post-chorus':  { bg: 'bg-orange-500/15',  border: 'border-orange-500/40',  text: 'text-orange-400',  glow: 'shadow-orange-500/20' },
+  bridge:         { bg: 'bg-cyan-500/15',    border: 'border-cyan-500/40',    text: 'text-cyan-400',    glow: 'shadow-cyan-500/20' },
+  interlude:      { bg: 'bg-indigo-500/15',  border: 'border-indigo-500/40',  text: 'text-indigo-400',  glow: 'shadow-indigo-500/20' },
+  break:          { bg: 'bg-slate-500/15',   border: 'border-slate-500/40',   text: 'text-slate-400',   glow: 'shadow-slate-500/20' },
+  drop:           { bg: 'bg-red-500/15',     border: 'border-red-500/40',     text: 'text-red-400',     glow: 'shadow-red-500/20' },
+  build:          { bg: 'bg-teal-500/15',    border: 'border-teal-500/40',    text: 'text-teal-400',    glow: 'shadow-teal-500/20' },
+  instrumental:   { bg: 'bg-violet-500/15',  border: 'border-violet-500/40',  text: 'text-violet-400',  glow: 'shadow-violet-500/20' },
+  outro:          { bg: 'bg-rose-500/15',    border: 'border-rose-500/40',    text: 'text-rose-400',    glow: 'shadow-rose-500/20' },
 }
 
 const SECTION_LABELS: Record<SectionType, string> = {
-  intro: 'Intro', verse: 'Verse', hook: 'Hook', bridge: 'Bridge', outro: 'Outro',
+  intro: 'Intro', verse: 'Verse', 'pre-chorus': 'Pre-Chorus', hook: 'Hook',
+  chorus: 'Chorus', 'post-chorus': 'Post-Chorus', bridge: 'Bridge',
+  interlude: 'Interlude', break: 'Break', drop: 'Drop', build: 'Build',
+  instrumental: 'Instrumental', outro: 'Outro',
 }
 
 // ─── Presets ─────────────────────────────────────────────────────────────────

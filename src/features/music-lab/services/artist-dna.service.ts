@@ -34,6 +34,9 @@ function safeDna(raw: ArtistDNA): ArtistDNA {
     lexicon: safeArrays({ ...d.lexicon, ...raw.lexicon }, d.lexicon),
     look: safeArrays({ ...d.look, ...raw.look }, d.look),
     catalog: { ...d.catalog, ...raw.catalog },
+    voices: Array.isArray(raw.voices) ? raw.voices : [],
+    socialCircle: raw.socialCircle || d.socialCircle,
+    phone: raw.phone,
     headerBackgroundUrl: raw.headerBackgroundUrl || '',
     lowConfidenceFields: Array.isArray(raw.lowConfidenceFields) ? raw.lowConfidenceFields : [],
   }

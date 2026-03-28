@@ -3,7 +3,10 @@
  * Song section builder with tone controls and draft generation
  */
 
-export type SectionType = 'intro' | 'hook' | 'verse' | 'bridge' | 'outro'
+export type SectionType =
+  | 'intro' | 'verse' | 'pre-chorus' | 'hook' | 'chorus'
+  | 'post-chorus' | 'bridge' | 'interlude' | 'break'
+  | 'drop' | 'build' | 'instrumental' | 'outro'
 
 export interface ToneSettings {
   emotion: string
@@ -14,9 +17,17 @@ export interface ToneSettings {
 
 export const BAR_COUNT_RANGES: Record<SectionType, { min: number; max: number; default: number }> = {
   intro: { min: 2, max: 8, default: 4 },
-  hook: { min: 4, max: 12, default: 8 },
   verse: { min: 8, max: 32, default: 20 },
+  'pre-chorus': { min: 2, max: 8, default: 4 },
+  hook: { min: 4, max: 12, default: 8 },
+  chorus: { min: 4, max: 12, default: 8 },
+  'post-chorus': { min: 2, max: 8, default: 4 },
   bridge: { min: 2, max: 8, default: 4 },
+  interlude: { min: 2, max: 8, default: 4 },
+  break: { min: 1, max: 4, default: 2 },
+  drop: { min: 2, max: 8, default: 4 },
+  build: { min: 2, max: 8, default: 4 },
+  instrumental: { min: 4, max: 16, default: 8 },
   outro: { min: 2, max: 8, default: 4 },
 }
 
@@ -32,6 +43,15 @@ export interface SongSection {
   tone: ToneSettings
   selectedDraft: DraftOption | null
   isLocked: boolean
+  voice: 'lead' | 'feature' | 'both' | 'adlib'
+  deliveryTag: string | null
+}
+
+export interface FeatureArtist {
+  id: string | null        // null = manual entry, string = picked from artist profiles
+  name: string
+  voiceType: 'male' | 'female'
+  voiceDescription: string
 }
 
 export interface IdeaEntry {
@@ -67,6 +87,40 @@ export const DEFAULT_TONE: ToneSettings = {
   energy: 50,
   delivery: 'Raw',
   barCount: 16,
+}
+
+// ─── Section Guidance & Suno Tags ──────────────────────────────────────────
+
+export const SECTION_GUIDANCE: Record<SectionType, string> = {
+  'intro': 'Set the scene, establish mood.',
+  'verse': 'Storytelling, vivid detail, narrative progression. Pack each line with meaning.',
+  'pre-chorus': 'Build tension toward the chorus. Shorter lines, rising energy.',
+  'hook': 'Catchy, memorable, repeatable. The emotional anchor of the song.',
+  'chorus': 'Big, singable, repeatable. The part everyone remembers and sings along to.',
+  'post-chorus': 'Extend the chorus energy. A chant, ad-lib section, or melodic extension.',
+  'bridge': 'Shift perspective, build tension, offer new insight.',
+  'interlude': 'Musical break. Minimal or no lyrics — a breathing moment.',
+  'break': 'Stripped-down moment. Sparse, raw, exposed.',
+  'drop': 'Energy release. Heavy instrumental impact. Minimal lyrics if any.',
+  'build': 'Rising intensity. Lines get shorter and more urgent.',
+  'instrumental': 'No vocals. Instrumental solo or musical passage.',
+  'outro': 'Wrap up, leave a lasting impression.',
+}
+
+export const SUNO_SECTION_TAGS: Record<SectionType, string> = {
+  'intro': '[Intro]',
+  'verse': '[Verse]',
+  'pre-chorus': '[Pre-Chorus]',
+  'hook': '[Hook]',
+  'chorus': '[Chorus]',
+  'post-chorus': '[Post-Chorus]',
+  'bridge': '[Bridge]',
+  'interlude': '[Interlude]',
+  'break': '[Break]',
+  'drop': '[Drop]',
+  'build': '[Build]',
+  'instrumental': '[Instrumental]',
+  'outro': '[Outro]',
 }
 
 // ─── Song Import Types ──────────────────────────────────────────────────────

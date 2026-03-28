@@ -15,17 +15,33 @@ import type { SectionType } from '../../types/writing-studio.types'
 
 const SECTION_LABELS: Record<SectionType, string> = {
   intro: 'Intro',
-  hook: 'Hook',
   verse: 'Verse',
+  'pre-chorus': 'Pre-Chorus',
+  hook: 'Hook',
+  chorus: 'Chorus',
+  'post-chorus': 'Post-Chorus',
   bridge: 'Bridge',
+  interlude: 'Interlude',
+  break: 'Break',
+  drop: 'Drop',
+  build: 'Build',
+  instrumental: 'Instrumental',
   outro: 'Outro',
 }
 
 const SECTION_COLORS: Record<SectionType, string> = {
   intro: 'bg-blue-500/20 text-blue-400',
-  hook: 'bg-amber-500/20 text-amber-400',
   verse: 'bg-green-500/20 text-green-400',
+  'pre-chorus': 'bg-purple-500/20 text-purple-400',
+  hook: 'bg-amber-500/20 text-amber-400',
+  chorus: 'bg-yellow-500/20 text-yellow-400',
+  'post-chorus': 'bg-orange-500/20 text-orange-400',
   bridge: 'bg-cyan-500/20 text-cyan-400',
+  interlude: 'bg-indigo-500/20 text-indigo-400',
+  break: 'bg-slate-500/20 text-slate-400',
+  drop: 'bg-red-500/20 text-red-400',
+  build: 'bg-teal-500/20 text-teal-400',
+  instrumental: 'bg-violet-500/20 text-violet-400',
   outro: 'bg-rose-500/20 text-rose-400',
 }
 

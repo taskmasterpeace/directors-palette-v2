@@ -134,6 +134,8 @@ export const useWritingStudioStore = create<WritingStudioState>()(
           tone: { ...DEFAULT_TONE, emotion: defaultEmotion || DEFAULT_TONE.emotion, barCount: barDefaults.default },
           selectedDraft: null,
           isLocked: false,
+          voice: 'lead',
+          deliveryTag: null,
         }
         set((state) => ({
           sections: [...state.sections, section],
@@ -437,6 +439,8 @@ export const useWritingStudioStore = create<WritingStudioState>()(
                     content: s.content,
                   },
                   isLocked: true,
+                  voice: 'lead' as const,
+                  deliveryTag: null,
                 }
               }
             )
@@ -465,6 +469,8 @@ export const useWritingStudioStore = create<WritingStudioState>()(
               label: 'A',
             },
             isLocked: false,
+            voice: 'lead' as const,
+            deliveryTag: null,
           }
         })
         set({

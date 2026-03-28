@@ -77,6 +77,13 @@ export interface ArtistLexicon {
   adLibs: string[]
 }
 
+export interface ArtistVoice {
+  id: string
+  name: string           // "Dark Raspy Trap", "Singing Drake"
+  description: string    // "deep male voice, aggressive, Southern drawl"
+  isDefault: boolean
+}
+
 export interface ArtistLook {
   skinTone: string
   hairStyle: string
@@ -190,6 +197,7 @@ export interface ArtistDNA {
   catalog: ArtistCatalog
   socialCircle?: ArtistSocialCircle
   phone?: PhoneProfile
+  voices: ArtistVoice[]
   headerBackgroundUrl: string  // AI generated atmospheric background
   lowConfidenceFields: string[]  // field paths where data may be inaccurate (e.g. "identity.realName", "lexicon.adLibs")
 }
@@ -320,6 +328,7 @@ export function createEmptyDNA(): ArtistDNA {
     catalog: {
       entries: [],
     },
+    voices: [],
     socialCircle: { entourage: [], hangoutSpots: [], transportation: '' },
     headerBackgroundUrl: '',
     lowConfidenceFields: [],

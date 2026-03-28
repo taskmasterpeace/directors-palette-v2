@@ -245,6 +245,9 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
             lexicon: { ...defaults.lexicon, ...dna.lexicon },
             look: lookMerged,
             catalog: { ...defaults.catalog, ...dna.catalog },
+            voices: Array.isArray(dna.voices) ? dna.voices : [],
+            socialCircle: dna.socialCircle || defaults.socialCircle,
+            phone: dna.phone,
             headerBackgroundUrl: dna.headerBackgroundUrl || '',
             lowConfidenceFields: Array.isArray(dna.lowConfidenceFields) ? dna.lowConfidenceFields : [],
           }
@@ -311,6 +314,9 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
             lexicon: ensureArrays({ ...defaults.lexicon, ...dna.lexicon }, defaults.lexicon),
             look: ensureArrays({ ...defaults.look, ...dna.look }, defaults.look),
             catalog: { ...defaults.catalog, ...dna.catalog },
+            voices: Array.isArray(dna.voices) ? dna.voices : [],
+            socialCircle: dna.socialCircle || defaults.socialCircle,
+            phone: dna.phone,
             headerBackgroundUrl: '',
             lowConfidenceFields: Array.isArray(dna.lowConfidenceFields) ? dna.lowConfidenceFields : [],
           }
@@ -782,6 +788,9 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
             lexicon: { ...defaults.lexicon, ...p.draft.lexicon },
             look: { ...defaults.look, ...p.draft.look, gallery: Array.isArray(p.draft.look?.gallery) ? p.draft.look.gallery : [] },
             catalog: { ...defaults.catalog, ...p.draft.catalog },
+            voices: Array.isArray(p.draft.voices) ? p.draft.voices : [],
+            socialCircle: p.draft.socialCircle || defaults.socialCircle,
+            phone: p.draft.phone,
             headerBackgroundUrl: p.draft.headerBackgroundUrl || '',
             lowConfidenceFields: Array.isArray(p.draft.lowConfidenceFields) ? p.draft.lowConfidenceFields : [],
           }
