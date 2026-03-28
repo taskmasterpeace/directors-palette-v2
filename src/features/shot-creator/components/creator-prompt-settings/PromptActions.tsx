@@ -119,7 +119,7 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
         setActiveRecipe(recipeId)
     }, [setActiveRecipe])
 
-    // Get references grouped by category from library items
+    // Get references grouped by category — unified: library items + gallery refs
     const getReferencesGroupedByCategory = useCallback(() => {
         const grouped: Record<Category, string[]> = {
             people: [],
@@ -130,6 +130,7 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
             unorganized: []
         }
 
+        // Library items (categorized)
         libraryItems.forEach(item => {
             if (item.tags && item.tags.length > 0) {
                 const category = item.category as Category
@@ -142,16 +143,32 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
             }
         })
 
+        // Gallery images with reference tags (add to unorganized if not already in library)
+        const allLibraryTags = new Set(
+            Object.values(grouped).flat().map(t => t.toLowerCase())
+        )
+        const galleryRefs = useUnifiedGalleryStore.getState().getAllReferences()
+        galleryRefs.forEach(ref => {
+            const formattedTag = ref.startsWith('@') ? ref : `@${ref}`
+            if (!allLibraryTags.has(formattedTag.toLowerCase())) {
+                grouped.unorganized.push(formattedTag)
+            }
+        })
+
         return grouped
     }, [libraryItems])
 
-    // Get thumbnail URL for a reference tag
+    // Get thumbnail URL for a reference tag — checks library first, then gallery
     const getThumbnailForTag = useCallback((tag: string) => {
         const tagWithoutAt = tag.startsWith('@') ? tag.slice(1) : tag
+        // Check library items
         const item = libraryItems.find(item =>
             item.tags?.some(t => t.toLowerCase() === tagWithoutAt.toLowerCase())
         )
-        return item?.preview || item?.imageData || null
+        if (item?.preview || item?.imageData) return item.preview || item.imageData
+        // Check gallery images
+        const galleryMatches = useUnifiedGalleryStore.getState().getImagesByReferences([tagWithoutAt])
+        return galleryMatches[0]?.url || null
     }, [libraryItems])
 
     // Untagged session reference images shown as IMG_1, IMG_2, etc.
@@ -211,27 +228,47 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
         setAutocompleteSearch('')
 
         // Auto-add the reference image when selecting an @tag
+        // Check all sources: library items → gallery images → already in session
         const tagWithoutAt = suggestion.startsWith('@') ? suggestion.slice(1) : suggestion
-        const matchingItem = libraryItems.find(item =>
-            item.tags?.some(tag => tag.toLowerCase() === tagWithoutAt.toLowerCase())
-        )
 
-        const imageUrl = matchingItem?.preview || matchingItem?.imageData
-        if (matchingItem && imageUrl) {
-            const isAlreadyAdded = shotCreatorReferenceImages.some(
-                refImg => refImg.url === imageUrl
+        // Skip if it's an untagged session ref (IMG_1 etc.) — already in references
+        if (!suggestion.includes('(REF:IMG_')) {
+            let imageUrl: string | null = null
+            let imageTags: string[] = [tagWithoutAt]
+
+            // 1. Check library items
+            const matchingLibItem = libraryItems.find(item =>
+                item.tags?.some(tag => tag.toLowerCase() === tagWithoutAt.toLowerCase())
             )
+            if (matchingLibItem) {
+                imageUrl = matchingLibItem.preview || matchingLibItem.imageData || null
+                imageTags = matchingLibItem.tags || [tagWithoutAt]
+            }
 
-            if (!isAlreadyAdded) {
-                const newRef: ShotCreatorReferenceImage = {
-                    id: `ref_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                    preview: imageUrl,
-                    url: imageUrl,
-                    tags: matchingItem.tags || [],
-                    persistentTag: tagWithoutAt
+            // 2. Check gallery images (if not found in library)
+            if (!imageUrl) {
+                const galleryMatches = useUnifiedGalleryStore.getState().getImagesByReferences([tagWithoutAt])
+                if (galleryMatches[0]?.url) {
+                    imageUrl = galleryMatches[0].url
                 }
-                setShotCreatorReferenceImages((prev: ShotCreatorReferenceImage[]) => [...prev, newRef])
-                toast.success(`Added ${suggestion} as reference image`)
+            }
+
+            if (imageUrl) {
+                const isAlreadyAdded = shotCreatorReferenceImages.some(
+                    refImg => refImg.url === imageUrl || refImg.persistentTag?.toLowerCase() === tagWithoutAt.toLowerCase()
+                )
+
+                if (!isAlreadyAdded) {
+                    const newRef: ShotCreatorReferenceImage = {
+                        id: `ref_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                        preview: imageUrl,
+                        url: imageUrl,
+                        tags: imageTags,
+                        persistentTag: tagWithoutAt
+                    }
+                    setShotCreatorReferenceImages((prev: ShotCreatorReferenceImage[]) => [...prev, newRef])
+                    toast.success(`Added ${suggestion} as reference image`)
+                }
             }
         }
 
@@ -263,18 +300,18 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
         const lastAtIndex = textBeforeCursor.lastIndexOf('@')
 
         if (lastAtIndex !== -1) {
-            const textAfterAt = textBeforeCursor.substring(lastAtIndex)
-            if (textAfterAt.includes(' ')) {
-                setShowAutocomplete(false)
-            } else {
-                const search = textAfterAt.substring(1)
-                setAutocompleteSearch(search)
+            // Only the text between @ and cursor — valid tag chars are [a-zA-Z0-9_-]
+            const queryText = textBeforeCursor.substring(lastAtIndex + 1)
+            if (/^[a-zA-Z0-9_-]*$/.test(queryText)) {
+                setAutocompleteSearch(queryText)
                 setAutocompleteCursorPos(cursorPos)
                 setShowAutocomplete(true)
                 selectAutocompleteIndex(0)
                 // Mutual exclusion: close wildcard autocomplete
                 wildcardAutocomplete.close()
                 return
+            } else {
+                setShowAutocomplete(false)
             }
         } else {
             setShowAutocomplete(false)
