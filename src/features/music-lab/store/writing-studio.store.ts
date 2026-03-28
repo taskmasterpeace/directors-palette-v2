@@ -15,6 +15,7 @@ import type {
   JudgeResult,
   ArtistJudgment,
   DetectedSection,
+  FeatureArtist,
 } from '../types/writing-studio.types'
 import { DEFAULT_TONE, BAR_COUNT_RANGES } from '../types/writing-studio.types'
 import { logger } from '@/lib/logger'
@@ -44,6 +45,9 @@ interface WritingStudioState {
   isJudging: boolean
   judgeResult: JudgeResult | null
   sectionJudgments: Record<string, JudgeResult>
+
+  // Feature artist
+  featureArtist: FeatureArtist | null
 
   // Revision
   isRevising: boolean
@@ -98,6 +102,11 @@ interface WritingStudioState {
   // Concept
   setConcept: (concept: string) => void
 
+  // Feature artist & voice/delivery
+  setFeatureArtist: (artist: FeatureArtist | null) => void
+  setSectionVoice: (sectionId: string, voice: SongSection['voice']) => void
+  setSectionDeliveryTag: (sectionId: string, tag: string | null) => void
+
   // Import
   importSections: (detected: DetectedSection[]) => void
 
@@ -123,6 +132,7 @@ export const useWritingStudioStore = create<WritingStudioState>()(
       isJudging: false,
       judgeResult: null,
       sectionJudgments: {},
+      featureArtist: null,
       isRevising: false,
       revisionNotes: '',
 
@@ -456,6 +466,22 @@ export const useWritingStudioStore = create<WritingStudioState>()(
 
       setConcept: (concept) => set({ concept }),
 
+      setFeatureArtist: (artist) => set({ featureArtist: artist }),
+
+      setSectionVoice: (sectionId, voice) =>
+        set(state => ({
+          sections: state.sections.map(s =>
+            s.id === sectionId ? { ...s, voice } : s
+          ),
+        })),
+
+      setSectionDeliveryTag: (sectionId, tag) =>
+        set(state => ({
+          sections: state.sections.map(s =>
+            s.id === sectionId ? { ...s, deliveryTag: tag } : s
+          ),
+        })),
+
       importSections: (detected) => {
         const sections: SongSection[] = detected.map((d) => {
           const barDefaults = BAR_COUNT_RANGES[d.type]
@@ -511,6 +537,7 @@ export const useWritingStudioStore = create<WritingStudioState>()(
         activeArtistId: state.activeArtistId,
         artistDirection: state.artistDirection,
         sectionDirections: state.sectionDirections,
+        featureArtist: state.featureArtist,
       }),
       merge: (persisted, current) => {
         const p = persisted as Partial<WritingStudioState> & { ideaBank?: IdeaEntry[] }
@@ -519,10 +546,17 @@ export const useWritingStudioStore = create<WritingStudioState>()(
         if (p.ideaBank && Array.isArray(p.ideaBank) && p.ideaBank.length > 0 && Object.keys(ideaBankByArtist).length === 0) {
           ideaBankByArtist = { _default: p.ideaBank }
         }
+        // Migrate sections missing voice/deliveryTag fields
+        const sections = (p.sections || []).map((s: SongSection) => ({
+          ...s,
+          voice: s.voice || 'lead',
+          deliveryTag: s.deliveryTag ?? null,
+        }))
         return {
           ...current,
           ...p,
           ideaBankByArtist,
+          sections,
         }
       },
     }
