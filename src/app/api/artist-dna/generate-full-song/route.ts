@@ -14,6 +14,33 @@ import { logger } from '@/lib/logger'
 const GENERATE_FULL_SONG_COST_CENTS = 10
 const MODEL = 'openai/gpt-4.1'
 
+function getSyllableGuidance(sectionType: string, melodyBias: number): string {
+  const noVocalSections = ['instrumental', 'interlude']
+  if (noVocalSections.includes(sectionType)) return ''
+
+  const isRap = melodyBias <= 40
+  const isSung = melodyBias >= 60
+
+  const targets: Record<string, { rap: string; sung: string; blend: string }> = {
+    'verse': { rap: '10-14', sung: '8-10', blend: '8-12' },
+    'hook': { rap: '6-10', sung: '6-8', blend: '6-10' },
+    'chorus': { rap: '6-10', sung: '6-8', blend: '6-10' },
+    'pre-chorus': { rap: '6-10', sung: '6-8', blend: '6-8' },
+    'build': { rap: '6-10', sung: '6-8', blend: '6-8' },
+    'bridge': { rap: '8-12', sung: '8-10', blend: '8-10' },
+    'post-chorus': { rap: '6-8', sung: '6-8', blend: '6-8' },
+    'intro': { rap: '6-10', sung: '6-8', blend: '6-10' },
+    'outro': { rap: '6-10', sung: '6-8', blend: '6-10' },
+    'break': { rap: '4-8', sung: '4-6', blend: '4-8' },
+    'drop': { rap: '4-8', sung: '4-6', blend: '4-8' },
+  }
+
+  const t = targets[sectionType] || targets['verse']
+  const range = isRap ? t.rap : isSung ? t.sung : t.blend
+
+  return `SYLLABLE CONSISTENCY: Target ${range} syllables per line for this ${sectionType}. Keep syllable counts consistent within the section — lines that vary wildly sound rushed or awkward when performed.`
+}
+
 const BANNED_AI_PHRASES = [
   'neon', 'echoes', 'shadows', 'whispers', 'tapestry', 'symphony',
   'labyrinth', 'enigma', 'ethereal', 'celestial', 'luminous',
@@ -58,6 +85,12 @@ function buildFullSongPrompt(body: GenerateFullSongBody): string {
       line += ` DIRECTION: "${s.direction}"`
     }
     parts.push(line)
+  })
+
+  // Per-section syllable guidance
+  structure.forEach((s, i) => {
+    const syllableNote = getSyllableGuidance(s.type, body.artistDna.sound?.melodyBias ?? 50)
+    if (syllableNote) parts.push(`  Section ${i + 1} syllables: ${syllableNote}`)
   })
 
   if (concept) {

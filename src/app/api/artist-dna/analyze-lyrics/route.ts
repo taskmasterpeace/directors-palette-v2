@@ -29,15 +29,15 @@ export async function POST(request: NextRequest) {
     const systemPrompt = `You are a music structure analyst. Analyze the following song lyrics and break them into sections.
 
 Rules:
-- Identify each section as one of: intro, verse, hook, bridge, outro
-- Repeated choruses/refrains should be labeled "hook"
+- Allowed section types: intro, verse, pre-chorus, hook, chorus, post-chorus, bridge, interlude, break, drop, build, instrumental, outro
+- Repeated choruses/refrains should be labeled "hook" or "chorus"
 - Number verses sequentially (Verse 1, Verse 2, etc.)
 - Number hooks if there are multiple (Hook, Hook 2, etc.) — but if the same chorus repeats, just call each one "Hook"
-- Look for structural cues: short opening lines = intro, repeated lines = hook, narrative progression = verse, tonal shift = bridge, closing/fade = outro
+- Look for structural cues: short opening lines = intro, repeated lines = hook/chorus, narrative progression = verse, rising energy before chorus = pre-chorus, tonal shift = bridge, closing/fade = outro
 ${artistName ? `- The artist is "${artistName}" — use knowledge of their style to inform section detection` : ''}
 
 Return ONLY a JSON array. No markdown, no code fences, no explanation.
-Each element: {"type": "verse"|"hook"|"intro"|"bridge"|"outro", "label": "Verse 1", "lines": ["line 1", "line 2"]}
+Each element: {"type": "intro"|"verse"|"pre-chorus"|"hook"|"chorus"|"post-chorus"|"bridge"|"interlude"|"break"|"drop"|"build"|"instrumental"|"outro", "label": "Verse 1", "lines": ["line 1", "line 2"]}
 
 Analyze these lyrics:`
 

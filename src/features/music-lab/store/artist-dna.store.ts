@@ -9,6 +9,7 @@ import type {
   ArtistDNA,
   ArtistDnaTab,
   ArtistGalleryItem,
+  ArtistVoice,
   CatalogEntry,
   CatalogSongAnalysis,
   GalleryItemType,
@@ -100,6 +101,12 @@ interface ArtistDnaState {
   // Actions - Mix
   generateMix: () => Promise<void>
   toggleCombineMode: () => void
+
+  // Actions - Voices
+  addVoice: (voice: Omit<ArtistVoice, 'id'>) => void
+  updateVoice: (id: string, updates: Partial<ArtistVoice>) => void
+  removeVoice: (id: string) => void
+  setDefaultVoice: (id: string) => void
 
   // Actions - Export / Import
   exportArtist: (artistId: string) => void
@@ -743,6 +750,51 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
           console.error('Failed to parse artist JSON')
           return false
         }
+      },
+
+      // Voice CRUD
+      addVoice: (voice) => {
+        const id = `voice-${Date.now()}`
+        set(state => {
+          const voices = [...(state.draft.voices || []), { ...voice, id }]
+          if (voices.length === 1) voices[0].isDefault = true
+          return { draft: { ...state.draft, voices }, isDirty: true }
+        })
+      },
+
+      updateVoice: (id, updates) => {
+        set(state => ({
+          draft: {
+            ...state.draft,
+            voices: (state.draft.voices || []).map(v =>
+              v.id === id ? { ...v, ...updates } : v
+            ),
+          },
+          isDirty: true,
+        }))
+      },
+
+      removeVoice: (id) => {
+        set(state => {
+          const voices = (state.draft.voices || []).filter(v => v.id !== id)
+          if (voices.length && !voices.some(v => v.isDefault)) {
+            voices[0].isDefault = true
+          }
+          return { draft: { ...state.draft, voices }, isDirty: true }
+        })
+      },
+
+      setDefaultVoice: (id) => {
+        set(state => ({
+          draft: {
+            ...state.draft,
+            voices: (state.draft.voices || []).map(v => ({
+              ...v,
+              isDefault: v.id === id,
+            })),
+          },
+          isDirty: true,
+        }))
       },
 
       closeEditor: () => {

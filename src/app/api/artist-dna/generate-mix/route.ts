@@ -6,6 +6,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import type { ArtistDNA } from '@/features/music-lab/types/artist-dna.types'
+import type { SectionType } from '@/features/music-lab/types/writing-studio.types'
+import { SECTION_GUIDANCE } from '@/features/music-lab/types/writing-studio.types'
 import { logger } from '@/lib/logger'
 
 const MODEL = 'openai/gpt-4.1-mini'
@@ -17,7 +19,48 @@ const BANNED_AI_PHRASES = [
   'uncharted', 'kaleidoscope', 'crescendo', 'epiphany',
 ]
 
-function buildSystemPrompt(dna: ArtistDNA): string {
+interface StructureEntry {
+  type: SectionType
+  barCount: number
+  direction?: string
+}
+
+function getSyllableGuidance(sectionType: string, melodyBias: number): string {
+  const noVocalSections = ['instrumental', 'interlude']
+  if (noVocalSections.includes(sectionType)) return ''
+
+  const isRap = melodyBias <= 40
+  const isSung = melodyBias >= 60
+
+  const targets: Record<string, { rap: string; sung: string; blend: string }> = {
+    'verse': { rap: '10-14', sung: '8-10', blend: '8-12' },
+    'hook': { rap: '6-10', sung: '6-8', blend: '6-10' },
+    'chorus': { rap: '6-10', sung: '6-8', blend: '6-10' },
+    'pre-chorus': { rap: '6-10', sung: '6-8', blend: '6-8' },
+    'build': { rap: '6-10', sung: '6-8', blend: '6-8' },
+    'bridge': { rap: '8-12', sung: '8-10', blend: '8-10' },
+    'post-chorus': { rap: '6-8', sung: '6-8', blend: '6-8' },
+    'intro': { rap: '6-10', sung: '6-8', blend: '6-10' },
+    'outro': { rap: '6-10', sung: '6-8', blend: '6-10' },
+    'break': { rap: '4-8', sung: '4-6', blend: '4-8' },
+    'drop': { rap: '4-8', sung: '4-6', blend: '4-8' },
+  }
+
+  const t = targets[sectionType] || targets['verse']
+  const range = isRap ? t.rap : isSung ? t.sung : t.blend
+
+  return `SYLLABLE CONSISTENCY: Target ${range} syllables per line for this ${sectionType}. Keep syllable counts consistent within the section — lines that vary wildly sound rushed or awkward when performed.`
+}
+
+const DEFAULT_STRUCTURE: StructureEntry[] = [
+  { type: 'verse', barCount: 16 },
+  { type: 'chorus', barCount: 8 },
+  { type: 'verse', barCount: 16 },
+  { type: 'chorus', barCount: 8 },
+  { type: 'bridge', barCount: 4 },
+]
+
+function buildSystemPrompt(dna: ArtistDNA, structure: StructureEntry[]): string {
   const parts: string[] = []
 
   parts.push('You are a professional songwriter and ghostwriter.')
@@ -70,20 +113,6 @@ function buildSystemPrompt(dna: ArtistDNA): string {
     parts.push(`Sound description: ${dna.sound.soundDescription}`)
   }
 
-  // Lexicon rules
-  if (dna.lexicon.signaturePhrases.length > 0) {
-    parts.push(`Incorporate signature phrases naturally: ${dna.lexicon.signaturePhrases.join(', ')}`)
-  }
-  if (dna.lexicon.slang.length > 0) {
-    parts.push(`Use slang: ${dna.lexicon.slang.join(', ')}`)
-  }
-  if (dna.lexicon.bannedWords.length > 0) {
-    parts.push(`NEVER use these words: ${dna.lexicon.bannedWords.join(', ')}`)
-  }
-  if (dna.lexicon.adLibs.length > 0) {
-    parts.push(`Include ad-libs: ${dna.lexicon.adLibs.join(', ')}`)
-  }
-
   // Persona
   if (dna.persona.attitude) {
     parts.push(`Attitude/tone: ${dna.persona.attitude}`)
@@ -100,6 +129,16 @@ function buildSystemPrompt(dna: ArtistDNA): string {
   if (dna.persona.dislikes?.length > 0) {
     parts.push(`Themes they avoid: ${dna.persona.dislikes.join(', ')}`)
   }
+
+  // Lexicon — tightened distribution rules
+  if (dna.lexicon?.signaturePhrases?.length)
+    parts.push(`Signature phrases (use at most 1-2 in the ENTIRE song, not in every section): ${dna.lexicon.signaturePhrases.join(', ')}`)
+  if (dna.lexicon?.slang?.length)
+    parts.push(`Slang/vocabulary (distribute naturally, don't repeat the same slang in every verse): ${dna.lexicon.slang.join(', ')}`)
+  if (dna.lexicon?.adLibs?.length)
+    parts.push(`Ad-libs (use at most 2-3 total across the whole song): ${dna.lexicon.adLibs.join(', ')}`)
+  if (dna.lexicon?.bannedWords?.length)
+    parts.push(`NEVER use these words: ${dna.lexicon.bannedWords.join(', ')}`)
 
   // Discography/catalog — use genome if available, fall back to raw lyrics
   if (dna.catalog.genome?.essenceStatement) {
@@ -131,17 +170,69 @@ function buildSystemPrompt(dna: ArtistDNA): string {
     parts.push('The new song should feel like it belongs in this catalog but covers NEW ground.')
   }
 
+  // Rhyming DNA
+  const rhymeTypes = dna.sound?.rhymeTypes
+  const rhymePatterns = dna.sound?.rhymePatterns
+  const rhymeDensity = dna.sound?.rhymeDensity
+
+  if (rhymeTypes?.length || rhymePatterns?.length || rhymeDensity !== undefined) {
+    parts.push('RHYMING STYLE:')
+    if (rhymeTypes?.length) {
+      const typeDescriptions: Record<string, string> = {
+        'perfect': 'Perfect rhymes (exact ending sounds)',
+        'multi-syllable': 'Multi-syllable rhymes (2+ syllables match)',
+        'slant': 'Slant/near rhymes (close sounds, not exact)',
+        'internal': 'Internal rhymes (within lines, not just at endings)',
+        'compound': 'Compound/mosaic rhymes (multiple words rhyming together)',
+        'assonance': 'Assonance rhymes (matching vowel sounds)',
+      }
+      parts.push(`Preferred rhyme types: ${rhymeTypes.map(t => typeDescriptions[t] || t).join('. ')}`)
+    }
+    if (rhymePatterns?.length) {
+      const patternDescriptions: Record<string, string> = {
+        'aabb': 'AABB (couplets)', 'abab': 'ABAB (alternating)',
+        'abcb': 'ABCB (only 2 and 4)', 'abba': 'ABBA (enclosed)',
+        'free': 'Free form', 'chain': 'Chain rhyme',
+      }
+      parts.push(`Preferred rhyme patterns: ${rhymePatterns.map(p => patternDescriptions[p] || p).join('. ')}`)
+    }
+    if (rhymeDensity !== undefined) {
+      if (rhymeDensity <= 25) parts.push('Rhyme density: SPARSE')
+      else if (rhymeDensity <= 50) parts.push('Rhyme density: MODERATE')
+      else if (rhymeDensity <= 75) parts.push('Rhyme density: DENSE')
+      else parts.push('Rhyme density: EVERY LINE')
+    }
+  }
+
+  // Song structure with section guidance and syllable notes
+  parts.push('SONG STRUCTURE:')
+  structure.forEach((s, i) => {
+    const guidance = SECTION_GUIDANCE[s.type] || 'Write this section with appropriate style and energy.'
+    let line = `  ${i + 1}. [${s.type.toUpperCase()}] — ${s.barCount} bars. ${guidance}`
+    if (s.direction) {
+      line += ` DIRECTION: "${s.direction}"`
+    }
+    parts.push(line)
+  })
+
+  // Per-section syllable guidance
+  const melodyBias = dna.sound?.melodyBias ?? 50
+  structure.forEach((s, i) => {
+    const syllableNote = getSyllableGuidance(s.type, melodyBias)
+    if (syllableNote) parts.push(`  Section ${i + 1} syllables: ${syllableNote}`)
+  })
+
+  parts.push('Keep total lyrics under 3000 characters (Suno limit).')
+
   // Banned AI phrases
   parts.push(`NEVER use these overused AI words: ${BANNED_AI_PHRASES.join(', ')}`)
 
   // Human-voice directive
   parts.push('Use concrete, specific imagery. Reference real places, objects, and sensations.')
   parts.push('Write like a human songwriter, not an AI. No purple prose.')
-  parts.push('Vary rhyme schemes across sections (AABB, ABAB, ABCB). Make rhymes feel natural, not forced.')
-
-  // Section structure
-  parts.push('Structure: 2 verses (8-16 bars each), 1 chorus (4-8 bars), 1 bridge (4 bars).')
-  parts.push('Keep total lyrics under 3000 characters (Suno limit).')
+  if (!rhymePatterns?.length) {
+    parts.push('Vary rhyme schemes across sections (AABB, ABAB, ABCB). Make rhymes feel natural, not forced.')
+  }
 
   return parts.join('\n')
 }
@@ -151,13 +242,17 @@ export async function POST(request: NextRequest) {
     const auth = await getAuthenticatedUser(request)
     if (auth instanceof NextResponse) return auth
 
-    const { dna } = await request.json() as { dna: ArtistDNA }
+    const { dna, structure: providedStructure } = await request.json() as {
+      dna: ArtistDNA
+      structure?: StructureEntry[]
+    }
 
     if (!dna) {
       return NextResponse.json({ error: 'dna is required' }, { status: 400 })
     }
 
-    const systemPrompt = buildSystemPrompt(dna)
+    const structure = providedStructure?.length ? providedStructure : DEFAULT_STRUCTURE
+    const systemPrompt = buildSystemPrompt(dna, structure)
     const artistName = dna.identity.stageName || dna.identity.realName || 'this artist'
     const genre = dna.sound.genres[0] || 'music'
     const city = dna.identity.city || 'the city'

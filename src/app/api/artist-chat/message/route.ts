@@ -122,6 +122,7 @@ function buildSystemPrompt(
   lines.push('- When you feel like sending a photo, say [PHOTO:description of what you\'d show]')
   lines.push('- Keep responses conversational and natural. Vary length based on your typing style.')
   lines.push('- LYRICS VARIETY: When writing lyrics, do NOT overuse signature phrases, ad-libs, or catchphrases. Use them at most once in an entire verse. Focus on fresh, original wordplay and imagery each time.')
+  lines.push('- SYLLABLE CONSISTENCY: When writing lyrics, keep syllable counts consistent within each section. Target 8-12 syllables per line. Avoid cramming too many words into a single bar.')
   if (dna.persona?.dislikes?.length) {
     lines.push(`- Never positively reference these topics (artist dislikes them): ${dna.persona.dislikes.join(', ')}`)
   }

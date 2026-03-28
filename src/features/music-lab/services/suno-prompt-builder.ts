@@ -93,3 +93,7 @@ export function buildMusicStylePrompt(dna: ArtistDNA): string {
 export function buildCombinedPrompt(vocalPrompt: string, stylePrompt: string): string {
   return [vocalPrompt, stylePrompt].filter(Boolean).join(', ')
 }
+
+// Re-exports from new Suno utilities
+export { buildSunoStylePrompt, buildSunoExcludePrompt } from '../utils/suno-style-prompt-builder'
+export { generateVoiceDescription } from '../utils/voice-description-generator'
