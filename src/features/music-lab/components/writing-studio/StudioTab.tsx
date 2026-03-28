@@ -16,6 +16,7 @@ import { LyricsPreview } from './LyricsPreview'
 import { PromptPreview } from './PromptPreview'
 import { FullSongBuilder } from './FullSongBuilder'
 import { ImportLyricsModal } from './ImportLyricsModal'
+import { SunoExportPanel } from './SunoExportPanel'
 import type { SectionType } from '../../types/writing-studio.types'
 
 export function StudioTab() {
@@ -299,6 +300,11 @@ export function StudioTab() {
         isGenerating={isGeneratingFullSong}
         concept={concept}
       />
+
+      {/* Suno Export */}
+      <CardContent className="pt-0">
+        <SunoExportPanel />
+      </CardContent>
 
       {/* Regenerate confirmation dialog */}
       <AlertDialog open={showRegenerateConfirm} onOpenChange={setShowRegenerateConfirm}>

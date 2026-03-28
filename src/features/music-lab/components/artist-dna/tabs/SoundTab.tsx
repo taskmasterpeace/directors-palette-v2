@@ -10,6 +10,7 @@ import { GenreCascade } from '../GenreCascade'
 import { TagInput } from '../TagInput'
 import { MagicWandField } from '../MagicWandField'
 import { MelodyBiasSlider } from '../MelodyBiasSlider'
+import { VoiceSection } from '../VoiceSection'
 import { useArtistDnaStore } from '../../../store/artist-dna.store'
 import { INSTRUMENT_TAGS, INSTRUMENT_CATEGORIES } from '../../../data/instrument-tags.data'
 import { logger } from '@/lib/logger'
@@ -428,6 +429,8 @@ export function SoundTab() {
             multiline
           />
         </div>
+
+        <VoiceSection />
       </CardContent>
     </Card>
   )

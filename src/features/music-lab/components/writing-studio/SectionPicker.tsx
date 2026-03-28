@@ -11,7 +11,15 @@ import {
 import { Plus, GripVertical, Lock, Trash2, ChevronUp, ChevronDown } from 'lucide-react'
 import { useWritingStudioStore } from '../../store/writing-studio.store'
 import { useArtistDnaStore } from '../../store/artist-dna.store'
-import type { SectionType } from '../../types/writing-studio.types'
+import type { SectionType, SongSection } from '../../types/writing-studio.types'
+import { FeatureArtistPicker } from './FeatureArtistPicker'
+
+const VOICE_OPTIONS: { value: SongSection['voice']; label: string }[] = [
+  { value: 'lead', label: 'Lead' },
+  { value: 'feature', label: 'Feat' },
+  { value: 'both', label: 'Both' },
+  { value: 'adlib', label: 'Ad-lib' },
+]
 
 const SECTION_LABELS: Record<SectionType, string> = {
   intro: 'Intro',
@@ -53,6 +61,8 @@ export function SectionPicker() {
     removeSection,
     setActiveSection,
     reorderSections,
+    featureArtist,
+    setSectionVoice,
   } = useWritingStudioStore()
   const genome = useArtistDnaStore((s) => s.draft.catalog.genome)
 
@@ -64,6 +74,7 @@ export function SectionPicker() {
 
   return (
     <div className="space-y-2">
+      <FeatureArtistPicker />
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-medium text-muted-foreground">Sections</h3>
         <DropdownMenu>
@@ -106,6 +117,24 @@ export function SectionPicker() {
             {section.isLocked && <Lock className="w-3 h-3 text-green-500 shrink-0" />}
             {section.selectedDraft && !section.isLocked && (
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+            )}
+            {featureArtist && (
+              <div className="flex items-center gap-0.5 ml-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                {VOICE_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    className={`px-1 py-0 text-[9px] rounded transition-colors ${
+                      section.voice === opt.value
+                        ? 'bg-cyan-500/25 text-cyan-400 font-medium'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                    }`}
+                    onClick={() => setSectionVoice(section.id, opt.value)}
+                    title={opt.label}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
             )}
             <div className="flex-1" />
             <div className="hidden group-hover:flex items-center gap-0.5">
