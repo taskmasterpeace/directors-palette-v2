@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useMemo, useState, useRef } from 'react'
+import React, { useMemo, useState, useRef, useCallback } from 'react'
 import { RefreshCw, Star, Sparkles, Database, Plus, Trash2, ChevronDown, ChevronUp, Image as ImageIcon, X, HelpCircle } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Button } from '@/components/ui/button'
@@ -30,6 +30,7 @@ import { useWildCardStore } from '@/features/shot-creator/store/wildcard.store'
 import { useDirectorStore } from '@/features/music-lab/store/director.store'
 import { createLogger } from '@/lib/logger'
 import { GuidedRecipeBuilder } from './recipe-builder/GuidedRecipeBuilder'
+import { WildcardDetailModal } from './WildcardDetailModal'
 
 
 const log = createLogger('Community')
@@ -78,6 +79,7 @@ export function CommunityPage() {
   const [recipeNote, setRecipeNote] = useState('')
   const [suggestedAspectRatio, setSuggestedAspectRatio] = useState('')
   const [showRecipeBuilder, setShowRecipeBuilder] = useState(false)
+  const [wildcardDetailItem, setWildcardDetailItem] = useState<CommunityItem | null>(null)
 
   // Separate featured items by type
   const featuredByType = useMemo(() => {
@@ -166,6 +168,13 @@ export function CommunityPage() {
     }
     return success
   }
+
+  // Handle item click — open detail modal for wildcards
+  const handleItemClick = useCallback((item: CommunityItem) => {
+    if (item.type === 'wildcard') {
+      setWildcardDetailItem(item)
+    }
+  }, [])
 
   // Admin: Open edit dialog
   const handleOpenEdit = (item: CommunityItem) => {
@@ -602,6 +611,7 @@ export function CommunityPage() {
             onAdd={handleAdd}
             onRemove={handleRemove}
             onRate={handleRate}
+            onItemClick={handleItemClick}
             isAdmin={isAdmin}
             onEdit={handleOpenEdit}
             onDelete={handleOpenDelete}
@@ -834,6 +844,14 @@ export function CommunityPage() {
           onClose={() => setShowRecipeBuilder(false)}
         />
       )}
+
+      <WildcardDetailModal
+        item={wildcardDetailItem}
+        open={wildcardDetailItem !== null}
+        onOpenChange={(open) => { if (!open) setWildcardDetailItem(null) }}
+        onAdd={() => wildcardDetailItem && handleAdd(wildcardDetailItem.id)}
+        isInLibrary={wildcardDetailItem ? isInLibrary(wildcardDetailItem.id) : false}
+      />
     </div>
   )
 }
