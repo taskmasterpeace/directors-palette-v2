@@ -602,13 +602,6 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                 return
             }
 
-            if (activeRecipe.suggestedModel) {
-                updateSettings({ model: activeRecipe.suggestedModel as ModelId })
-            }
-            if (activeRecipe.suggestedAspectRatio) {
-                updateSettings({ aspectRatio: activeRecipe.suggestedAspectRatio })
-            }
-
             const userRefs = shotCreatorReferenceImages
                 .map(ref => ref.url || ref.preview)
                 .filter((url): url is string => Boolean(url))
@@ -626,7 +619,7 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                 }
 
                 const model = (activeRecipe.suggestedModel || shotCreatorSettings.model || 'nano-banana-2') as ModelId
-                const aspectRatio = shotCreatorSettings.aspectRatio || activeRecipe.suggestedAspectRatio || '16:9'
+                const aspectRatio = activeRecipe.suggestedAspectRatio || shotCreatorSettings.aspectRatio || '16:9'
 
                 try {
                     toast.info('Starting recipe with tool stages...')
@@ -667,6 +660,11 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
 
             const model = (activeRecipe.suggestedModel || shotCreatorSettings.model || 'nano-banana-2') as ModelId
             const modelSettings = buildModelSettings()
+
+            // Use recipe's suggested aspect ratio for this generation (without permanently overwriting user setting)
+            if (activeRecipe.suggestedAspectRatio) {
+                modelSettings.aspectRatio = activeRecipe.suggestedAspectRatio
+            }
 
             toast.info(`Generating with recipe: ${activeRecipe.name}`)
 
