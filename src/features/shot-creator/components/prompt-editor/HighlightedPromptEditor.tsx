@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useRef, useCallback, useEffect, useState } from 'react'
+import React, { useRef, useCallback, useEffect, useMemo } from 'react'
 import { cn } from '@/utils/utils'
-import { tokenizePrompt, type SyntaxToken, type TokenType } from '../../helpers/prompt-syntax-tokenizer'
+import { tokenizePrompt, type TokenType } from '../../helpers/prompt-syntax-tokenizer'
 
 /**
  * Color mapping for each syntax token type.
@@ -52,12 +52,7 @@ export function HighlightedPromptEditor({
     const internalRef = useRef<HTMLTextAreaElement>(null)
     const backdropRef = useRef<HTMLDivElement>(null)
     const textareaRef = externalRef || internalRef
-    const [tokens, setTokens] = useState<SyntaxToken[]>([])
-
-    // Tokenize the prompt on value change
-    useEffect(() => {
-        setTokens(tokenizePrompt(value))
-    }, [value])
+    const tokens = useMemo(() => tokenizePrompt(value), [value])
 
     // Sync scroll position between textarea and backdrop
     const syncScroll = useCallback(() => {
@@ -146,9 +141,9 @@ export function HighlightedPromptEditor({
                 style={hasSyntax ? {
                     color: 'transparent',
                     caretColor: DEFAULT_TEXT_COLOR,
-                    backgroundColor: 'hsl(var(--background))',
+                    backgroundColor: 'var(--background)',
                 } : {
-                    backgroundColor: 'hsl(var(--background))',
+                    backgroundColor: 'var(--background)',
                 }}
             />
         </div>
