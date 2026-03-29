@@ -34,6 +34,7 @@ import {
   Eraser,
   Share2,
   Box,
+  ArrowUpFromLine,
 } from 'lucide-react'
 import type { FolderWithCount } from '../../types/folder.types'
 import { MobileImageActionSheet } from './MobileImageActionSheet'
@@ -57,6 +58,8 @@ interface ImageActionMenuProps {
   onMoveToFolder?: (folderId: string | null) => void
   onRemoveBackground?: () => void
   isRemovingBackground?: boolean
+  onUpscale?: () => void
+  isUpscaling?: boolean
   onShare?: () => void
   onMakeFigurine?: () => void
   dropdownOpen: boolean
@@ -86,6 +89,8 @@ export function ImageActionMenu({
   onMoveToFolder,
   onRemoveBackground,
   isRemovingBackground,
+  onUpscale,
+  isUpscaling,
   onShare,
   onMakeFigurine,
   dropdownOpen,
@@ -130,6 +135,8 @@ export function ImageActionMenu({
         onMoveToFolder={onMoveToFolder}
         onRemoveBackground={onRemoveBackground}
         isRemovingBackground={isRemovingBackground}
+        onUpscale={onUpscale}
+        isUpscaling={isUpscaling}
         onShare={onShare}
         onMakeFigurine={onMakeFigurine}
       />
@@ -280,6 +287,27 @@ export function ImageActionMenu({
                 <>
                   <Eraser className="mr-2 h-4 w-4" />
                   Remove Background (3 pts)
+                </>
+              )}
+            </DropdownMenuItem>
+          )}
+
+          {/* Upscale 4x */}
+          {onUpscale && (
+            <DropdownMenuItem
+              onClick={onUpscale}
+              disabled={isUpscaling}
+              className="hover:bg-secondary cursor-pointer"
+            >
+              {isUpscaling ? (
+                <>
+                  <LoadingSpinner size="sm" color="current" className="mr-2" />
+                  Upscaling...
+                </>
+              ) : (
+                <>
+                  <ArrowUpFromLine className="mr-2 h-4 w-4" />
+                  Upscale 4x (2 pts)
                 </>
               )}
             </DropdownMenuItem>

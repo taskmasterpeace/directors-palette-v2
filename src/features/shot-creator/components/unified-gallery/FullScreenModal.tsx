@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import Image from 'next/image'
-import { X, Copy, Download, ChevronLeft, ChevronRight, FileText, Link, Tag, Sparkles, Film, Layout, Save, Trash2, Info, Grid3x3, Eraser, Clapperboard, Layers, Share2, RefreshCw, Ratio, Box, Sliders, Hash } from 'lucide-react'
+import { X, Copy, Download, ChevronLeft, ChevronRight, FileText, Link, Tag, Sparkles, Film, Layout, Save, Trash2, Info, Grid3x3, Eraser, Clapperboard, Layers, Share2, RefreshCw, Ratio, Box, Sliders, Hash, ArrowUpFromLine } from 'lucide-react'
 import { useToast } from "@/hooks/use-toast"
 import { GeneratedImage } from "../../store/unified-gallery-store"
 import { useIsMobile } from '@/hooks/useMediaQuery'
@@ -27,6 +27,8 @@ interface FullscreenModalProps {
     onExtractFramesToGallery?: () => void
     onRemoveBackground?: () => void
     isRemovingBackground?: boolean
+    onUpscale?: () => void
+    isUpscaling?: boolean
     onGenerateCinematicGrid?: () => void
     isGeneratingCinematic?: boolean
     onGenerateBRollGrid?: () => void
@@ -54,6 +56,8 @@ function FullscreenModal({
     onExtractFramesToGallery,
     onRemoveBackground,
     isRemovingBackground,
+    onUpscale,
+    isUpscaling,
     onGenerateCinematicGrid,
     isGeneratingCinematic,
     onGenerateBRollGrid,
@@ -702,6 +706,32 @@ function FullscreenModal({
                                             <>
                                                 <Eraser className="w-3.5 h-3.5 mr-1" />
                                                 Remove Background (3 pts)
+                                            </>
+                                        )}
+                                    </Button>
+                                </div>
+                            )}
+
+                            {/* Upscale 4x */}
+                            {onUpscale && (
+                                <div className="flex gap-2">
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="w-full text-white border-border"
+                                        onClick={onUpscale}
+                                        disabled={isUpscaling}
+                                        title="Upscale 4x (2 pts)"
+                                    >
+                                        {isUpscaling ? (
+                                            <>
+                                                <LoadingSpinner size="xs" color="current" className="w-3.5 h-3.5 mr-1" />
+                                                Upscaling...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <ArrowUpFromLine className="w-3.5 h-3.5 mr-1" />
+                                                Upscale 4x (2 pts)
                                             </>
                                         )}
                                     </Button>

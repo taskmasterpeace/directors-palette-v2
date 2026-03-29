@@ -36,6 +36,8 @@ interface ImageCardProps {
   onExtractFramesToGallery?: () => void
   onRemoveBackground?: () => void
   isRemovingBackground?: boolean
+  onUpscale?: () => void
+  isUpscaling?: boolean
   onShare?: () => void
   onMakeFigurine?: () => void
   currentFolderId?: string | null
@@ -70,6 +72,8 @@ const ImageCardComponent = ({
   onExtractFramesToGallery,
   onRemoveBackground,
   isRemovingBackground,
+  onUpscale,
+  isUpscaling,
   onShare,
   onMakeFigurine,
   currentFolderId,
@@ -246,6 +250,8 @@ const ImageCardComponent = ({
             onExtractFramesToGallery={onExtractFramesToGallery}
             onRemoveBackground={onRemoveBackground}
             isRemovingBackground={isRemovingBackground}
+            onUpscale={onUpscale}
+            isUpscaling={isUpscaling}
             onShare={onShare}
             onMakeFigurine={onMakeFigurine}
             dropdownOpen={dropdownOpen}

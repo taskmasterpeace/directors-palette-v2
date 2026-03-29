@@ -22,11 +22,13 @@ interface ImageCardCallbacks {
   onExtractFrames?: (image: GeneratedImage) => void
   onExtractFramesToGallery?: (image: GeneratedImage) => void
   onRemoveBackground: (image: GeneratedImage) => void
+  onUpscale?: (image: GeneratedImage) => void
   onRetry: (image: GeneratedImage) => void
   onShare?: (image: GeneratedImage) => void
   onMakeFigurine?: (image: GeneratedImage) => void
   isGridImage: (image: GeneratedImage) => boolean
   removingBackgroundId: string | null
+  upscalingId?: string | null
 }
 
 interface GalleryGridProps {
@@ -130,6 +132,8 @@ function renderImageCard(
       onExtractFramesToGallery={callbacks.isGridImage(image) && callbacks.onExtractFramesToGallery ? () => callbacks.onExtractFramesToGallery!(image) : undefined}
       onRemoveBackground={() => callbacks.onRemoveBackground(image)}
       isRemovingBackground={callbacks.removingBackgroundId === image.id}
+      onUpscale={callbacks.onUpscale ? () => callbacks.onUpscale!(image) : undefined}
+      isUpscaling={callbacks.upscalingId === image.id}
       currentFolderId={image.folderId}
       folders={folders}
       showActions={true}

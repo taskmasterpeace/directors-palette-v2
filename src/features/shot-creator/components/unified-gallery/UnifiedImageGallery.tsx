@@ -132,6 +132,7 @@ export function UnifiedImageGallery({
     // Local UI state
     const [isMobileFolderMenuOpen, setIsMobileFolderMenuOpen] = useState(false)
     const [removingBackgroundId, setRemovingBackgroundId] = useState<string | null>(null)
+    const [upscalingId, setUpscalingId] = useState<string | null>(null)
     const [generatingCinematicId, setGeneratingCinematicId] = useState<string | null>(null)
     const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false)
     // Sort + UI prefs from store (persisted)
@@ -188,6 +189,53 @@ export function UnifiedImageGallery({
             setRemovingBackgroundId(null)
         }
     }, [removingBackgroundId, toast])
+
+    // Handle upscale 4x
+    const handleUpscale = useCallback(async (image: GeneratedImage) => {
+        if (upscalingId) return // Prevent multiple concurrent upscales
+
+        setUpscalingId(image.id)
+        toast({
+            title: "Upscaling Image",
+            description: "Processing image... (2 pts)"
+        })
+
+        try {
+            const response = await fetch('/api/tools/upscale', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    imageUrl: image.url,
+                    galleryId: image.id
+                })
+            })
+
+            const result = await response.json()
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Failed to upscale image')
+            }
+
+            toast({
+                title: "Image Upscaled!",
+                description: "New image saved to gallery. Refreshing..."
+            })
+
+            // Refresh gallery to show the new image
+            setTimeout(async () => {
+                await useUnifiedGalleryStore.getState().refreshGallery()
+            }, 500)
+        } catch (error) {
+            logger.shotCreator.error('Upscale error', { error: error instanceof Error ? error.message : String(error) })
+            toast({
+                title: "Upscale Failed",
+                description: error instanceof Error ? error.message : "An error occurred",
+                variant: "destructive"
+            })
+        } finally {
+            setUpscalingId(null)
+        }
+    }, [upscalingId, toast])
 
     // Handle 9-Shot Cinematic Grid generation
     const handleGenerateCinematicGrid = useCallback(async (image: GeneratedImage) => {
@@ -825,17 +873,19 @@ CRITICAL RULES:
         onExtractFrames: (image: GeneratedImage) => handleExtractFrames(image.url),
         onExtractFramesToGallery: (image: GeneratedImage) => handleExtractFramesToGallery(image.url, image.id),
         onRemoveBackground: (image: GeneratedImage) => handleRemoveBackground(image),
+        onUpscale: (image: GeneratedImage) => handleUpscale(image),
         onRetry: (image: GeneratedImage) => handleRetryGeneration(image),
         onShare: (image: GeneratedImage) => handleShare(image),
         onMakeFigurine: (currentTab === 'gallery' || currentTab === 'shot-creator') ? (image: GeneratedImage) => handleMakeFigurine(image) : undefined,
         isGridImage,
         removingBackgroundId,
+        upscalingId,
     }), [
         _handleImageSelect, _handleImageSelectWithModifiers,
         setFullscreenImage, handleCopyImage, handleDownloadImage, handleDeleteImage,
         handleSendTo, currentTab, showReferenceNamePrompt, updateImageReference, toast,
         onSendToLibrary, handleMoveToFolder, handleExtractFrames, handleExtractFramesToGallery,
-        handleRemoveBackground, handleRetryGeneration, handleShare, handleMakeFigurine, isGridImage, removingBackgroundId,
+        handleRemoveBackground, handleUpscale, handleRetryGeneration, handleShare, handleMakeFigurine, isGridImage, removingBackgroundId, upscalingId,
     ])
 
     // Filter for favorites view
@@ -891,6 +941,8 @@ CRITICAL RULES:
                             onExtractFramesToGallery={isGridImage(image) ? () => handleExtractFramesToGallery(image.url, image.id) : undefined}
                             onRemoveBackground={() => handleRemoveBackground(image)}
                             isRemovingBackground={removingBackgroundId === image.id}
+                            onUpscale={() => handleUpscale(image)}
+                            isUpscaling={upscalingId === image.id}
                             currentFolderId={image.folderId}
                             folders={folders}
                             showActions={true}
@@ -1027,6 +1079,8 @@ CRITICAL RULES:
                             onExtractFramesToGallery={isGridImage(fullscreenImage) ? () => handleExtractFramesToGallery(fullscreenImage.url, fullscreenImage.id) : undefined}
                             onRemoveBackground={() => handleRemoveBackground(fullscreenImage)}
                             isRemovingBackground={removingBackgroundId === fullscreenImage.id}
+                            onUpscale={() => handleUpscale(fullscreenImage)}
+                            isUpscaling={upscalingId === fullscreenImage.id}
                             onGenerateCinematicGrid={() => handleGenerateCinematicGrid(fullscreenImage)}
                             isGeneratingCinematic={generatingCinematicId === fullscreenImage.id}
                             onGenerateBRollGrid={() => handleGenerateBRollGrid(fullscreenImage)}

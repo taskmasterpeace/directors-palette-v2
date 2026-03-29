@@ -26,6 +26,7 @@ import {
   Eraser,
   Share2,
   Box,
+  ArrowUpFromLine,
 } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import type { FolderWithCount } from '../../types/folder.types'
@@ -51,6 +52,8 @@ interface MobileImageActionSheetProps {
   onMoveToFolder?: (folderId: string | null) => void
   onRemoveBackground?: () => void
   isRemovingBackground?: boolean
+  onUpscale?: () => void
+  isUpscaling?: boolean
   onShare?: () => void
   onMakeFigurine?: () => void
 }
@@ -74,6 +77,8 @@ export function MobileImageActionSheet({
   onMoveToFolder,
   onRemoveBackground,
   isRemovingBackground,
+  onUpscale,
+  isUpscaling,
   onShare,
   onMakeFigurine,
 }: MobileImageActionSheetProps) {
@@ -190,6 +195,24 @@ export function MobileImageActionSheet({
                       onClick={() => {
                         if (!isRemovingBackground) {
                           onRemoveBackground()
+                          handleClose()
+                        }
+                      }}
+                    />
+                  )}
+
+                  {/* Upscale 4x */}
+                  {onUpscale && (
+                    <MenuButton
+                      icon={isUpscaling ? (
+                        <LoadingSpinner size="md" color="current" className="h-5 w-5" />
+                      ) : (
+                        <ArrowUpFromLine className="h-5 w-5" />
+                      )}
+                      label={isUpscaling ? "Upscaling..." : "Upscale 4x (2 pts)"}
+                      onClick={() => {
+                        if (!isUpscaling) {
+                          onUpscale()
                           handleClose()
                         }
                       }}
