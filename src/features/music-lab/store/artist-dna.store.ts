@@ -77,6 +77,7 @@ interface ArtistDnaState {
   // Actions - Catalog
   addCatalogEntry: (entry: Omit<CatalogEntry, 'id' | 'createdAt'>) => void
   removeCatalogEntry: (id: string) => void
+  saveCatalogAudio: (entryId: string, audioUrl: string, audioDuration: number) => void
 
   // Actions - Genome
   analyzeSong: (entryId: string) => Promise<void>
@@ -420,6 +421,23 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
           }))
         }
       },
+
+      saveCatalogAudio: (entryId, audioUrl, audioDuration) =>
+        set((state) => {
+          const catalog = state.draft.catalog || { entries: [] }
+          const updatedEntries = catalog.entries.map((entry) =>
+            entry.id === entryId
+              ? { ...entry, audioUrl, audioDuration }
+              : entry
+          )
+          return {
+            draft: {
+              ...state.draft,
+              catalog: { ...catalog, entries: updatedEntries },
+            },
+            isDirty: true,
+          }
+        }),
 
       analyzeSong: async (entryId: string) => {
         const { draft } = get()
