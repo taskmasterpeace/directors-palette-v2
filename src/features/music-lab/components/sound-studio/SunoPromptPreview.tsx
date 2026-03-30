@@ -1,9 +1,12 @@
 'use client'
 
-import { Copy, Check, FileText } from 'lucide-react'
+import { Copy, Check, FileText, Sparkles } from 'lucide-react'
 import { useState, useCallback } from 'react'
 import { useSoundStudioStore } from '@/features/music-lab/store/sound-studio.store'
 import { energyToLabel } from '@/features/music-lab/types/sound-studio.types'
+import { useGenerateMusic } from '../../hooks/useGenerateMusic'
+import { useArtistDnaStore } from '../../store/artist-dna.store'
+import { GenerationDrawer } from '../generation/GenerationDrawer'
 
 function SectionBadge({ label, items, color }: { label: string; items: string[]; color: string }) {
   if (!items.length) return null
@@ -27,6 +30,26 @@ function SectionBadge({ label, items, color }: { label: string; items: string[];
 export function SunoPromptPreview() {
   const { sunoPrompt, promptCharCount, settings } = useSoundStudioStore()
   const [copied, setCopied] = useState(false)
+  const [beatTitle, setBeatTitle] = useState('')
+  const { generate, isGenerating } = useGenerateMusic()
+  const activeArtist = useArtistDnaStore((s) => s.activeArtist)
+
+  const handleGenerate = useCallback(() => {
+    if (!activeArtist || !sunoPrompt) return
+
+    generate({
+      mode: 'instrumental',
+      artistId: activeArtist,
+      title: beatTitle || 'Untitled Beat',
+      stylePrompt: sunoPrompt,
+      lyricsPrompt: '',
+      excludePrompt: settings.negativeTags.join(', '),
+    })
+  }, [activeArtist, sunoPrompt, beatTitle, settings.negativeTags, generate])
+
+  const handleRegenerate = useCallback(() => {
+    handleGenerate()
+  }, [handleGenerate])
 
   const charColor =
     promptCharCount === 0
@@ -169,6 +192,44 @@ export function SunoPromptPreview() {
           </div>
         )}
       </div>
+
+      {/* Beat title input */}
+      <div>
+        <input
+          type="text"
+          value={beatTitle}
+          onChange={(e) => setBeatTitle(e.target.value)}
+          placeholder="Beat title (optional)"
+          className="w-full rounded-[0.625rem] border border-border bg-background px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-cyan-500/40"
+        />
+      </div>
+
+      {/* Generate Beat button */}
+      <div className="flex gap-2">
+        <button
+          onClick={handleGenerate}
+          disabled={!activeArtist || isGenerating || !sunoPrompt}
+          className="flex-1 flex items-center justify-center gap-2 py-2 rounded-[0.625rem] bg-cyan-500/20 border border-cyan-500/30 text-xs font-medium text-cyan-400 hover:bg-cyan-500/30 hover:text-cyan-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <Sparkles className="w-3.5 h-3.5" />
+          {isGenerating ? 'Generating...' : 'Generate Beat — 12 pts'}
+        </button>
+        <button
+          onClick={handleCopy}
+          disabled={!sunoPrompt}
+          className="shrink-0 p-2 rounded-[0.625rem] border border-border hover:bg-muted/40 transition-colors disabled:opacity-30"
+          title="Copy to clipboard"
+        >
+          {copied ? (
+            <Check className="w-4 h-4 text-emerald-400" />
+          ) : (
+            <Copy className="w-4 h-4 text-muted-foreground" />
+          )}
+        </button>
+      </div>
+
+      {/* Generation Drawer */}
+      <GenerationDrawer onRegenerate={handleRegenerate} />
     </div>
   )
 }
