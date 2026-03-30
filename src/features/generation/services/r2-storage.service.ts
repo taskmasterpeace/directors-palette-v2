@@ -67,4 +67,41 @@ export class R2StorageService {
       fileSize: buffer.byteLength,
     };
   }
+
+  /**
+   * Upload audio (music) to R2
+   */
+  static async uploadAudio(
+    buffer: ArrayBuffer,
+    userId: string,
+    artistId: string,
+    trackId: string,
+    fileExtension: string = 'mp3',
+    mimeType: string = 'audio/mpeg'
+  ): Promise<{
+    publicUrl: string;
+    storagePath: string;
+    fileSize: number;
+  }> {
+    const storagePath = `music/${userId}/${artistId}/${trackId}.${fileExtension}`;
+
+    const command = new PutObjectCommand({
+      Bucket: BUCKET,
+      Key: storagePath,
+      Body: new Uint8Array(buffer),
+      ContentType: mimeType,
+      CacheControl: 'public, max-age=31536000, immutable',
+    });
+
+    await getR2Client().send(command);
+    logger.generation.info('[R2] Uploaded audio', { storagePath, size: buffer.byteLength });
+
+    const publicUrl = `${R2_PUBLIC_BASE}/${storagePath}`;
+
+    return {
+      publicUrl,
+      storagePath,
+      fileSize: buffer.byteLength,
+    };
+  }
 }
