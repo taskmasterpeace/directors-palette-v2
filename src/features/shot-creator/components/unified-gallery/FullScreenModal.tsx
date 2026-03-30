@@ -646,7 +646,7 @@ function FullscreenModal({
                                             className="flex-1 text-white border-border"
                                             onClick={onGenerateCinematicGrid}
                                             disabled={isGeneratingCinematic}
-                                            title="Generate 9 Camera Angles"
+                                            title="Generate 9 Camera Angles (15 pts)"
                                         >
                                             {isGeneratingCinematic ? (
                                                 <>
@@ -656,7 +656,7 @@ function FullscreenModal({
                                             ) : (
                                                 <>
                                                     <Clapperboard className="w-3.5 h-3.5 mr-1" />
-                                                    Angles
+                                                    Angles (15 pts)
                                                 </>
                                             )}
                                         </Button>
@@ -668,7 +668,7 @@ function FullscreenModal({
                                             className="flex-1 text-white border-border"
                                             onClick={onGenerateBRollGrid}
                                             disabled={isGeneratingBRoll}
-                                            title="Generate 9 B-Roll Shots"
+                                            title="Generate 9 B-Roll Shots (15 pts)"
                                         >
                                             {isGeneratingBRoll ? (
                                                 <>
@@ -678,7 +678,7 @@ function FullscreenModal({
                                             ) : (
                                                 <>
                                                     <Layers className="w-3.5 h-3.5 mr-1" />
-                                                    B-Roll
+                                                    B-Roll (15 pts)
                                                 </>
                                             )}
                                         </Button>
