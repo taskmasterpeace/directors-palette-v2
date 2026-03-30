@@ -6,7 +6,7 @@ import { useArtistDnaStore } from '../../store/artist-dna.store'
 
 export function GenerationHistory() {
   const allHistory = useGenerationStore((s) => s.history)
-  const activeArtist = useArtistDnaStore((s) => s.activeArtist)
+  const activeArtist = useArtistDnaStore((s) => s.activeArtistId)
 
   const history = activeArtist
     ? allHistory.filter((h) => h.artistId === activeArtist)

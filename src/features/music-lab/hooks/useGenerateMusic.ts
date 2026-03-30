@@ -11,14 +11,12 @@ export function useGenerateMusic() {
   const {
     currentJob,
     drawerOpen,
-    pollCount,
     startJob,
     updateJobStatus,
     clearJob,
     openDrawer,
     closeDrawer,
     incrementPoll,
-    resetPoll,
     addToHistory,
   } = useGenerationStore()
 
@@ -27,9 +25,11 @@ export function useGenerateMusic() {
 
   // Clean up polling on unmount
   useEffect(() => {
+    const timer = pollTimerRef
+    const abort = abortRef
     return () => {
-      if (pollTimerRef.current) clearTimeout(pollTimerRef.current)
-      if (abortRef.current) abortRef.current.abort()
+      if (timer.current) clearTimeout(timer.current)
+      if (abort.current) abort.current.abort()
     }
   }, [])
 

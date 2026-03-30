@@ -92,7 +92,7 @@ export function SunoExportPanel() {
   const lyricsText = lyricsOverride ?? formattedLyrics
 
   const { generate, isGenerating } = useGenerateMusic()
-  const activeArtist = useArtistDnaStore((s) => s.activeArtist)
+  const activeArtist = useArtistDnaStore((s) => s.activeArtistId)
 
   const handleGenerate = useCallback(() => {
     if (!activeArtist) return

@@ -32,7 +32,7 @@ export function SunoPromptPreview() {
   const [copied, setCopied] = useState(false)
   const [beatTitle, setBeatTitle] = useState('')
   const { generate, isGenerating } = useGenerateMusic()
-  const activeArtist = useArtistDnaStore((s) => s.activeArtist)
+  const activeArtist = useArtistDnaStore((s) => s.activeArtistId)
 
   const handleGenerate = useCallback(() => {
     if (!activeArtist || !sunoPrompt) return

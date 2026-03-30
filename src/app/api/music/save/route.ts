@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
-import { getAPIClient } from '@/lib/db/client'
+import { getClient } from '@/lib/db/client'
 import { R2StorageService } from '@/features/generation/services/r2-storage.service'
 import { createLogger } from '@/lib/logger'
 import type { SaveTrackRequest } from '@/features/music-lab/types/generation.types'
@@ -38,7 +38,8 @@ export async function POST(request: NextRequest) {
     log.info('Audio uploaded to R2', { publicUrl, size: audioBuffer.byteLength })
 
     // 3. Update artist catalog in Supabase
-    const supabase = await getAPIClient()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const supabase: any = await getClient()
     const { data: artist } = await supabase
       .from('artist_profiles')
       .select('dna')
