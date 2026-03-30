@@ -176,6 +176,8 @@ export interface CatalogEntry {
   createdAt: string
   analysis?: CatalogSongAnalysis
   analysisStatus?: AnalysisStatus
+  audioUrl?: string
+  audioDuration?: number
 }
 
 export interface ArtistCatalog {
