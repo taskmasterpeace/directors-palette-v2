@@ -8,16 +8,33 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Replicate from 'replicate'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
+import { creditsService } from '@/features/credits'
+import { isAdminEmail } from '@/features/admin/types/admin.types'
 import { logger } from '@/lib/logger'
 
 // Use nano-banana-2 for clean wardrobe generation
 const IMAGE_MODEL = 'google/nano-banana-2'
+const WARDROBE_REF_COST = 10
 
 export async function POST(request: NextRequest) {
     try {
         // Check authentication
         const auth = await getAuthenticatedUser(request)
         if (auth instanceof NextResponse) return auth
+
+        const { user } = auth
+        const userIsAdmin = isAdminEmail(user.email || '')
+
+        // Check credits
+        if (!userIsAdmin) {
+            const balance = await creditsService.getBalance(user.id)
+            if (!balance || balance.balance < WARDROBE_REF_COST) {
+                return NextResponse.json(
+                    { error: `Insufficient credits. Need ${WARDROBE_REF_COST}, have ${balance?.balance || 0}` },
+                    { status: 402 }
+                )
+            }
+        }
 
         const {
             wardrobeName,
@@ -58,6 +75,18 @@ no person visible, clothing only`
 
         if (!resultUrl) {
             return NextResponse.json({ error: 'No output from image generation' }, { status: 500 })
+        }
+
+        // Deduct credits after success
+        if (!userIsAdmin) {
+            const deductResult = await creditsService.addCredits(user.id, -WARDROBE_REF_COST, {
+                type: 'usage',
+                description: 'Wardrobe reference generation',
+                metadata: { tool: 'wardrobe-reference', model: IMAGE_MODEL },
+            })
+            if (!deductResult.success) {
+                logger.api.error('Wardrobe ref: Failed to deduct credits', { error: deductResult.error })
+            }
         }
 
         return NextResponse.json({

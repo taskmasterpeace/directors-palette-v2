@@ -13,8 +13,12 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
+import { creditsService } from '@/features/credits'
+import { isAdminEmail } from '@/features/admin/types/admin.types'
 import Replicate from 'replicate'
 import { logger } from '@/lib/logger'
+
+const INPAINT_COST_POINTS = 10
 
 // Initialize Replicate client
 const replicate = new Replicate({
@@ -55,6 +59,20 @@ export async function POST(request: NextRequest) {
     try {
         const auth = await getAuthenticatedUser(request)
         if (auth instanceof NextResponse) return auth
+
+        const { user } = auth
+        const userIsAdmin = isAdminEmail(user.email || '')
+
+        // Check credits before generation
+        if (!userIsAdmin) {
+            const balance = await creditsService.getBalance(user.id)
+            if (!balance || balance.balance < INPAINT_COST_POINTS) {
+                return NextResponse.json(
+                    { error: `Insufficient credits. Need ${INPAINT_COST_POINTS}, have ${balance?.balance || 0}` },
+                    { status: 402 }
+                )
+            }
+        }
 
         const { image, prompt, model = 'nano-banana-2', systemPrompt } = await request.json()
 
@@ -142,6 +160,18 @@ export async function POST(request: NextRequest) {
         }
 
         logger.api.info('Inpaint: Success! Generated URL', { detail: resultUrl.substring(0, 100) })
+
+        // Deduct credits after successful generation
+        if (!userIsAdmin) {
+            const deductResult = await creditsService.addCredits(user.id, -INPAINT_COST_POINTS, {
+                type: 'usage',
+                description: 'Image inpainting/editing',
+                metadata: { tool: 'inpaint', model: modelId },
+            })
+            if (!deductResult.success) {
+                logger.api.error('Inpaint: Failed to deduct credits', { error: deductResult.error })
+            }
+        }
 
         return NextResponse.json({
             url: resultUrl,

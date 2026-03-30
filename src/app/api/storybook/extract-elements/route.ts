@@ -8,6 +8,10 @@ import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { lognog } from '@/lib/lognog'
 import type { ExtractedElements, ExtractedCharacter, ExtractedLocation, GeneratedStoryPage } from '@/features/storybook/types/education.types'
 import { logger } from '@/lib/logger'
+import { creditsService } from '@/features/credits'
+import { isAdminEmail } from '@/features/admin/types/admin.types'
+
+const LLM_COST_POINTS = 1
 
 interface ExtractElementsRequest {
   title: string
@@ -126,6 +130,17 @@ export async function POST(request: NextRequest) {
     const { user } = auth
     userId = user.id
     userEmail = user.email
+    const userIsAdmin = isAdminEmail(user.email || '')
+
+    if (!userIsAdmin) {
+        const balance = await creditsService.getBalance(user.id)
+        if (!balance || balance.balance < LLM_COST_POINTS) {
+            return NextResponse.json(
+                { error: `Insufficient credits. Need ${LLM_COST_POINTS}, have ${balance?.balance || 0}` },
+                { status: 402 }
+            )
+        }
+    }
 
     logger.api.info('Storybook API: extract-elements called by user', { user: user.id })
 
@@ -263,6 +278,14 @@ export async function POST(request: NextRequest) {
         integration: 'openrouter',
         model: 'openai/gpt-4o-mini',
       })
+
+      if (!userIsAdmin) {
+          await creditsService.addCredits(user.id, -LLM_COST_POINTS, {
+              type: 'usage',
+              description: 'Element extraction',
+              metadata: { tool: 'storybook-elements' },
+          })
+      }
 
       return NextResponse.json(extractedElements)
     } catch (parseError) {

@@ -7,6 +7,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { lognog } from '@/lib/lognog'
 import { logger } from '@/lib/logger'
+import { creditsService } from '@/features/credits'
+import { isAdminEmail } from '@/features/admin/types/admin.types'
+
+const LLM_COST_POINTS = 1
 
 interface GenerateSynopsisRequest {
   title: string
@@ -99,6 +103,17 @@ export async function POST(request: NextRequest) {
     const { user } = auth
     userId = user.id
     userEmail = user.email
+    const userIsAdmin = isAdminEmail(user.email || '')
+
+    if (!userIsAdmin) {
+        const balance = await creditsService.getBalance(user.id)
+        if (!balance || balance.balance < LLM_COST_POINTS) {
+            return NextResponse.json(
+                { error: `Insufficient credits. Need ${LLM_COST_POINTS}, have ${balance?.balance || 0}` },
+                { status: 402 }
+            )
+        }
+    }
 
     logger.api.info('Storybook API: generate-synopsis called by user', { user: user.id })
 
@@ -237,6 +252,14 @@ Write a compelling synopsis that will make parents want to buy this book for the
         integration: 'openrouter',
         model: 'openai/gpt-4o-mini',
       })
+
+      if (!userIsAdmin) {
+          await creditsService.addCredits(user.id, -LLM_COST_POINTS, {
+              type: 'usage',
+              description: 'Synopsis generation',
+              metadata: { tool: 'storybook-synopsis' },
+          })
+      }
 
       return NextResponse.json(responseData)
     } catch (parseError) {

@@ -9,6 +9,10 @@ import { lognog } from '@/lib/lognog'
 import { getCategoryById, getTopicById, getRandomApproaches } from '@/features/storybook/types/education.types'
 import type { StoryCharacterInput } from '@/features/storybook/types/storybook.types'
 import { logger } from '@/lib/logger'
+import { creditsService } from '@/features/credits'
+import { isAdminEmail } from '@/features/admin/types/admin.types'
+
+const LLM_COST_POINTS = 1
 
 interface GenerateIdeasRequest {
   characterName: string
@@ -214,6 +218,17 @@ export async function POST(request: NextRequest) {
     const { user } = auth
     userId = user.id
     userEmail = user.email
+    const userIsAdmin = isAdminEmail(user.email || '')
+
+    if (!userIsAdmin) {
+        const balance = await creditsService.getBalance(user.id)
+        if (!balance || balance.balance < LLM_COST_POINTS) {
+            return NextResponse.json(
+                { error: `Insufficient credits. Need ${LLM_COST_POINTS}, have ${balance?.balance || 0}` },
+                { status: 402 }
+            )
+        }
+    }
 
     logger.api.info('Storybook API: generate-ideas called by user', { user: user.id })
 
@@ -398,6 +413,14 @@ export async function POST(request: NextRequest) {
         integration: 'openrouter',
         model: 'openai/gpt-4o-mini',
       })
+
+      if (!userIsAdmin) {
+          await creditsService.addCredits(user.id, -LLM_COST_POINTS, {
+              type: 'usage',
+              description: 'Idea generation',
+              metadata: { tool: 'storybook-ideas' },
+          })
+      }
 
       return NextResponse.json(responseData)
     } catch (parseError) {

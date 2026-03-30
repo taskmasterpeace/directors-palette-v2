@@ -3,6 +3,10 @@ import { createOpenRouterService } from '@/features/storyboard/services/openrout
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { lognog } from '@/lib/lognog'
 import { logger } from '@/lib/logger'
+import { creditsService } from '@/features/credits'
+import { isAdminEmail } from '@/features/admin/types/admin.types'
+
+const LLM_COST_POINTS = 1
 
 export const maxDuration = 120
 
@@ -12,6 +16,18 @@ export async function POST(request: NextRequest) {
     try {
         const auth = await getAuthenticatedUser(request)
         if (auth instanceof NextResponse) return auth
+        const { user } = auth
+        const userIsAdmin = isAdminEmail(user.email || '')
+
+        if (!userIsAdmin) {
+            const balance = await creditsService.getBalance(user.id)
+            if (!balance || balance.balance < LLM_COST_POINTS) {
+                return NextResponse.json(
+                    { error: `Insufficient credits. Need ${LLM_COST_POINTS}, have ${balance?.balance || 0}` },
+                    { status: 402 }
+                )
+            }
+        }
 
         const body = await request.json()
         const { shots, narrativeSummary, model } = body
@@ -102,6 +118,14 @@ Return ONLY the JSON array, no other text.`
             duration_ms: Date.now() - apiStart,
             suggestion_count: validSuggestions.length,
         })
+
+        if (!userIsAdmin) {
+            await creditsService.addCredits(user.id, -LLM_COST_POINTS, {
+                type: 'usage',
+                description: 'Coherence pass',
+                metadata: { tool: 'storyboard-coherence' },
+            })
+        }
 
         return NextResponse.json({ suggestions: validSuggestions })
     } catch (error) {

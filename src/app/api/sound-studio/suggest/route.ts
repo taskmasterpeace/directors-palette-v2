@@ -6,13 +6,28 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { logger } from '@/lib/logger'
+import { creditsService } from '@/features/credits'
+import { isAdminEmail } from '@/features/admin/types/admin.types'
 
 const MODEL = 'openai/gpt-4.1-mini'
+const LLM_COST_POINTS = 1
 
 export async function POST(request: NextRequest) {
   try {
     const auth = await getAuthenticatedUser(request)
     if (auth instanceof NextResponse) return auth
+    const { user } = auth
+    const userIsAdmin = isAdminEmail(user.email || '')
+
+    if (!userIsAdmin) {
+        const balance = await creditsService.getBalance(user.id)
+        if (!balance || balance.balance < LLM_COST_POINTS) {
+            return NextResponse.json(
+                { error: `Insufficient credits. Need ${LLM_COST_POINTS}, have ${balance?.balance || 0}` },
+                { status: 402 }
+            )
+        }
+    }
 
     const { currentSettings, userMessage, artistDna } = await request.json()
 
@@ -58,6 +73,14 @@ Give concise, actionable suggestions. If suggesting changes, be specific about w
 
     const data = await response.json()
     const suggestion = data.choices?.[0]?.message?.content || ''
+
+    if (!userIsAdmin) {
+        await creditsService.addCredits(user.id, -LLM_COST_POINTS, {
+            type: 'usage',
+            description: 'Sound suggestion',
+            metadata: { tool: 'sound-suggest' },
+        })
+    }
 
     return NextResponse.json({ suggestion })
   } catch (error) {

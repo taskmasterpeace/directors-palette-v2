@@ -8,6 +8,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { lognog } from '@/lib/lognog'
 import { logger } from '@/lib/logger'
+import { creditsService } from '@/features/credits'
+import { isAdminEmail } from '@/features/admin/types/admin.types'
+
+const LLM_COST_POINTS = 1
 
 interface ExpandStyleRequest {
   styleName: string
@@ -87,6 +91,17 @@ export async function POST(request: NextRequest) {
     const { user } = auth
     userId = user.id
     userEmail = user.email
+    const userIsAdmin = isAdminEmail(user.email || '')
+
+    if (!userIsAdmin) {
+        const balance = await creditsService.getBalance(user.id)
+        if (!balance || balance.balance < LLM_COST_POINTS) {
+            return NextResponse.json(
+                { error: `Insufficient credits. Need ${LLM_COST_POINTS}, have ${balance?.balance || 0}` },
+                { status: 402 }
+            )
+        }
+    }
 
     logger.api.info('Storybook API: expand-style called by user', { user: user.id })
 
@@ -197,6 +212,14 @@ export async function POST(request: NextRequest) {
         integration: 'openrouter',
         model: 'meta-llama/llama-3.2-3b-instruct',
       })
+
+      if (!userIsAdmin) {
+          await creditsService.addCredits(user.id, -LLM_COST_POINTS, {
+              type: 'usage',
+              description: 'Style expansion',
+              metadata: { tool: 'storybook-style' },
+          })
+      }
 
       return NextResponse.json(responseData)
     } catch (parseError) {

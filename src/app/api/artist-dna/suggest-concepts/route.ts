@@ -7,8 +7,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import type { ArtistDNA } from '@/features/music-lab/types/artist-dna.types'
 import { logger } from '@/lib/logger'
+import { creditsService } from '@/features/credits'
+import { isAdminEmail } from '@/features/admin/types/admin.types'
 
 const MODEL = 'openai/gpt-4.1-mini'
+const LLM_COST_POINTS = 1
 
 interface SuggestConceptsBody {
   artistDna: ArtistDNA
@@ -76,6 +79,18 @@ export async function POST(request: NextRequest) {
   try {
     const auth = await getAuthenticatedUser(request)
     if (auth instanceof NextResponse) return auth
+    const { user } = auth
+    const userIsAdmin = isAdminEmail(user.email || '')
+
+    if (!userIsAdmin) {
+        const balance = await creditsService.getBalance(user.id)
+        if (!balance || balance.balance < LLM_COST_POINTS) {
+            return NextResponse.json(
+                { error: `Insufficient credits. Need ${LLM_COST_POINTS}, have ${balance?.balance || 0}` },
+                { status: 402 }
+            )
+        }
+    }
 
     const { artistDna } = await request.json() as SuggestConceptsBody
 
@@ -136,6 +151,14 @@ RULES:
     } catch {
       logger.api.error('Failed to parse concepts JSON', { detail: raw.substring(0, 300) })
       return NextResponse.json({ error: 'Failed to parse suggestions' }, { status: 500 })
+    }
+
+    if (!userIsAdmin) {
+        await creditsService.addCredits(user.id, -LLM_COST_POINTS, {
+            type: 'usage',
+            description: 'Concept suggestion',
+            metadata: { tool: 'artist-concepts' },
+        })
     }
 
     return NextResponse.json({ concepts })

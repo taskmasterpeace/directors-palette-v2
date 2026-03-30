@@ -6,8 +6,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { logger } from '@/lib/logger'
+import { creditsService } from '@/features/credits'
+import { isAdminEmail } from '@/features/admin/types/admin.types'
 
 const MODEL = 'openai/gpt-4.1-mini'
+const LLM_COST_POINTS = 1
 
 interface AnalyzeLyricsBody {
   lyrics: string
@@ -17,6 +20,18 @@ interface AnalyzeLyricsBody {
 export async function POST(request: NextRequest) {
   const auth = await getAuthenticatedUser(request)
   if (auth instanceof NextResponse) return auth
+  const { user } = auth
+  const userIsAdmin = isAdminEmail(user.email || '')
+
+  if (!userIsAdmin) {
+      const balance = await creditsService.getBalance(user.id)
+      if (!balance || balance.balance < LLM_COST_POINTS) {
+          return NextResponse.json(
+              { error: `Insufficient credits. Need ${LLM_COST_POINTS}, have ${balance?.balance || 0}` },
+              { status: 402 }
+          )
+      }
+  }
 
   try {
     const body: AnalyzeLyricsBody = await request.json()
@@ -78,6 +93,14 @@ Analyze these lyrics:`
 
     if (!Array.isArray(sections)) {
       return NextResponse.json({ error: 'Invalid analysis format' }, { status: 502 })
+    }
+
+    if (!userIsAdmin) {
+        await creditsService.addCredits(user.id, -LLM_COST_POINTS, {
+            type: 'usage',
+            description: 'Lyrics analysis',
+            metadata: { tool: 'artist-lyrics' },
+        })
     }
 
     return NextResponse.json({ sections })
