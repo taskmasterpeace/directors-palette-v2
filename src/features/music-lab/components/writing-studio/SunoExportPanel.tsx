@@ -7,6 +7,9 @@ import { useArtistDnaStore } from '../../store/artist-dna.store'
 import { buildSunoStylePrompt, buildSunoExcludePrompt } from '../../utils/suno-style-prompt-builder'
 import { formatLyricsForSuno } from '../../utils/suno-lyrics-formatter'
 import { ALL_DELIVERY_TAGS } from '../../utils/suno-delivery-inference'
+import { Sparkles } from 'lucide-react'
+import { useGenerateMusic } from '../../hooks/useGenerateMusic'
+import { GenerationDrawer } from '../generation/GenerationDrawer'
 import type { SongSection } from '../../types/writing-studio.types'
 
 function CopyButton({ text }: { text: string }) {
@@ -87,6 +90,26 @@ export function SunoExportPanel() {
   const styleText = styleOverride ?? stylePrompt
   const excludeText = excludeOverride ?? excludePrompt
   const lyricsText = lyricsOverride ?? formattedLyrics
+
+  const { generate, isGenerating } = useGenerateMusic()
+  const activeArtist = useArtistDnaStore((s) => s.activeArtist)
+
+  const handleGenerate = useCallback(() => {
+    if (!activeArtist) return
+
+    generate({
+      mode: 'song',
+      artistId: activeArtist,
+      title: artistDna.identity?.stageName ? `${artistDna.identity.stageName} Song` : 'Song',
+      stylePrompt: styleText,
+      lyricsPrompt: lyricsText,
+      excludePrompt: excludeText,
+    })
+  }, [activeArtist, artistDna.identity?.stageName, styleText, lyricsText, excludeText, generate])
+
+  const handleRegenerate = useCallback(() => {
+    handleGenerate()
+  }, [handleGenerate])
 
   const handleCopyAll = useCallback(() => {
     const combined = [
@@ -256,23 +279,31 @@ export function SunoExportPanel() {
             </div>
           )}
 
-          {/* 5. Copy All */}
-          <button
-            onClick={onCopyAll}
-            className="w-full flex items-center justify-center gap-2 py-1.5 rounded-md border border-cyan-500/30 text-xs font-medium text-cyan-400 hover:bg-cyan-500/10 hover:text-cyan-300 transition-colors"
-          >
-            {copiedAll ? (
-              <>
+          {/* 5. Generate + Copy */}
+          <div className="flex gap-2">
+            <button
+              onClick={handleGenerate}
+              disabled={!activeArtist || isGenerating || !lyricsText.trim()}
+              className="flex-1 flex items-center justify-center gap-2 py-2 rounded-md bg-cyan-500/20 border border-cyan-500/30 text-xs font-medium text-cyan-400 hover:bg-cyan-500/30 hover:text-cyan-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              {isGenerating ? 'Generating...' : 'Generate Song — 12 pts'}
+            </button>
+            <button
+              onClick={onCopyAll}
+              className="shrink-0 flex items-center justify-center gap-2 px-3 py-1.5 rounded-md border border-zinc-500/30 text-xs font-medium text-zinc-400 hover:bg-zinc-500/10 transition-colors"
+              title="Copy all to clipboard"
+            >
+              {copiedAll ? (
                 <Check className="w-3.5 h-3.5 text-green-400" />
-                Copied!
-              </>
-            ) : (
-              <>
+              ) : (
                 <Copy className="w-3.5 h-3.5" />
-                Copy All
-              </>
-            )}
-          </button>
+              )}
+            </button>
+          </div>
+
+          {/* Generation Drawer */}
+          <GenerationDrawer onRegenerate={handleRegenerate} />
         </div>
       )}
     </div>
