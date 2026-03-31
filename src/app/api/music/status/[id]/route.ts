@@ -23,11 +23,16 @@ export async function GET(
 
     const result = await pollGenerationStatus(id)
 
+    // MuAPI returns `outputs` (array of URLs), map to our audio format
+    const audio = result.outputs?.length
+      ? result.outputs.map((url) => ({ url, duration: 0 }))
+      : result.audio || []
+
     return NextResponse.json({
       id: result.id,
       status: result.status,
-      audio: result.audio || [],
-      error: result.error,
+      audio,
+      error: result.error || undefined,
     })
   } catch (error) {
     log.error('Music status poll error', { error: error instanceof Error ? error.message : String(error) })

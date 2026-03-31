@@ -39,6 +39,7 @@ export interface GenerateRequest {
   lyricsPrompt: string
   excludePrompt: string
   vocalGender?: string
+  personaId?: string
 }
 
 export interface SaveTrackRequest {

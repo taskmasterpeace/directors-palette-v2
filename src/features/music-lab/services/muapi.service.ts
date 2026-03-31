@@ -3,7 +3,7 @@ import type { GenerateRequest } from '../types/generation.types'
 
 const log = createLogger('MuAPI')
 
-const MUAPI_BASE = 'https://muapi.ai/api/v1'
+const MUAPI_BASE = 'https://api.muapi.ai/api/v1'
 
 function getApiKey(): string {
   const key = process.env.MUAPI_KEY
@@ -12,15 +12,16 @@ function getApiKey(): string {
 }
 
 interface MuAPIGenerateResponse {
-  id: string
+  request_id: string
   status: string
 }
 
 interface MuAPIPollResponse {
   id: string
   status: 'pending' | 'processing' | 'completed' | 'failed'
+  outputs?: string[]
   audio?: Array<{ url: string; duration?: number }>
-  error?: string
+  error?: string | null
 }
 
 /**
@@ -31,13 +32,14 @@ export async function submitGeneration(req: GenerateRequest): Promise<{ requestI
     style: req.stylePrompt,
     custom_mode: true,
     title: req.title,
-    model: 'v4',
+    model: 'V4',
   }
 
   if (req.mode === 'song') {
     body.prompt = req.lyricsPrompt
     body.instrumental = false
-    if (req.vocalGender) body.vocal_gender = req.vocalGender
+    if (req.vocalGender) body.vocal_gender = req.vocalGender === 'm' ? 'male' : req.vocalGender === 'f' ? 'female' : req.vocalGender
+    if (req.personaId) body.persona_id = req.personaId
   } else {
     body.prompt = ''
     body.instrumental = true
@@ -65,9 +67,9 @@ export async function submitGeneration(req: GenerateRequest): Promise<{ requestI
   }
 
   const data: MuAPIGenerateResponse = await response.json()
-  log.info('Generation submitted', { requestId: data.id })
+  log.info('Generation submitted', { requestId: data.request_id })
 
-  return { requestId: data.id }
+  return { requestId: data.request_id }
 }
 
 /**
