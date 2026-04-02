@@ -16,6 +16,7 @@ import type {
   SuggestionBatch,
   SunoPromptOutput,
   UserArtistProfile,
+  VibeBeat,
 } from '../types/artist-dna.types'
 import { createEmptyDNA } from '../types/artist-dna.types'
 import { artistDnaService } from '../services/artist-dna.service'
@@ -99,6 +100,11 @@ interface ArtistDnaState {
   generateHeaderBg: () => Promise<void>
   isGeneratingHeaderBg: boolean
 
+  // Actions - Vibe Beat
+  isSavingVibeBeat: boolean
+  saveVibeBeat: (tempAudioUrl: string, duration: number) => Promise<void>
+  updateVibeBeatVolume: (volume: number) => void
+
   // Actions - Mix
   generateMix: () => Promise<void>
   toggleCombineMode: () => void
@@ -140,6 +146,7 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
       seededFrom: null,
       isAnalyzingCatalog: false,
       isGeneratingHeaderBg: false,
+      isSavingVibeBeat: false,
       personalityPrintStatus: 'idle',
 
       clearSeededFrom: () => set({ seededFrom: null }),
@@ -677,6 +684,86 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
           set({ isGeneratingHeaderBg: false })
         }
       },
+
+      saveVibeBeat: async (tempAudioUrl: string, duration: number) => {
+        const { activeArtistId, currentUserId, draft } = get()
+        if (!activeArtistId || !currentUserId) return
+
+        set({ isSavingVibeBeat: true })
+        try {
+          // Download from MuAPI temp URL → upload to R2
+          const res = await fetch('/api/music/download-to-r2', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ audioUrl: tempAudioUrl, artistId: activeArtistId }),
+          })
+
+          if (!res.ok) {
+            const data = await res.json()
+            throw new Error(data.error || 'Failed to upload to R2')
+          }
+
+          const { r2Url } = await res.json()
+
+          const vibeBeat: VibeBeat = {
+            audioUrl: r2Url,
+            duration,
+            title: 'Vibe Beat',
+            volume: 0.2,
+            createdAt: new Date().toISOString(),
+          }
+
+          // Update draft
+          set((state) => ({
+            draft: { ...state.draft, vibeBeat },
+            isDirty: true,
+          }))
+
+          // Persist to Supabase
+          const name = draft.identity.stageName || draft.identity.realName || 'Untitled Artist'
+          await artistDnaService.updateArtist(activeArtistId, currentUserId, name, { ...draft, vibeBeat })
+
+          // Update the artists list so it reflects the change
+          set((state) => ({
+            artists: state.artists.map((a) =>
+              a.id === activeArtistId ? { ...a, dna: { ...a.dna, vibeBeat } } : a
+            ),
+            isDirty: false,
+          }))
+        } catch (error) {
+          logger.musicLab.error('Failed to save vibe beat', {
+            error: error instanceof Error ? error.message : String(error),
+          })
+          throw error // Let caller handle toast
+        } finally {
+          set({ isSavingVibeBeat: false })
+        }
+      },
+
+      updateVibeBeatVolume: (() => {
+        let debounceTimer: ReturnType<typeof setTimeout> | null = null
+        return (volume: number) => {
+          // Update draft immediately for responsive UI
+          set((state) => {
+            if (!state.draft.vibeBeat) return state
+            return {
+              draft: {
+                ...state.draft,
+                vibeBeat: { ...state.draft.vibeBeat, volume },
+              },
+            }
+          })
+
+          // Debounced persist to Supabase
+          if (debounceTimer) clearTimeout(debounceTimer)
+          debounceTimer = setTimeout(async () => {
+            const { activeArtistId, currentUserId, draft } = get()
+            if (!activeArtistId || !currentUserId || !draft.vibeBeat) return
+            const name = draft.identity.stageName || draft.identity.realName || 'Untitled Artist'
+            await artistDnaService.updateArtist(activeArtistId, currentUserId, name, draft)
+          }, 500)
+        }
+      })(),
 
       generateMix: async () => {
         const { draft, combineVocalAndStyle } = get()
