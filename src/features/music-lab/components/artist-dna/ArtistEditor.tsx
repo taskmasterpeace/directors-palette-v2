@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import { Save, Check, Loader2, Sparkles } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -70,6 +70,42 @@ export function ArtistEditor() {
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle')
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
+  const audioRef = useRef<HTMLAudioElement>(null)
+  const hasAttemptedPlay = useRef(false)
+
+  // Auto-play vibe beat when editor mounts or vibeBeat changes
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio || !draft.vibeBeat) return
+
+    audio.src = draft.vibeBeat.audioUrl
+    audio.volume = draft.vibeBeat.volume ?? 0.2
+    audio.loop = true
+
+    // Try auto-play (may be blocked by browser policy)
+    audio.play().catch(() => {
+      // Blocked — will retry on first user interaction
+      hasAttemptedPlay.current = false
+    })
+
+    return () => {
+      audio.pause()
+      audio.src = ''
+    }
+  }, [draft.vibeBeat?.audioUrl]) // Only re-run when the audio URL changes
+
+  // Retry play on first user interaction (browser auto-play policy)
+  const handleContainerClick = useCallback(() => {
+    const audio = audioRef.current
+    if (!audio || hasAttemptedPlay.current) return
+    if (audio.paused && audio.src) {
+      audio.play().then(() => {
+        hasAttemptedPlay.current = true
+      }).catch(() => {})
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const handleSave = useCallback(async () => {
     if (!isDirty && saveState !== 'idle') return
     setSaveState('saving')
@@ -132,9 +168,9 @@ export function ArtistEditor() {
   }, [activeTab])
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" onClick={handleContainerClick}>
       {/* Constellation with overlaid controls (Back, Name, Save) */}
-      <ConstellationWidget onDeleteRequest={() => setShowDeleteConfirm(true)} />
+      <ConstellationWidget onDeleteRequest={() => setShowDeleteConfirm(true)} audioRef={audioRef} />
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
         <TabsList className="w-full overflow-x-auto flex-nowrap justify-start scrollbar-hide">
@@ -210,6 +246,9 @@ export function ArtistEditor() {
           </div>
         </div>
       )}
+
+      {/* Hidden audio element for vibe beat — lives here for tab persistence */}
+      <audio ref={audioRef} />
 
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent>
