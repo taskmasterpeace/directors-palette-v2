@@ -84,6 +84,14 @@ export interface ArtistVoice {
   isDefault: boolean
 }
 
+export interface VibeBeat {
+  audioUrl: string      // R2 public URL (permanent)
+  duration: number      // seconds
+  title: string         // "Vibe Beat" or auto-generated
+  volume: number        // 0-1, user's last volume setting (default 0.2)
+  createdAt: string     // ISO timestamp
+}
+
 export interface ArtistLook {
   skinTone: string
   hairStyle: string
@@ -202,6 +210,7 @@ export interface ArtistDNA {
   voices: ArtistVoice[]
   headerBackgroundUrl: string  // AI generated atmospheric background
   lowConfidenceFields: string[]  // field paths where data may be inaccurate (e.g. "identity.realName", "lexicon.adLibs")
+  vibeBeat?: VibeBeat  // instrumental theme beat
 }
 
 // =============================================================================

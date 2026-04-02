@@ -258,6 +258,7 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
             phone: dna.phone,
             headerBackgroundUrl: dna.headerBackgroundUrl || '',
             lowConfidenceFields: Array.isArray(dna.lowConfidenceFields) ? dna.lowConfidenceFields : [],
+            vibeBeat: dna.vibeBeat,
           }
           set({
             editorOpen: true,
@@ -863,6 +864,7 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
             phone: p.draft.phone,
             headerBackgroundUrl: p.draft.headerBackgroundUrl || '',
             lowConfidenceFields: Array.isArray(p.draft.lowConfidenceFields) ? p.draft.lowConfidenceFields : [],
+            vibeBeat: p.draft.vibeBeat,
           }
         } else {
           draft = current.draft
