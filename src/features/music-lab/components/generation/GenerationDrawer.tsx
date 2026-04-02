@@ -10,9 +10,10 @@ import { GenerationHistory } from './GenerationHistory'
 
 interface GenerationDrawerProps {
   onRegenerate: () => void
+  onPickOverride?: (variationUrl: string, duration: number) => Promise<void>
 }
 
-export function GenerationDrawer({ onRegenerate }: GenerationDrawerProps) {
+export function GenerationDrawer({ onRegenerate, onPickOverride }: GenerationDrawerProps) {
   const { currentJob, drawerOpen, isGenerating, saveTrack, closeDrawer, clearJob } = useGenerateMusic()
   const pollCount = useGenerationStore((s) => s.pollCount)
 
@@ -21,13 +22,25 @@ export function GenerationDrawer({ onRegenerate }: GenerationDrawerProps) {
   const [savedIndices, setSavedIndices] = useState<Set<number>>(new Set())
 
   const handlePick = useCallback(async (index: number) => {
+    if (!currentJob?.variations[index]) return
+    const variation = currentJob.variations[index]
+
     setSavingIndex(index)
-    const result = await saveTrack(index)
-    setSavingIndex(null)
-    if (!result.error) {
-      setSavedIndices((prev) => new Set(prev).add(index))
+    if (onPickOverride) {
+      try {
+        await onPickOverride(variation.url, variation.duration)
+        setSavedIndices((prev) => new Set(prev).add(index))
+      } catch {
+        // Error handled by caller (toast)
+      }
+    } else {
+      const result = await saveTrack(index)
+      if (!result.error) {
+        setSavedIndices((prev) => new Set(prev).add(index))
+      }
     }
-  }, [saveTrack])
+    setSavingIndex(null)
+  }, [saveTrack, onPickOverride, currentJob])
 
   const handleClose = useCallback(() => {
     closeDrawer()
