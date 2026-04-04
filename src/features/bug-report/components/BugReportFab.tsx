@@ -30,18 +30,20 @@ export function BugReportFab() {
       <button
         onClick={() => setOpen(true)}
         aria-label="Report a bug"
-        className="fixed bottom-5 left-5 z-40 flex items-center justify-center w-10 h-10 rounded-[0.625rem] border transition-all duration-200 hover:scale-105 group"
+        title="Report a bug"
+        className="fixed bottom-5 left-5 z-40 flex items-center justify-center w-11 h-11 rounded-[0.625rem] border transition-all duration-200 hover:scale-110 group"
         style={{
-          background: 'oklch(0.22 0.025 200)',
-          borderColor: 'oklch(0.32 0.03 200)',
+          background: 'oklch(0.2 0.04 200)',
+          borderColor: 'oklch(0.35 0.06 200)',
+          boxShadow: '0 2px 8px oklch(0 0 0 / 0.4), inset 0 1px 0 oklch(1 0 0 / 0.05)',
           paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         }}
       >
         <svg
-          width="18" height="18" viewBox="0 0 24 24" fill="none"
+          width="20" height="20" viewBox="0 0 24 24" fill="none"
           strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
           className="transition-colors"
-          style={{ stroke: 'oklch(0.6 0.15 200)' }}
+          style={{ stroke: 'oklch(0.7 0.18 200)' }}
         >
           <path d="m8 2 1.88 1.88" /><path d="M14.12 3.88 16 2" />
           <path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1" />
