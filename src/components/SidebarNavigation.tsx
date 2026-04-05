@@ -489,11 +489,11 @@ export function SidebarNavigation() {
                                             onClick={() => setBugReportOpen(true)}
                                             className="flex items-center justify-center w-9 h-9 rounded-[0.625rem] transition-all duration-200 hover:brightness-125 flex-shrink-0"
                                             style={{
-                                                background: 'oklch(0.18 0.03 200)',
-                                                border: '1px solid oklch(0.28 0.04 200)',
+                                                background: 'oklch(0.18 0.04 200)',
+                                                border: '1px solid oklch(0.32 0.06 200)',
                                             }}
                                         >
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ stroke: 'oklch(0.6 0.12 200)' }}>
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ stroke: 'oklch(0.7 0.18 200)' }}>
                                                 <path d="m8 2 1.88 1.88" /><path d="M14.12 3.88 16 2" />
                                                 <path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1" />
                                                 <path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6" />
@@ -540,11 +540,11 @@ export function SidebarNavigation() {
                                             onClick={() => setBugReportOpen(true)}
                                             className="w-8 h-8 rounded-[0.625rem] flex items-center justify-center transition-all duration-200 hover:brightness-125"
                                             style={{
-                                                background: 'oklch(0.18 0.03 200)',
-                                                border: '1px solid oklch(0.28 0.04 200)',
+                                                background: 'oklch(0.18 0.04 200)',
+                                                border: '1px solid oklch(0.32 0.06 200)',
                                             }}
                                         >
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ stroke: 'oklch(0.6 0.12 200)' }}>
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ stroke: 'oklch(0.7 0.18 200)' }}>
                                                 <path d="m8 2 1.88 1.88" /><path d="M14.12 3.88 16 2" />
                                                 <path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1" />
                                                 <path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6" />
@@ -1064,14 +1064,14 @@ function MobileNavigation({ open, onOpenChange, activeTab, onNavSelect, user, on
                         {user && onBugReport && (
                             <button
                                 onClick={() => { onOpenChange(false); onBugReport() }}
-                                className="flex items-center gap-2.5 w-full rounded-lg px-3 py-2.5 transition-all duration-200"
+                                className="flex items-center gap-2.5 w-full rounded-lg px-3 py-2.5 transition-all duration-200 hover:brightness-125"
                                 style={{
-                                    background: 'oklch(0.18 0.03 200)',
-                                    border: '1px solid oklch(0.28 0.04 200)',
-                                    color: 'oklch(0.7 0.08 200)',
+                                    background: 'oklch(0.18 0.04 200)',
+                                    border: '1px solid oklch(0.32 0.06 200)',
+                                    color: 'oklch(0.7 0.18 200)',
                                 }}
                             >
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ stroke: 'oklch(0.65 0.15 200)' }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ stroke: 'oklch(0.7 0.18 200)' }}>
                                     <path d="m8 2 1.88 1.88" /><path d="M14.12 3.88 16 2" />
                                     <path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1" />
                                     <path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6" />
