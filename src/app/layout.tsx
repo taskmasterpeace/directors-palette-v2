@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/toaster"
 import { PromptProvider } from "@/components/providers/PromptProvider"
 import { CapacitorProvider } from "@/components/providers/CapacitorProvider"
 import { DragDropPrevention } from "@/components/DragDropPrevention"
-import { BugReportFab } from "@/features/bug-report/components/BugReportFab"
 
 export const dynamic = 'force-dynamic'
 
@@ -84,7 +83,6 @@ export default function RootLayout({
             <PromptProvider>
               {children}
             </PromptProvider>
-            <BugReportFab />
             <Toaster />
           </ThemeProvider>
         </CapacitorProvider>

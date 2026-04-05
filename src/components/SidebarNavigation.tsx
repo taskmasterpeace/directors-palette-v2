@@ -41,6 +41,7 @@ import {
 } from '@/components/ui/tooltip'
 import { createBrowserClient } from '@supabase/ssr'
 import { CreditsDisplay } from '@/features/credits/components/CreditsDisplay'
+import { BugReportModal } from '@/features/bug-report/components/BugReportModal'
 import { useCreditsStore } from '@/features/credits/store/credits.store'
 import { useIsMobile } from '@/hooks/use-mobile'
 import {
@@ -208,6 +209,7 @@ export function SidebarNavigation() {
     const { balance } = useCreditsStore()
     const isMobile = useIsMobile()
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+    const [bugReportOpen, setBugReportOpen] = useState(false)
 
     // Section collapse state
     const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({})
@@ -306,7 +308,7 @@ export function SidebarNavigation() {
 
     // Mobile: Floating logo button + Sheet menu
     if (isMobile) {
-        return (
+        return (<>
             <MobileNavigation
                 open={mobileMenuOpen}
                 onOpenChange={setMobileMenuOpen}
@@ -314,12 +316,14 @@ export function SidebarNavigation() {
                 onNavSelect={handleMobileNavSelect}
                 user={user}
                 onSignOut={handleSignOut}
+                onBugReport={() => setBugReportOpen(true)}
             />
-        )
+            <BugReportModal open={bugReportOpen} onOpenChange={setBugReportOpen} />
+        </>)
     }
 
     // Desktop: Original sidebar
-    return (
+    return (<>
         <motion.div
             initial={false}
             animate={{ width: isCollapsed ? 64 : 240 }}
@@ -493,6 +497,34 @@ export function SidebarNavigation() {
                     )}
                 </div>
 
+                {/* Bug Report Button */}
+                {user && (
+                    <button
+                        onClick={() => setBugReportOpen(true)}
+                        className={cn(
+                            "flex items-center gap-2.5 w-full rounded-lg transition-all duration-200 hover:brightness-125",
+                            isCollapsed ? "justify-center p-2" : "px-3 py-2"
+                        )}
+                        style={{
+                            background: 'oklch(0.18 0.03 200)',
+                            border: '1px solid oklch(0.28 0.04 200)',
+                            color: 'oklch(0.7 0.08 200)',
+                        }}
+                        title="Report a bug"
+                    >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ stroke: 'oklch(0.65 0.15 200)', flexShrink: 0 }}>
+                            <path d="m8 2 1.88 1.88" /><path d="M14.12 3.88 16 2" />
+                            <path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1" />
+                            <path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6" />
+                            <path d="M12 20v-9" /><path d="M6.53 9C4.6 8.8 3 7.1 3 5" />
+                            <path d="M6 13H2" /><path d="M3 21c0-2.1 1.7-3.9 3.8-4" />
+                            <path d="M20.97 5c0 2.1-1.6 3.8-3.5 4" /><path d="M22 13h-4" />
+                            <path d="M17.2 17c2.1.1 3.8 1.9 3.8 4" />
+                        </svg>
+                        {!isCollapsed && <span className="text-xs font-medium">Report a Bug</span>}
+                    </button>
+                )}
+
                 {/* User Profile */}
                 {user && (
                     <div className={cn("flex items-center gap-3 p-2 rounded-lg bg-zinc-900/90 hover:bg-accent/50 transition-colors cursor-pointer border border-zinc-800/50", isCollapsed && "justify-center")} onClick={isCollapsed ? undefined : () => { }}>
@@ -517,6 +549,8 @@ export function SidebarNavigation() {
                 )}
             </div>
         </motion.div>
+        <BugReportModal open={bugReportOpen} onOpenChange={setBugReportOpen} />
+    </>
     )
 }
 
@@ -902,9 +936,10 @@ interface MobileNavigationProps {
     onNavSelect: (tab: TabValue) => void
     user: { email?: string, avatar_url?: string } | null
     onSignOut: () => void
+    onBugReport?: () => void
 }
 
-function MobileNavigation({ open, onOpenChange, activeTab, onNavSelect, user, onSignOut }: MobileNavigationProps) {
+function MobileNavigation({ open, onOpenChange, activeTab, onNavSelect, user, onSignOut, onBugReport }: MobileNavigationProps) {
     const { isAdmin } = useAdminAuth()
 
     return (
@@ -987,6 +1022,29 @@ function MobileNavigation({ open, onOpenChange, activeTab, onNavSelect, user, on
                         </div>
 
                         {/* User Profile */}
+                        {user && onBugReport && (
+                            <button
+                                onClick={() => { onOpenChange(false); onBugReport() }}
+                                className="flex items-center gap-2.5 w-full rounded-lg px-3 py-2.5 transition-all duration-200"
+                                style={{
+                                    background: 'oklch(0.18 0.03 200)',
+                                    border: '1px solid oklch(0.28 0.04 200)',
+                                    color: 'oklch(0.7 0.08 200)',
+                                }}
+                            >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ stroke: 'oklch(0.65 0.15 200)' }}>
+                                    <path d="m8 2 1.88 1.88" /><path d="M14.12 3.88 16 2" />
+                                    <path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1" />
+                                    <path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6" />
+                                    <path d="M12 20v-9" /><path d="M6.53 9C4.6 8.8 3 7.1 3 5" />
+                                    <path d="M6 13H2" /><path d="M3 21c0-2.1 1.7-3.9 3.8-4" />
+                                    <path d="M20.97 5c0 2.1-1.6 3.8-3.5 4" /><path d="M22 13h-4" />
+                                    <path d="M17.2 17c2.1.1 3.8 1.9 3.8 4" />
+                                </svg>
+                                <span className="text-xs font-medium">Report a Bug</span>
+                            </button>
+                        )}
+
                         {user && (
                             <div className="flex items-center gap-3 p-2 rounded-lg bg-accent/30">
                                 <Avatar className="w-9 h-9 border border-border">
