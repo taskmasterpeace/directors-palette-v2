@@ -206,7 +206,7 @@ export function SidebarNavigation() {
     const { activeTab, setActiveTab } = useLayoutStore()
     const [isCollapsed, setIsCollapsed] = useState(false)
     const [user, setUser] = useState<{ email?: string, avatar_url?: string } | null>(null)
-    const { balance } = useCreditsStore()
+    const { balance, openPurchaseDialog } = useCreditsStore()
     const isMobile = useIsMobile()
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const [bugReportOpen, setBugReportOpen] = useState(false)
@@ -485,12 +485,19 @@ export function SidebarNavigation() {
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center cursor-help border border-amber-500/20">
-                                        <Sparkles className="w-4 h-4 text-amber-500" />
+                                    <div
+                                        className="w-8 h-8 rounded-[0.625rem] flex items-center justify-center cursor-pointer"
+                                        style={{
+                                            background: 'oklch(0.18 0.04 200)',
+                                            border: '1px solid oklch(0.32 0.06 200)',
+                                        }}
+                                        onClick={() => openPurchaseDialog()}
+                                    >
+                                        <Sparkles className="w-4 h-4" style={{ color: 'oklch(0.7 0.18 200)' }} />
                                     </div>
                                 </TooltipTrigger>
-                                <TooltipContent side="right">
-                                    <p>{balance} pts</p>
+                                <TooltipContent side="right" style={{ background: 'oklch(0.15 0.02 200)', border: '1px solid oklch(0.3 0.04 200)', color: 'oklch(0.9 0.02 200)' }}>
+                                    <p className="font-mono text-xs">{balance} pts</p>
                                 </TooltipContent>
                             </Tooltip>
                         </TooltipProvider>
