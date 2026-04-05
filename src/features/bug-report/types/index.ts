@@ -29,3 +29,10 @@ export interface BugReportPayload {
   metadata: BugReportMetadata
   screenshotUrl?: string
 }
+
+export type {
+  SecurityVerdict,
+  SecurityGateResult,
+  PipelineEventType,
+  PipelineNotification,
+} from './pipeline.types'

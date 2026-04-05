@@ -3,6 +3,12 @@ import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { logger } from '@/lib/logger'
 import type { BugCategory, BugReportMetadata } from '@/features/bug-report/types'
 import { CATEGORY_GITHUB_LABELS } from '@/features/bug-report/types'
+import { analyzeReport } from '@/features/bug-report/services/security-gate.service'
+import {
+  handleLowQualityReport,
+  handleSecurityFlag,
+  triggerRealtimeTriage,
+} from '@/features/bug-report/services/bug-pipeline.service'
 
 // Simple in-memory rate limiting: userId -> timestamps[]
 const rateLimitMap = new Map<string, number[]>()
@@ -18,6 +24,28 @@ function isRateLimited(userId: string): boolean {
   return false
 }
 
+// Security ban: userId -> ban expiry timestamp
+const securityBanMap = new Map<string, number>()
+const blockCountMap = new Map<string, number[]>()
+
+function isSecurityBanned(userId: string): boolean {
+  const banExpiry = securityBanMap.get(userId)
+  if (banExpiry && Date.now() < banExpiry) return true
+  if (banExpiry) securityBanMap.delete(userId)
+  return false
+}
+
+function recordSecurityBlock(userId: string): void {
+  const now = Date.now()
+  const blocks = (blockCountMap.get(userId) || []).filter(t => now - t < 60 * 60 * 1000)
+  blocks.push(now)
+  blockCountMap.set(userId, blocks)
+  // Two blocks in an hour = 24-hour ban
+  if (blocks.length >= 2) {
+    securityBanMap.set(userId, now + 24 * 60 * 60 * 1000)
+  }
+}
+
 function obfuscateEmail(email: string): string {
   const [local, domain] = email.split('@')
   if (!domain) return '***'
@@ -31,6 +59,7 @@ function buildIssueBody(
   email: string,
   userId: string,
   screenshotUrl?: string,
+  gateResult?: { quality_score: number; quality_issues: string[]; security_flags: string[] },
 ): string {
   const categoryLabel = { ui: 'UI Glitch', feature: 'Feature Broken', performance: 'Slow / Laggy', other: 'Other' }[category]
 
@@ -59,6 +88,18 @@ function buildIssueBody(
   body += `- Timestamp: ${metadata.timestamp}\n`
   body += `- User ID: \`${userId}\`\n`
 
+  if (gateResult) {
+    body += `\n<details><summary>Pipeline Analysis</summary>\n\n`
+    body += `- Quality Score: ${gateResult.quality_score}/100\n`
+    if (gateResult.quality_issues.length > 0) {
+      body += `- Quality Issues: ${gateResult.quality_issues.join(', ')}\n`
+    }
+    if (gateResult.security_flags.length > 0) {
+      body += `- Security Flags: ${gateResult.security_flags.join(', ')}\n`
+    }
+    body += `\n</details>\n`
+  }
+
   return body
 }
 
@@ -71,6 +112,13 @@ export async function POST(request: NextRequest) {
   if (isRateLimited(user.id)) {
     return NextResponse.json(
       { error: "You've submitted 3 reports recently. Please wait before submitting another." },
+      { status: 429 }
+    )
+  }
+
+  if (isSecurityBanned(user.id)) {
+    return NextResponse.json(
+      { error: 'Something went wrong — please try again later.' },
       { status: 429 }
     )
   }
@@ -88,8 +136,6 @@ export async function POST(request: NextRequest) {
     if (!['ui', 'feature', 'performance', 'other'].includes(category)) {
       return NextResponse.json({ error: 'Invalid category' }, { status: 400 })
     }
-
-    const metadata: BugReportMetadata = JSON.parse(metadataRaw)
 
     // Upload screenshot if provided
     let screenshotUrl: string | undefined
@@ -112,6 +158,29 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Security & Quality Gate
+    const metadata: BugReportMetadata = JSON.parse(metadataRaw)
+    const gateResult = await analyzeReport({
+      description: description.trim(),
+      category,
+      pageUrl: metadata.pageUrl,
+      feature: metadata.feature,
+    })
+
+    // Block malicious submissions
+    if (gateResult.verdict === 'block') {
+      recordSecurityBlock(user.id)
+      logger.api.warn('Bug report blocked by security gate', {
+        userId: user.id,
+        security_score: gateResult.security_score,
+        flags: gateResult.security_flags,
+      })
+      return NextResponse.json(
+        { error: 'Something went wrong — please try again.' },
+        { status: 400 }
+      )
+    }
+
     // Create GitHub issue
     const githubPat = process.env.GITHUB_PAT
     if (!githubPat) {
@@ -126,9 +195,14 @@ export async function POST(request: NextRequest) {
       user.email || 'unknown',
       user.id,
       screenshotUrl,
+      gateResult,
     )
 
     const labels = ['bug', 'user-reported', CATEGORY_GITHUB_LABELS[category]]
+    if (gateResult.verdict === 'flag') labels.push('security:flagged')
+    if (gateResult.quality_score < 30) labels.push('needs-info')
+    else if (gateResult.quality_score < 60) labels.push('low-quality')
+    labels.push('pipeline:pending')
 
     const ghRes = await fetch('https://api.github.com/repos/taskmasterpeace/directors-palette-v2/issues', {
       method: 'POST',
@@ -164,6 +238,44 @@ export async function POST(request: NextRequest) {
       feature: metadata.feature,
       userId: user.id,
     })
+
+    // Fire-and-forget: trigger pipeline
+    const pipelineAsync = async () => {
+      try {
+        if (gateResult.quality_score < 30 && gateResult.suggested_followup) {
+          await handleLowQualityReport({
+            issueNumber: ghData.number,
+            issueUrl: ghData.html_url,
+            title: description.trim().slice(0, 80),
+            suggestedFollowup: gateResult.suggested_followup,
+          })
+          return // Don't trigger full triage for garbage reports
+        }
+
+        if (gateResult.verdict === 'flag') {
+          await handleSecurityFlag({
+            issueNumber: ghData.number,
+            issueUrl: ghData.html_url,
+            title: description.trim().slice(0, 80),
+            gateResult,
+          })
+        }
+
+        // Trigger real-time triage (skips auto-fix for security-flagged)
+        await triggerRealtimeTriage({
+          issueNumber: ghData.number,
+          issueUrl: ghData.html_url,
+          title: description.trim().slice(0, 80),
+          isSecurityFlagged: gateResult.verdict === 'flag',
+        })
+      } catch (pipelineError) {
+        logger.api.error('Bug pipeline error (non-blocking)', {
+          error: pipelineError instanceof Error ? pipelineError.message : String(pipelineError),
+          issueNumber: ghData.number,
+        })
+      }
+    }
+    pipelineAsync()
 
     return NextResponse.json({ success: true, issueNumber: ghData.number, issueUrl: ghData.html_url })
   } catch (error) {

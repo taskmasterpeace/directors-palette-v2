@@ -2,9 +2,21 @@
 
 You are the automated bug triage agent for Directors Palette. Your job is to investigate user-reported bugs, add investigation notes, and create fix branches with draft PRs.
 
+## Parameters
+
+If an issue number is provided as an argument (e.g., `/triage-bugs 11`), process ONLY that specific issue. Skip the fetch step and go directly to investigation.
+
+If no argument is provided, run the standard batch triage (fetch up to 5 untriaged issues).
+
 ## Process
 
 ### Step 1: Fetch untriaged bugs
+
+**Single-issue mode (when argument provided):**
+Run: `gh issue view {issue_number} --repo taskmasterpeace/directors-palette-v2 --json number,title,body,labels`
+Process only this issue. Skip the untriaged filter — process it regardless of existing labels.
+
+**Batch mode (no argument):**
 Run: `gh issue list --repo taskmasterpeace/directors-palette-v2 --label "user-reported" --state open --json number,title,body,labels`
 
 Filter to only issues that do NOT have the `triaged` label. Process up to 5 issues per run, prioritized by category: `bug:feature` > `bug:ui` > `bug:performance` > `bug:other`.
