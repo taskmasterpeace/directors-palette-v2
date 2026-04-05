@@ -383,7 +383,7 @@ export function SidebarNavigation() {
             </div>
 
             {/* Footer Area - Always visible */}
-            <div className="flex-shrink-0 border-t border-border/50 p-2 space-y-2 bg-background/95 backdrop-blur-sm relative z-10">
+            <div className="flex-shrink-0 border-t border-border/50 p-2 space-y-1.5 bg-background/95 backdrop-blur-sm relative z-10">
 
                 {/* Help Menu Item */}
                 <TooltipProvider>
@@ -475,18 +475,49 @@ export function SidebarNavigation() {
                     </Tooltip>
                 </TooltipProvider>
 
-                {/* Credits Display (Simplified for Sidebar) */}
-                <div className={cn("flex flex-col gap-1", isCollapsed ? "items-center" : "px-2")}>
-                    {!isCollapsed ? (
-                        <div className="w-full">
+                {/* Credits + Bug Report — compact row */}
+                {!isCollapsed ? (
+                    <div className="flex items-center gap-1.5">
+                        <div className="flex-1">
                             <CreditsDisplay />
                         </div>
-                    ) : (
+                        {user && (
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <button
+                                            onClick={() => setBugReportOpen(true)}
+                                            className="flex items-center justify-center w-9 h-9 rounded-[0.625rem] transition-all duration-200 hover:brightness-125 flex-shrink-0"
+                                            style={{
+                                                background: 'oklch(0.18 0.03 200)',
+                                                border: '1px solid oklch(0.28 0.04 200)',
+                                            }}
+                                        >
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ stroke: 'oklch(0.6 0.12 200)' }}>
+                                                <path d="m8 2 1.88 1.88" /><path d="M14.12 3.88 16 2" />
+                                                <path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1" />
+                                                <path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6" />
+                                                <path d="M12 20v-9" /><path d="M6.53 9C4.6 8.8 3 7.1 3 5" />
+                                                <path d="M6 13H2" /><path d="M3 21c0-2.1 1.7-3.9 3.8-4" />
+                                                <path d="M20.97 5c0 2.1-1.6 3.8-3.5 4" /><path d="M22 13h-4" />
+                                                <path d="M17.2 17c2.1.1 3.8 1.9 3.8 4" />
+                                            </svg>
+                                        </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="right" style={{ background: 'oklch(0.15 0.02 200)', border: '1px solid oklch(0.3 0.04 200)', color: 'oklch(0.85 0.06 200)' }}>
+                                        Report a bug
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        )}
+                    </div>
+                ) : (
+                    <div className="flex flex-col items-center gap-1.5">
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <div
-                                        className="w-8 h-8 rounded-[0.625rem] flex items-center justify-center cursor-pointer"
+                                        className="w-8 h-8 rounded-[0.625rem] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-125"
                                         style={{
                                             background: 'oklch(0.18 0.04 200)',
                                             border: '1px solid oklch(0.32 0.06 200)',
@@ -501,55 +532,56 @@ export function SidebarNavigation() {
                                 </TooltipContent>
                             </Tooltip>
                         </TooltipProvider>
-                    )}
-                </div>
-
-                {/* Bug Report Button */}
-                {user && (
-                    <button
-                        onClick={() => setBugReportOpen(true)}
-                        className={cn(
-                            "flex items-center gap-2.5 w-full rounded-lg transition-all duration-200 hover:brightness-125",
-                            isCollapsed ? "justify-center p-2" : "px-3 py-2"
+                        {user && (
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <button
+                                            onClick={() => setBugReportOpen(true)}
+                                            className="w-8 h-8 rounded-[0.625rem] flex items-center justify-center transition-all duration-200 hover:brightness-125"
+                                            style={{
+                                                background: 'oklch(0.18 0.03 200)',
+                                                border: '1px solid oklch(0.28 0.04 200)',
+                                            }}
+                                        >
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ stroke: 'oklch(0.6 0.12 200)' }}>
+                                                <path d="m8 2 1.88 1.88" /><path d="M14.12 3.88 16 2" />
+                                                <path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1" />
+                                                <path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6" />
+                                                <path d="M12 20v-9" /><path d="M6.53 9C4.6 8.8 3 7.1 3 5" />
+                                                <path d="M6 13H2" /><path d="M3 21c0-2.1 1.7-3.9 3.8-4" />
+                                                <path d="M20.97 5c0 2.1-1.6 3.8-3.5 4" /><path d="M22 13h-4" />
+                                                <path d="M17.2 17c2.1.1 3.8 1.9 3.8 4" />
+                                            </svg>
+                                        </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="right" style={{ background: 'oklch(0.15 0.02 200)', border: '1px solid oklch(0.3 0.04 200)', color: 'oklch(0.85 0.06 200)' }}>
+                                        Report a bug
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
                         )}
-                        style={{
-                            background: 'oklch(0.18 0.03 200)',
-                            border: '1px solid oklch(0.28 0.04 200)',
-                            color: 'oklch(0.7 0.08 200)',
-                        }}
-                        title="Report a bug"
-                    >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ stroke: 'oklch(0.65 0.15 200)', flexShrink: 0 }}>
-                            <path d="m8 2 1.88 1.88" /><path d="M14.12 3.88 16 2" />
-                            <path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1" />
-                            <path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6" />
-                            <path d="M12 20v-9" /><path d="M6.53 9C4.6 8.8 3 7.1 3 5" />
-                            <path d="M6 13H2" /><path d="M3 21c0-2.1 1.7-3.9 3.8-4" />
-                            <path d="M20.97 5c0 2.1-1.6 3.8-3.5 4" /><path d="M22 13h-4" />
-                            <path d="M17.2 17c2.1.1 3.8 1.9 3.8 4" />
-                        </svg>
-                        {!isCollapsed && <span className="text-xs font-medium">Report a Bug</span>}
-                    </button>
+                    </div>
                 )}
 
                 {/* User Profile */}
                 {user && (
-                    <div className={cn("flex items-center gap-3 p-2 rounded-lg bg-zinc-900/90 hover:bg-accent/50 transition-colors cursor-pointer border border-zinc-800/50", isCollapsed && "justify-center")} onClick={isCollapsed ? undefined : () => { }}>
-                        <Avatar className="w-8 h-8 border border-border">
+                    <div className={cn("flex items-center gap-2.5 px-2 py-1.5 rounded-[0.625rem] transition-colors", isCollapsed && "justify-center px-0")}>
+                        <Avatar className="w-7 h-7 border border-border flex-shrink-0">
                             <AvatarImage src={user.avatar_url} />
-                            <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                            <AvatarFallback className="bg-primary/10 text-primary text-[10px]">
                                 {user.email?.slice(0, 2).toUpperCase()}
                             </AvatarFallback>
                         </Avatar>
 
                         {!isCollapsed && (
-                            <div className="flex-1 overflow-hidden flex flex-col justify-center">
+                            <div className="flex-1 overflow-hidden min-w-0">
                                 <AdminLink />
-                                <p className="text-sm font-medium truncate text-white">{user.email?.split('@')[0]}</p>
-                                <p className="text-xs text-zinc-400 cursor-pointer hover:text-destructive transition-colors" onClick={(e) => {
+                                <p className="text-xs font-medium truncate" style={{ color: 'oklch(0.85 0.02 200)' }}>{user.email?.split('@')[0]}</p>
+                                <p className="text-[10px] cursor-pointer transition-colors" style={{ color: 'oklch(0.5 0.03 200)' }} onClick={(e) => {
                                     e.stopPropagation()
                                     handleSignOut()
-                                }}>Sign out</p>
+                                }} onMouseEnter={(e) => { (e.target as HTMLElement).style.color = 'oklch(0.65 0.2 25)' }} onMouseLeave={(e) => { (e.target as HTMLElement).style.color = 'oklch(0.5 0.03 200)' }}>Sign out</p>
                             </div>
                         )}
                     </div>
