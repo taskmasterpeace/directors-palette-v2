@@ -34,6 +34,8 @@ export interface RecipeExecutionOptions {
   // Gallery organization (for storybook projects)
   folderId?: string
   extraMetadata?: Record<string, unknown>
+  // Server-side execution (API v2): provide userId to bypass HTTP endpoint
+  userId?: string
 }
 
 export interface RecipeExecutionResult {
@@ -468,6 +470,7 @@ export async function executeRecipe(options: RecipeExecutionOptions): Promise<Re
     onProgress,
     folderId,
     extraMetadata,
+    userId,
   } = options
 
   try {
@@ -646,8 +649,21 @@ export async function executeRecipe(options: RecipeExecutionOptions): Promise<Re
           extraMetadata,
         }
 
-        // Generate image
-        const response = await imageGenerationService.generateImage(request)
+        // Generate image — use server-side path for API v2 (no HTTP roundtrip)
+        const { ImageGenerationService: ImgGenSvc } = await import('@/features/shot-creator/services/image-generation.service')
+        const response = userId
+          ? await ImgGenSvc.generateImageServerSide({
+              userId,
+              model,
+              prompt: stagePrompt,
+              referenceImages: inputImages,
+              modelSettings,
+              recipeId: recipe.id,
+              recipeName: recipe.name,
+              folderId,
+              extraMetadata,
+            })
+          : await imageGenerationService.generateImage(request)
 
         if (!response.galleryId) {
           throw new Error(`Stage ${i + 1} failed: No gallery ID returned`)

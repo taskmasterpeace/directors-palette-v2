@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     if (!isAuthContext(auth)) return auth
 
     const body = await request.json()
-    const { recipe_id, fields, model, aspect_ratio, reference_images, webhook_url } = body
+    const { recipe_id, fields, model, aspect_ratio, reference_images, reference_image, webhook_url } = body
 
     if (!recipe_id || !fields) {
       return errors.validation('recipe_id and fields are required')
@@ -92,10 +92,11 @@ export async function POST(request: NextRequest) {
         const result = await executeRecipe({
           recipe: dbRow as Parameters<typeof executeRecipe>[0]['recipe'],
           fieldValues: fields as RecipeFieldValues,
-          stageReferenceImages: reference_images || [],
+          stageReferenceImages: reference_images || (reference_image ? [[reference_image]] : []),
           model: modelId,
           aspectRatio: aspect_ratio || dbRow.suggested_aspect_ratio || dbRow.suggestedAspectRatio,
           extraMetadata: { source: 'api_v2', api_job_id: job.id },
+          userId: auth.userId,
         })
 
         if (result.success) {

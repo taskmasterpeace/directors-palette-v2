@@ -10,6 +10,7 @@ import type {
   ImageGenerationInput,
   ImageGenerationRequest,
   ImageGenerationResponse,
+  ImageModelSettings,
   NanoBanana2Settings,
   Flux2Klein9bSettings,
   QwenImageEditSettings,
@@ -18,7 +19,14 @@ import { buildCameraAnglePrompt } from '../helpers/camera-angle.helper'
 import { logger } from '@/lib/logger'
 
 export class ImageGenerationService {
-  private baseUrl = '/api'
+  private get baseUrl(): string {
+    // Server-side (API routes, recipe execution) needs absolute URL
+    if (typeof window === 'undefined') {
+      const host = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3002'
+      return `${host}/api`
+    }
+    return '/api'
+  }
 
   /**
    * Validate input based on model-specific constraints
@@ -341,6 +349,142 @@ export class ImageGenerationService {
       }
       logger.shotCreator.error('Image generation error', { message: errMsg, name: errName, type: typeof error })
       throw error
+    }
+  }
+
+  /**
+   * Server-side image generation (for recipe execution from API routes).
+   * Calls Replicate directly instead of going through the HTTP endpoint,
+   * avoiding auth/URL issues with server-to-server fetch.
+   */
+  static async generateImageServerSide(params: {
+    userId: string
+    model: ImageModel
+    prompt: string
+    referenceImages?: string[]
+    modelSettings: ImageModelSettings
+    recipeId?: string
+    recipeName?: string
+    folderId?: string
+    extraMetadata?: Record<string, unknown>
+  }): Promise<ImageGenerationResponse> {
+    const Replicate = (await import('replicate')).default
+    const { createClient } = await import('@supabase/supabase-js')
+    const { creditsService } = await import('@/features/credits')
+    const { StorageService } = await import('@/features/generation/services/storage.service')
+
+    const replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN })
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    const { userId, model, prompt, referenceImages, modelSettings, recipeId, recipeName, folderId, extraMetadata } = params
+
+    // Deduct credits
+    await creditsService.deductCredits(userId, model, {
+      generationType: 'image',
+      useServiceRole: true,
+    })
+
+    // Build Replicate input
+    const replicateInput = ImageGenerationService.buildReplicateInput({
+      model,
+      prompt,
+      modelSettings,
+      referenceImages: referenceImages || [],
+      userId,
+    })
+
+    // Get model routing
+    const replicateModelId = ImageGenerationService.getReplicateModelId(model)
+    const versionHash = ImageGenerationService.getVersionForModel(model)
+
+    // Build prediction
+    const webhookUrl = process.env.WEBHOOK_URL
+      ? `${process.env.WEBHOOK_URL}/api/webhooks/replicate`
+      : null
+
+    const predictionOptions: Record<string, unknown> = versionHash
+      ? { version: versionHash, input: replicateInput }
+      : { model: replicateModelId, input: replicateInput }
+
+    if (webhookUrl) {
+      predictionOptions.webhook = webhookUrl
+      predictionOptions.webhook_events_filter = ['start', 'completed']
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const prediction = await replicate.predictions.create(predictionOptions as any)
+
+    // Build metadata
+    const metadata: Record<string, unknown> = {
+      ...ImageGenerationService.buildMetadata({
+        model,
+        prompt,
+        modelSettings,
+        referenceImages: referenceImages || [],
+        userId,
+        recipeId,
+        recipeName,
+      }),
+      ...(extraMetadata || {}),
+    }
+
+    // Create gallery entry
+    const { data: gallery } = await supabase
+      .from('gallery')
+      .insert({
+        user_id: userId,
+        prediction_id: prediction.id,
+        generation_type: 'image',
+        status: 'pending',
+        metadata,
+        ...(folderId ? { folder_id: folderId } : {}),
+      })
+      .select()
+      .single()
+
+    const galleryId = gallery?.id
+
+    // If no webhook, poll for completion
+    if (!webhookUrl && galleryId) {
+      try {
+        let result = prediction
+        const maxWait = 90_000
+        const start = Date.now()
+        while (result.status !== 'succeeded' && result.status !== 'failed' && Date.now() - start < maxWait) {
+          await new Promise(r => setTimeout(r, 2000))
+          result = await replicate.predictions.get(result.id)
+        }
+        if (result.status === 'succeeded' && result.output) {
+          const outputUrl = Array.isArray(result.output) ? result.output[0] : result.output
+          if (typeof outputUrl === 'string') {
+            const { buffer } = await StorageService.downloadAsset(outputUrl)
+            const { ext, mimeType } = StorageService.getMimeType(outputUrl, 'png')
+            const { publicUrl, storagePath, fileSize } = await StorageService.uploadToStorage(
+              buffer, userId, prediction.id, ext, mimeType
+            )
+            await supabase.from('gallery').update({
+              status: 'completed',
+              public_url: publicUrl,
+              storage_path: storagePath,
+              file_size: fileSize,
+              mime_type: mimeType,
+            }).eq('id', galleryId)
+          }
+        } else if (result.status === 'failed') {
+          throw new Error(result.error?.toString() || 'Replicate prediction failed')
+        }
+      } catch (pollError) {
+        logger.shotCreator.error('Server-side poll error', { error: pollError instanceof Error ? pollError.message : String(pollError) })
+      }
+    }
+
+    return {
+      predictionId: prediction.id,
+      galleryId: galleryId || '',
+      status: prediction.status,
     }
   }
 }
