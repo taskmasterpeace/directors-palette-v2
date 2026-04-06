@@ -4,7 +4,7 @@ import { lognog } from '@/lib/lognog'
 
 const log = createLogger('BugPipeline')
 
-const GEMINI_MODEL = 'google/gemini-2.0-flash-exp:free'
+const GEMINI_MODEL = 'google/gemini-2.0-flash-001'
 
 const SYSTEM_PROMPT = `You are a security and quality analyzer for a bug report system. Analyze the bug report and respond with ONLY valid JSON matching this exact schema:
 
