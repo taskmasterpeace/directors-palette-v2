@@ -17,6 +17,7 @@ import {
   ArrowLeft,
   Copy,
   Check,
+  CheckCheck,
   PenLine,
   Music,
   Headphones,
@@ -129,12 +130,18 @@ function getActionIcon(type: ChatActionData['type']) {
 
 function ChatBubble({
   message,
+  artistName,
+  portraitUrl,
+  readStatus,
   onReact,
   onAction,
   onSendLyricsToStudio,
   onGetSunoPrompt,
 }: {
   message: ChatMessage
+  artistName: string
+  portraitUrl?: string
+  readStatus?: 'sending' | 'delivered' | 'read'
   onReact: (messageId: string, reaction: ChatReaction) => void
   onAction: (action: ChatActionData) => void
   onSendLyricsToStudio: (lyrics: string) => void
@@ -146,6 +153,36 @@ function ChatBubble({
   const isLyrics = message.messageType === 'lyrics'
   const isSunoPrompt = message.messageType === 'suno-prompt'
   const [copied, setCopied] = useState(false)
+
+  const initials = artistName
+    .split(' ')
+    .map((w) => w[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
+
+  // Mini avatar for artist messages
+  const ArtistAvatar = () => (
+    <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center bg-muted/30 ring-1 ring-border/40 mt-0.5">
+      {portraitUrl ? (
+        <img src={portraitUrl} alt={artistName} className="w-full h-full object-cover" />
+      ) : (
+        <span className="text-[9px] font-bold text-muted-foreground">{initials}</span>
+      )}
+    </div>
+  )
+
+  // Read receipt indicator for user messages
+  const ReadReceipt = () => {
+    if (!isUser || !readStatus) return null
+    return (
+      <span className="inline-flex items-center ml-1">
+        {readStatus === 'sending' && <Loader2 className="w-3 h-3 text-muted-foreground/40 animate-spin" />}
+        {readStatus === 'delivered' && <Check className="w-3 h-3 text-muted-foreground/40" />}
+        {readStatus === 'read' && <CheckCheck className="w-3 h-3 text-amber-400/70" />}
+      </span>
+    )
+  }
 
   const handleCopy = async (text: string) => {
     await navigator.clipboard.writeText(text)
@@ -162,7 +199,8 @@ function ChatBubble({
   // ── Lyrics bubble ──
   if (isLyrics && !isUser) {
     return (
-      <div className="flex justify-start mb-3">
+      <div className="flex justify-start mb-3 gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <ArtistAvatar />
         <div className="max-w-[85%] space-y-1.5">
           {/* Lyrics card with amber accent */}
           <div className="rounded-2xl overflow-hidden bg-amber-500/[0.06] border border-amber-500/20 shadow-[0_2px_12px_rgba(245,158,11,0.06)]">
@@ -235,7 +273,8 @@ function ChatBubble({
   // ── Suno prompt card ──
   if (isSunoPrompt && !isUser) {
     return (
-      <div className="flex justify-start mb-3">
+      <div className="flex justify-start mb-3 gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <ArtistAvatar />
         <div className="max-w-[85%] space-y-1.5">
           <div className="rounded-2xl overflow-hidden bg-violet-500/[0.06] border border-violet-500/20 shadow-[0_2px_12px_rgba(139,92,246,0.06)]">
             <div className="flex">
@@ -294,7 +333,8 @@ function ChatBubble({
   if (isAction && message.actionData && !isUser) {
     const ActionIcon = getActionIcon(message.actionData.type)
     return (
-      <div className="flex justify-start mb-3">
+      <div className="flex justify-start mb-3 gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <ArtistAvatar />
         <div className="space-y-1">
           <button
             onClick={() => onAction(message.actionData!)}
@@ -322,7 +362,8 @@ function ChatBubble({
   // ── Photo ──
   if (isPhoto && message.photoUrl) {
     return (
-      <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-3`}>
+      <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-3 ${!isUser ? 'gap-2' : ''} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
+        {!isUser && <ArtistAvatar />}
         <div className="max-w-[80%] space-y-1">
           <div className="rounded-2xl overflow-hidden border border-border">
             <img src={message.photoUrl} alt="Shared photo" className="max-w-[280px] w-full object-cover" />
@@ -344,7 +385,7 @@ function ChatBubble({
               {timestamp}
             </div>
           )}
-          {isUser && <div className="flex justify-end mr-1">{timestamp}</div>}
+          {isUser && <div className="flex justify-end items-center mr-1">{timestamp}<ReadReceipt /></div>}
         </div>
       </div>
     )
@@ -352,7 +393,8 @@ function ChatBubble({
 
   // ── Default: text bubble ──
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-3`}>
+    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-3 ${!isUser ? 'gap-2' : ''} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
+      {!isUser && <ArtistAvatar />}
       <div className="max-w-[80%] space-y-1">
         <div
           className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
@@ -390,7 +432,7 @@ function ChatBubble({
           </div>
         )}
 
-        {isUser && <div className="flex justify-end mr-1">{timestamp}</div>}
+        {isUser && <div className="flex justify-end items-center mr-1">{timestamp}<ReadReceipt /></div>}
       </div>
     </div>
   )
@@ -398,9 +440,62 @@ function ChatBubble({
 
 // ─── Chat Message List ────────────────────────────────────────────────────────
 
+// ─── Day separator helper ────────────────────────────────────────────────────
+
+function getDayLabel(dateStr: string): string {
+  const date = new Date(dateStr)
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const msgDay = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+  const diffDays = Math.floor((today.getTime() - msgDay.getTime()) / (1000 * 60 * 60 * 24))
+
+  if (diffDays === 0) return 'Today'
+  if (diffDays === 1) return 'Yesterday'
+  if (diffDays < 7) return date.toLocaleDateString([], { weekday: 'long' })
+  return date.toLocaleDateString([], { month: 'short', day: 'numeric', year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined })
+}
+
+function DaySeparator({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-3 my-4">
+      <div className="flex-1 h-px bg-border/40" />
+      <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">{label}</span>
+      <div className="flex-1 h-px bg-border/40" />
+    </div>
+  )
+}
+
+// ─── Read receipt logic ─────────────────────────────────────────────────────
+
+function getReadStatus(msg: ChatMessage, index: number, messages: ChatMessage[], isSending: boolean): 'sending' | 'delivered' | 'read' | undefined {
+  if (msg.role !== 'user') return undefined
+
+  // Check if any artist message follows this user message
+  for (let i = index + 1; i < messages.length; i++) {
+    if (messages[i].role === 'artist') {
+      // Artist responded after this message — it's been read
+      return 'read'
+    }
+  }
+
+  // Last user message with no artist response yet
+  if (isSending) {
+    // If there's a streaming message after, the artist is "reading" it
+    const lastMsg = messages[messages.length - 1]
+    if (lastMsg && lastMsg.role === 'artist' && lastMsg.id.startsWith('streaming-')) {
+      return 'read'
+    }
+    return 'sending'
+  }
+
+  return 'delivered'
+}
+
 function ChatMessageList({
   messages,
   isSending,
+  artistName,
+  portraitUrl,
   onReact,
   onAction,
   onSendLyricsToStudio,
@@ -408,6 +503,8 @@ function ChatMessageList({
 }: {
   messages: ChatMessage[]
   isSending: boolean
+  artistName: string
+  portraitUrl?: string
   onReact: (messageId: string, reaction: ChatReaction) => void
   onAction: (action: ChatActionData) => void
   onSendLyricsToStudio: (lyrics: string) => void
@@ -420,6 +517,13 @@ function ChatMessageList({
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
   }, [messages])
+
+  const initials = artistName
+    .split(' ')
+    .map((w) => w[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
 
   if (messages.length === 0) {
     return (
@@ -437,27 +541,53 @@ function ChatMessageList({
     )
   }
 
+  // Build messages with day separators
+  let lastDayLabel = ''
+
   return (
     <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
-      {messages.map((msg) => (
-        <ChatBubble
-          key={msg.id}
-          message={msg}
-          onReact={onReact}
-          onAction={onAction}
-          onSendLyricsToStudio={onSendLyricsToStudio}
-          onGetSunoPrompt={onGetSunoPrompt}
-        />
-      ))}
+      {messages.map((msg, index) => {
+        const dayLabel = getDayLabel(msg.createdAt)
+        const showDaySep = dayLabel !== lastDayLabel
+        lastDayLabel = dayLabel
+        const readStatus = getReadStatus(msg, index, messages, isSending)
 
-      {isSending && (
-        <div className="flex justify-start mb-3">
-          <div className="px-4 py-3 rounded-2xl rounded-bl-md bg-muted/30 border border-border">
-            <div className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce" style={{ animationDelay: '0ms' }} />
-              <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce" style={{ animationDelay: '150ms' }} />
-              <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+        return (
+          <div key={msg.id}>
+            {showDaySep && <DaySeparator label={dayLabel} />}
+            <ChatBubble
+              message={msg}
+              artistName={artistName}
+              portraitUrl={portraitUrl}
+              readStatus={readStatus}
+              onReact={onReact}
+              onAction={onAction}
+              onSendLyricsToStudio={onSendLyricsToStudio}
+              onGetSunoPrompt={onGetSunoPrompt}
+            />
+          </div>
+        )
+      })}
+
+      {/* Typing indicator with artist name */}
+      {isSending && !messages.some(m => m.id.startsWith('streaming-') && m.content) && (
+        <div className="flex justify-start mb-3 gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center bg-muted/30 ring-1 ring-border/40 mt-0.5">
+            {portraitUrl ? (
+              <img src={portraitUrl} alt={artistName} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-[9px] font-bold text-muted-foreground">{initials}</span>
+            )}
+          </div>
+          <div>
+            <div className="px-4 py-3 rounded-2xl rounded-bl-md bg-muted/30 border border-border">
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+              </div>
             </div>
+            <p className="text-[10px] text-muted-foreground/50 mt-1 ml-1">{artistName} is typing...</p>
           </div>
         </div>
       )}
@@ -556,6 +686,8 @@ function LivingContextDrawer({ context }: { context: LivingContext }) {
 function ConversationDrawer({
   conversations,
   activeConversationId,
+  artistName,
+  portraitUrl,
   onSelect,
   onNewChat,
   onDelete,
@@ -563,17 +695,37 @@ function ConversationDrawer({
 }: {
   conversations: ChatConversation[]
   activeConversationId: string | null
+  artistName: string
+  portraitUrl?: string
   onSelect: (id: string) => void
   onNewChat: () => void
   onDelete: (id: string) => void
   onClose: () => void
 }) {
+  const initials = artistName
+    .split(' ')
+    .map((w) => w[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
+
   return (
     <div className="absolute inset-0 z-20 flex">
-      {/* Panel */}
-      <div className="w-72 bg-card border-r border-border flex flex-col h-full animate-in slide-in-from-left duration-200">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-          <h3 className="text-sm font-semibold text-foreground">Conversations</h3>
+      {/* Panel — full width on mobile, 72 on desktop */}
+      <div className="w-full sm:w-72 bg-card border-r border-border flex flex-col h-full animate-in slide-in-from-left duration-200">
+        {/* Artist header */}
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
+          <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-amber-500/40 flex items-center justify-center bg-muted/30">
+            {portraitUrl ? (
+              <img src={portraitUrl} alt={artistName} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-xs font-bold text-muted-foreground">{initials}</span>
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-foreground truncate">{artistName}</p>
+            <p className="text-[10px] text-muted-foreground/60">{conversations.length} thread{conversations.length !== 1 ? 's' : ''}</p>
+          </div>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted/40 transition-colors">
             <ArrowLeft className="w-4 h-4 text-muted-foreground" />
           </button>
@@ -588,7 +740,6 @@ function ConversationDrawer({
         </button>
 
         <div className="flex-1 overflow-y-auto px-2 pb-3 space-y-1">
-          {/* Legacy messages (no conversation) */}
           {conversations.length === 0 && (
             <div className="px-3 py-6 text-center text-xs text-muted-foreground/60">
               No conversations yet. Start a new chat!
@@ -601,23 +752,25 @@ function ConversationDrawer({
             return (
               <div
                 key={conv.id}
-                className={`group flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer transition-all ${
+                className={`group flex items-start gap-2.5 px-3 py-2.5 rounded-lg cursor-pointer transition-all ${
                   isActive
                     ? 'bg-amber-500/10 border border-amber-500/25'
                     : 'hover:bg-muted/30 border border-transparent'
                 }`}
                 onClick={() => onSelect(conv.id)}
               >
-                <MessageCircle className={`w-4 h-4 shrink-0 ${isActive ? 'text-amber-400' : 'text-muted-foreground/50'}`} />
+                <MessageCircle className={`w-4 h-4 shrink-0 mt-0.5 ${isActive ? 'text-amber-400' : 'text-muted-foreground/50'}`} />
                 <div className="flex-1 min-w-0">
-                  <p className={`text-sm truncate ${isActive ? 'text-foreground font-medium' : 'text-foreground/80'}`}>
-                    {conv.title}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground/50">{dateStr}</p>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className={`text-sm truncate ${isActive ? 'text-foreground font-medium' : 'text-foreground/80'}`}>
+                      {conv.title}
+                    </p>
+                    <span className="text-[10px] text-muted-foreground/40 shrink-0">{dateStr}</span>
+                  </div>
                 </div>
                 <button
                   onClick={(e) => { e.stopPropagation(); onDelete(conv.id) }}
-                  className="p-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-red-500/20 hover:text-red-400 text-muted-foreground/40 transition-all"
+                  className="p-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-red-500/20 hover:text-red-400 text-muted-foreground/40 transition-all shrink-0"
                   title="Delete conversation"
                 >
                   <Trash2 className="w-3 h-3" />
@@ -628,8 +781,8 @@ function ConversationDrawer({
         </div>
       </div>
 
-      {/* Backdrop */}
-      <div className="flex-1 bg-black/30" onClick={onClose} />
+      {/* Backdrop — hidden on full-width mobile since drawer fills the screen */}
+      <div className="hidden sm:block flex-1 bg-black/30" onClick={onClose} />
     </div>
   )
 }
@@ -904,6 +1057,8 @@ export function ChatPage({ userId }: ChatPageProps) {
         <ConversationDrawer
           conversations={conversations}
           activeConversationId={activeConversationId}
+          artistName={artistName}
+          portraitUrl={portraitUrl}
           onSelect={handleSelectConversation}
           onNewChat={handleNewChat}
           onDelete={handleDeleteConversation}
@@ -973,6 +1128,8 @@ export function ChatPage({ userId }: ChatPageProps) {
           <ChatMessageList
             messages={messages}
             isSending={isSending}
+            artistName={artistName}
+            portraitUrl={portraitUrl}
             onReact={handleReact}
             onAction={handleAction}
             onSendLyricsToStudio={handleSendLyricsToStudio}
