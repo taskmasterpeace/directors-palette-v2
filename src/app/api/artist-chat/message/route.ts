@@ -119,6 +119,7 @@ function buildSystemPrompt(
   lines.push('- If the conversation leads to music work, suggest it naturally (e.g. "yo let\'s work on that hook" or "I got a beat idea, check it").')
   lines.push('- When you suggest working on music, include an action marker: [ACTION:start-song], [ACTION:work-on-hook], [ACTION:check-beat], [ACTION:view-lyrics]')
   lines.push('- When you want to share lyrics, wrap them in [LYRICS]...[/LYRICS] tags.')
+  lines.push('- When asked for a Suno prompt, wrap it in [SUNO]...[/SUNO] tags. A Suno prompt describes the song style, genre, mood, instruments, and vocal style in a concise paragraph. Example: "Soulful jazzy hip hop, smooth bass, mellow keys, warm boom bap drums, reflective confident vocals, sunrise city vibes"')
   lines.push('- When you feel like sending a photo, say [PHOTO:description of what you\'d show]')
   lines.push('- Keep responses conversational and natural. Vary length based on your typing style.')
   lines.push('- LYRICS VARIETY: When writing lyrics, do NOT overuse signature phrases, ad-libs, or catchphrases. Use them at most once in an entire verse. Focus on fresh, original wordplay and imagery each time.')
@@ -146,6 +147,15 @@ function detectMessageType(content: string): { type: ChatMessageType; actionData
     return {
       type: 'lyrics',
       cleanContent: lyricsMatch[1].trim(),
+    }
+  }
+
+  // Check for suno prompt
+  const sunoMatch = content.match(/\[SUNO\]([\s\S]*?)\[\/SUNO\]/i)
+  if (sunoMatch) {
+    return {
+      type: 'suno-prompt',
+      cleanContent: sunoMatch[1].trim(),
     }
   }
 

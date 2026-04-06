@@ -3,7 +3,7 @@
  * iMessage-style messaging with AI artists
  */
 
-export type ChatMessageType = 'text' | 'lyrics' | 'photo' | 'action' | 'web-share' | 'system'
+export type ChatMessageType = 'text' | 'lyrics' | 'suno-prompt' | 'photo' | 'action' | 'web-share' | 'system'
 
 export type ChatReaction = 'thumbs-up' | 'thumbs-down' | null
 

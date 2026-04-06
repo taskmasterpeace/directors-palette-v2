@@ -130,16 +130,19 @@ function ChatBubble({
   onReact,
   onAction,
   onSendLyricsToStudio,
+  onGetSunoPrompt,
 }: {
   message: ChatMessage
   onReact: (messageId: string, reaction: ChatReaction) => void
   onAction: (action: ChatActionData) => void
   onSendLyricsToStudio: (lyrics: string) => void
+  onGetSunoPrompt: (lyrics: string) => void
 }) {
   const isUser = message.role === 'user'
   const isPhoto = message.messageType === 'photo'
   const isAction = message.messageType === 'action'
   const isLyrics = message.messageType === 'lyrics'
+  const isSunoPrompt = message.messageType === 'suno-prompt'
   const [copied, setCopied] = useState(false)
 
   const handleCopy = async (text: string) => {
@@ -191,12 +194,78 @@ function ChatBubble({
               <PenLine className="w-3 h-3" />
               <span>Edit in Studio</span>
             </button>
+            <button
+              onClick={() => onGetSunoPrompt(message.content)}
+              className="flex items-center gap-1 px-2 py-1 rounded-md text-xs transition-colors hover:bg-violet-500/20 text-violet-400/80 hover:text-violet-400"
+              title="Generate a Suno prompt for these lyrics"
+            >
+              <Music className="w-3 h-3" />
+              <span>Get Suno Prompt</span>
+            </button>
             <div className="w-px h-3 bg-border/40 mx-0.5" />
             <button
               onClick={() => onReact(message.id, message.reaction === 'thumbs-up' ? null : 'thumbs-up')}
               className={`p-1 rounded-md transition-colors ${
                 message.reaction === 'thumbs-up'
                   ? 'bg-amber-500/20 text-amber-400'
+                  : 'hover:bg-muted/40 text-muted-foreground/60'
+              }`}
+            >
+              <ThumbsUp className="w-3 h-3" />
+            </button>
+            <button
+              onClick={() => onReact(message.id, message.reaction === 'thumbs-down' ? null : 'thumbs-down')}
+              className={`p-1 rounded-md transition-colors ${
+                message.reaction === 'thumbs-down'
+                  ? 'bg-red-500/20 text-red-400'
+                  : 'hover:bg-muted/40 text-muted-foreground/60'
+              }`}
+            >
+              <ThumbsDown className="w-3 h-3" />
+            </button>
+            {timestamp}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Suno prompt card ──
+  if (isSunoPrompt && !isUser) {
+    return (
+      <div className="flex justify-start mb-3">
+        <div className="max-w-[85%] space-y-1.5">
+          <div className="rounded-2xl overflow-hidden bg-violet-500/[0.06] border border-violet-500/20 shadow-[0_2px_12px_rgba(139,92,246,0.06)]">
+            <div className="flex">
+              <div className="w-1 bg-gradient-to-b from-violet-400 to-fuchsia-600 shrink-0 rounded-l-full" />
+              <div className="px-3.5 py-3 flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <Music className="w-3.5 h-3.5 text-violet-400" />
+                  <span className="text-[11px] font-semibold text-violet-400 uppercase tracking-wider">Suno Prompt</span>
+                </div>
+                <p className="text-[13px] leading-relaxed text-foreground/90 whitespace-pre-wrap">
+                  {message.content}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Suno prompt action bar */}
+          <div className="flex items-center gap-1 ml-1 flex-wrap">
+            <button
+              onClick={() => handleCopy(message.content)}
+              className="flex items-center gap-1 px-2 py-1 rounded-md text-xs transition-colors hover:bg-muted/40 text-muted-foreground/60"
+              title="Copy Suno prompt"
+            >
+              {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
+              <span>{copied ? 'Copied' : 'Copy Prompt'}</span>
+            </button>
+            <div className="w-px h-3 bg-border/40 mx-0.5" />
+            <button
+              onClick={() => onReact(message.id, message.reaction === 'thumbs-up' ? null : 'thumbs-up')}
+              className={`p-1 rounded-md transition-colors ${
+                message.reaction === 'thumbs-up'
+                  ? 'bg-violet-500/20 text-violet-400'
                   : 'hover:bg-muted/40 text-muted-foreground/60'
               }`}
             >
@@ -333,12 +402,14 @@ function ChatMessageList({
   onReact,
   onAction,
   onSendLyricsToStudio,
+  onGetSunoPrompt,
 }: {
   messages: ChatMessage[]
   isSending: boolean
   onReact: (messageId: string, reaction: ChatReaction) => void
   onAction: (action: ChatActionData) => void
   onSendLyricsToStudio: (lyrics: string) => void
+  onGetSunoPrompt: (lyrics: string) => void
 }) {
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -373,6 +444,7 @@ function ChatMessageList({
           onReact={onReact}
           onAction={onAction}
           onSendLyricsToStudio={onSendLyricsToStudio}
+          onGetSunoPrompt={onGetSunoPrompt}
         />
       ))}
 
@@ -596,6 +668,16 @@ export function ChatPage({ userId }: ChatPageProps) {
     }
   }, [activeArtistId, setStudioArtistId, resetStudio, navigateToStudio, setActiveTab, setMusicLabSubTab])
 
+  // One-click: ask artist to generate a Suno prompt for given lyrics
+  const handleGetSunoPrompt = useCallback(
+    async (lyrics: string) => {
+      if (!activeArtist) return
+      const prompt = `Based on these lyrics I just wrote, give me a Suno prompt that captures the vibe, genre, mood, and sound:\n\n${lyrics}`
+      await sendMessage(prompt, userId, activeArtist.dna)
+    },
+    [activeArtist, sendMessage, userId],
+  )
+
   // Send lyrics from chat directly to writing studio import
   const handleSendLyricsToStudio = useCallback(async (lyrics: string) => {
     if (activeArtistId) setStudioArtistId(activeArtistId)
@@ -755,6 +837,7 @@ export function ChatPage({ userId }: ChatPageProps) {
             onReact={handleReact}
             onAction={handleAction}
             onSendLyricsToStudio={handleSendLyricsToStudio}
+            onGetSunoPrompt={handleGetSunoPrompt}
           />
 
           <ChatInput
