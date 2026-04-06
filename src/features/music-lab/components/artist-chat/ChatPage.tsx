@@ -567,6 +567,7 @@ export function ChatPage({ userId }: ChatPageProps) {
     isSending,
     livingContext,
     isLoadingContext,
+    quickReplies,
     openChat,
     closeChat,
     sendMessage,
@@ -839,6 +840,21 @@ export function ChatPage({ userId }: ChatPageProps) {
             onSendLyricsToStudio={handleSendLyricsToStudio}
             onGetSunoPrompt={handleGetSunoPrompt}
           />
+
+          {/* Quick reply chips */}
+          {quickReplies.length > 0 && !isSending && (
+            <div className="px-4 py-2 flex items-center gap-2 overflow-x-auto border-t border-border/30">
+              {quickReplies.map((reply, i) => (
+                <button
+                  key={i}
+                  onClick={() => handleSend(reply)}
+                  className="shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border border-amber-500/30 text-amber-400/90 hover:bg-amber-500/10 hover:border-amber-500/50 hover:text-amber-400 transition-all duration-200"
+                >
+                  {reply}
+                </button>
+              ))}
+            </div>
+          )}
 
           <ChatInput
             onSend={handleSend}

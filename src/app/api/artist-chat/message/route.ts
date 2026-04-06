@@ -13,7 +13,7 @@ import type { ArtistMemory } from '@/features/music-lab/types/artist-memory.type
 import type { ChatMessage, ChatMessageType, ChatActionData } from '@/features/music-lab/types/artist-chat.types'
 import type { ArtistDNA } from '@/features/music-lab/types/artist-dna.types'
 
-const MODEL = 'openai/gpt-4.1'
+const MODEL = 'openai/gpt-4.1-mini'
 
 function buildSystemPrompt(
   dna: ArtistDNA,
@@ -124,6 +124,7 @@ function buildSystemPrompt(
   lines.push('- Keep responses conversational and natural. Vary length based on your typing style.')
   lines.push('- LYRICS VARIETY: When writing lyrics, do NOT overuse signature phrases, ad-libs, or catchphrases. Use them at most once in an entire verse. Focus on fresh, original wordplay and imagery each time.')
   lines.push('- SYLLABLE CONSISTENCY: When writing lyrics, keep syllable counts consistent within each section. Target 8-12 syllables per line. Avoid cramming too many words into a single bar.')
+  lines.push('- QUICK REPLIES: At the very end of EVERY response, add exactly 3 short follow-up suggestions the user might say next. Format: [REPLIES]suggestion 1|suggestion 2|suggestion 3[/REPLIES]. Keep each under 6 words. Make them natural, conversational, and relevant to what you just said. Examples: "Write a verse about that", "Let\'s hit the studio", "What inspired that?"')
   if (dna.persona?.dislikes?.length) {
     lines.push(`- Never positively reference these topics (artist dislikes them): ${dna.persona.dislikes.join(', ')}`)
   }
@@ -140,13 +141,22 @@ function buildSystemPrompt(
   return lines.join('\n')
 }
 
-function detectMessageType(content: string): { type: ChatMessageType; actionData?: ChatActionData; cleanContent: string } {
+function detectMessageType(content: string): { type: ChatMessageType; actionData?: ChatActionData; cleanContent: string; quickReplies?: string[] } {
+  // Extract quick replies first (present in all message types)
+  let quickReplies: string[] | undefined
+  const repliesMatch = content.match(/\[REPLIES\]([\s\S]*?)\[\/REPLIES\]/i)
+  if (repliesMatch) {
+    quickReplies = repliesMatch[1].split('|').map(s => s.trim()).filter(Boolean).slice(0, 3)
+    content = content.replace(/\[REPLIES\][\s\S]*?\[\/REPLIES\]/i, '').trim()
+  }
+
   // Check for lyrics
   const lyricsMatch = content.match(/\[LYRICS\]([\s\S]*?)\[\/LYRICS\]/i)
   if (lyricsMatch) {
     return {
       type: 'lyrics',
       cleanContent: lyricsMatch[1].trim(),
+      quickReplies,
     }
   }
 
@@ -156,6 +166,7 @@ function detectMessageType(content: string): { type: ChatMessageType; actionData
     return {
       type: 'suno-prompt',
       cleanContent: sunoMatch[1].trim(),
+      quickReplies,
     }
   }
 
@@ -177,6 +188,7 @@ function detectMessageType(content: string): { type: ChatMessageType; actionData
         payload: {},
       },
       cleanContent: content.replace(/\[ACTION:[^\]]*\]/gi, '').trim(),
+      quickReplies,
     }
   }
 
@@ -185,10 +197,11 @@ function detectMessageType(content: string): { type: ChatMessageType; actionData
     return {
       type: 'photo',
       cleanContent: content.replace(/\[PHOTO:[^\]]*\]/gi, '').trim(),
+      quickReplies,
     }
   }
 
-  return { type: 'text', cleanContent: content }
+  return { type: 'text', cleanContent: content, quickReplies }
 }
 
 export async function GET(request: NextRequest) {
@@ -328,7 +341,7 @@ export async function POST(request: NextRequest) {
           // Stream complete — detect type and save to DB
           if (!fullContent.trim()) fullContent = "..."
 
-          const { type, actionData, cleanContent } = detectMessageType(fullContent)
+          const { type, actionData, cleanContent, quickReplies } = detectMessageType(fullContent)
 
           const savedArtistMsg = await artistChatService.saveMessage({
             artist_id: artistId,
@@ -357,6 +370,7 @@ export async function POST(request: NextRequest) {
             type: 'done',
             message: artistMsg,
             photoTrigger: type === 'photo',
+            quickReplies: quickReplies || [],
           })}\n\n`))
         } catch (err) {
           logger.api.error('Stream error', { error: err instanceof Error ? err.message : String(err) })

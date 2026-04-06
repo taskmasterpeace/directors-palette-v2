@@ -31,6 +31,9 @@ interface ArtistChatState {
   // Personality print
   personalityPrint: PersonalityPrint | null
 
+  // Quick reply suggestions
+  quickReplies: string[]
+
   // Photo generation
   isGeneratingPhoto: boolean
 
@@ -63,6 +66,7 @@ export const useArtistChatStore = create<ArtistChatState>()(
       memory: null,
       isLoadingMemory: false,
       personalityPrint: null,
+      quickReplies: [],
       isGeneratingPhoto: false,
 
       openChat: async (artistId, userId, dna) => {
@@ -104,7 +108,7 @@ export const useArtistChatStore = create<ArtistChatState>()(
         const { activeArtistId, messages } = get()
 
         // Always clear chat state immediately so the UI returns to picker
-        set({ activeArtistId: null, messages: [], livingContext: null, memory: null, personalityPrint: null })
+        set({ activeArtistId: null, messages: [], livingContext: null, memory: null, personalityPrint: null, quickReplies: [] })
 
         // Fire memory update in background (non-blocking) if there were messages
         if (activeArtistId && messages.length) {
@@ -163,7 +167,7 @@ export const useArtistChatStore = create<ArtistChatState>()(
           }
         }
 
-        set({ isSending: true })
+        set({ isSending: true, quickReplies: [] })
 
         // Optimistically add user message
         const tempUserMsg: ChatMessage = {
@@ -269,6 +273,7 @@ export const useArtistChatStore = create<ArtistChatState>()(
                     messages: state.messages.map(m =>
                       m.id === streamingMsgId ? event.message : m
                     ),
+                    quickReplies: event.quickReplies?.length ? event.quickReplies : [],
                   }))
 
                   // Handle photo trigger
