@@ -215,7 +215,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'artistId is required' }, { status: 400 })
     }
 
-    const messages = await artistChatService.getMessages(artistId, user.id)
+    const conversationId = request.nextUrl.searchParams.get('conversationId') || undefined
+    const messages = await artistChatService.getMessages(artistId, user.id, conversationId)
     return NextResponse.json({ messages })
   } catch (error) {
     logger.api.error('Load messages error', { error: error instanceof Error ? error.message : String(error) })
@@ -229,7 +230,7 @@ export async function POST(request: NextRequest) {
     if (auth instanceof NextResponse) return auth
     const { user } = auth
 
-    const { artistId, userMessage, dna, personalityPrint, livingContext, memory, recentMessages } = await request.json()
+    const { artistId, conversationId, userMessage, dna, personalityPrint, livingContext, memory, recentMessages } = await request.json()
 
     if (!artistId || !userMessage || !dna || !personalityPrint) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -239,6 +240,7 @@ export async function POST(request: NextRequest) {
     const savedUserMsg = await artistChatService.saveMessage({
       artist_id: artistId,
       user_id: user.id,
+      conversation_id: conversationId || undefined,
       role: 'user',
       content: userMessage,
       message_type: 'text',
@@ -346,6 +348,7 @@ export async function POST(request: NextRequest) {
           const savedArtistMsg = await artistChatService.saveMessage({
             artist_id: artistId,
             user_id: userId,
+            conversation_id: conversationId || undefined,
             role: 'artist',
             content: cleanContent,
             message_type: type,

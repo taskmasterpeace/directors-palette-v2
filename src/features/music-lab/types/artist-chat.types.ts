@@ -20,9 +20,28 @@ export interface WebShareData {
   source: string
 }
 
+export interface ChatConversation {
+  id: string
+  artistId: string
+  userId: string
+  title: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface DbChatConversation {
+  id: string
+  artist_id: string
+  user_id: string
+  title: string
+  created_at: string
+  updated_at: string
+}
+
 export interface ChatMessage {
   id: string
   artistId: string
+  conversationId?: string
   role: 'user' | 'artist'
   content: string
   messageType: ChatMessageType
@@ -37,6 +56,7 @@ export interface DbChatMessage {
   id: string
   artist_id: string
   user_id: string
+  conversation_id?: string
   role: 'user' | 'artist'
   content: string
   message_type: ChatMessageType

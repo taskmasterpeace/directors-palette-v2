@@ -2,12 +2,12 @@
 
 /**
  * Artist Chat Store
- * Manages chat state, living context, memory, and personality prints
+ * Manages chat state, living context, memory, personality prints, and conversation threads
  */
 
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { ChatMessage, ChatReaction } from '../types/artist-chat.types'
+import type { ChatMessage, ChatConversation, ChatReaction } from '../types/artist-chat.types'
 import type { LivingContext } from '../types/living-context.types'
 import type { ArtistMemory } from '../types/artist-memory.types'
 import type { PersonalityPrint } from '../types/personality-print.types'
@@ -19,6 +19,11 @@ interface ArtistChatState {
   messages: ChatMessage[]
   isLoading: boolean
   isSending: boolean
+
+  // Conversations
+  conversations: ChatConversation[]
+  activeConversationId: string | null
+  isLoadingConversations: boolean
 
   // Living context
   livingContext: LivingContext | null
@@ -45,8 +50,14 @@ interface ArtistChatState {
   refreshStatus: (dna: ArtistDNA) => Promise<void>
   requestPhoto: (context: string, dna: ArtistDNA) => Promise<string | null>
 
+  // Conversation actions
+  loadConversations: (artistId: string) => Promise<void>
+  selectConversation: (conversationId: string | null, artistId: string) => Promise<void>
+  createConversation: (artistId: string) => Promise<ChatConversation | null>
+  deleteConversation: (conversationId: string, artistId: string) => Promise<void>
+
   // Internal
-  loadMessages: (artistId: string, userId: string) => Promise<void>
+  loadMessages: (artistId: string, userId: string, conversationId?: string) => Promise<void>
   loadMemory: (artistId: string, userId: string) => Promise<void>
   loadPersonalityPrint: (artistId: string, userId: string) => Promise<void>
   generateLivingContext: (dna: ArtistDNA) => Promise<void>
@@ -61,6 +72,9 @@ export const useArtistChatStore = create<ArtistChatState>()(
       messages: [],
       isLoading: false,
       isSending: false,
+      conversations: [],
+      activeConversationId: null,
+      isLoadingConversations: false,
       livingContext: null,
       isLoadingContext: false,
       memory: null,
@@ -70,21 +84,30 @@ export const useArtistChatStore = create<ArtistChatState>()(
       isGeneratingPhoto: false,
 
       openChat: async (artistId, userId, dna) => {
-        set({ activeArtistId: artistId, isLoading: true, messages: [] })
+        set({ activeArtistId: artistId, isLoading: true, messages: [], conversations: [], activeConversationId: null })
 
-        // Phase 1: Load fast data (DB reads) — show chat ASAP
+        // Phase 1: Load conversations + fast data in parallel
         await Promise.all([
-          get().loadMessages(artistId, userId),
+          get().loadConversations(artistId),
           get().loadMemory(artistId, userId),
           get().loadPersonalityPrint(artistId, userId),
         ])
 
-        set({ isLoading: false })
+        // If conversations exist, select the most recent one; otherwise load legacy messages
+        const { conversations } = get()
+        if (conversations.length > 0) {
+          await get().loadMessages(artistId, userId, conversations[0].id)
+          set({ activeConversationId: conversations[0].id, isLoading: false })
+        } else {
+          // Load legacy messages (no conversation_id)
+          await get().loadMessages(artistId, userId)
+          set({ isLoading: false })
+        }
 
-        // Phase 2: Generate living context in background (LLM call, 3-5s)
+        // Phase 2: Generate living context in background
         get().generateLivingContext(dna)
 
-        // Phase 3: If no personality print was loaded, generate one eagerly
+        // Phase 3: If no personality print was loaded, generate one
         if (!get().personalityPrint) {
           try {
             const genRes = await fetch('/api/artist-dna/generate-personality-print', {
@@ -107,12 +130,18 @@ export const useArtistChatStore = create<ArtistChatState>()(
       closeChat: (userId) => {
         const { activeArtistId, messages } = get()
 
-        // Always clear chat state immediately so the UI returns to picker
-        set({ activeArtistId: null, messages: [], livingContext: null, memory: null, personalityPrint: null, quickReplies: [] })
+        set({
+          activeArtistId: null,
+          messages: [],
+          conversations: [],
+          activeConversationId: null,
+          livingContext: null,
+          memory: null,
+          personalityPrint: null,
+          quickReplies: [],
+        })
 
-        // Fire memory update in background (non-blocking) if there were messages
         if (activeArtistId && messages.length) {
-          // Use the values captured before clearing state
           fetch('/api/artist-chat/update-memory', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -127,11 +156,98 @@ export const useArtistChatStore = create<ArtistChatState>()(
         }
       },
 
+      // --- Conversation actions ---
+
+      loadConversations: async (artistId) => {
+        set({ isLoadingConversations: true })
+        try {
+          const res = await fetch(`/api/artist-chat/conversations?artistId=${artistId}`)
+          if (res.ok) {
+            const data = await res.json()
+            set({ conversations: data.conversations || [] })
+          }
+        } catch {
+          // No conversations loaded
+        } finally {
+          set({ isLoadingConversations: false })
+        }
+      },
+
+      selectConversation: async (conversationId, artistId) => {
+        const { activeArtistId } = get()
+        const aid = artistId || activeArtistId
+        if (!aid) return
+
+        set({ activeConversationId: conversationId, messages: [], isLoading: true, quickReplies: [] })
+
+        // Fetch the user ID from current auth context — we'll pass via loadMessages
+        // loadMessages handles auth server-side, so just pass the conversationId
+        try {
+          const url = conversationId
+            ? `/api/artist-chat/message?artistId=${aid}&conversationId=${conversationId}`
+            : `/api/artist-chat/message?artistId=${aid}`
+          const res = await fetch(url)
+          if (res.ok) {
+            const data = await res.json()
+            set({ messages: data.messages || [] })
+          }
+        } catch {
+          // Empty messages
+        } finally {
+          set({ isLoading: false })
+        }
+      },
+
+      createConversation: async (artistId) => {
+        try {
+          const res = await fetch('/api/artist-chat/conversations', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ artistId }),
+          })
+          if (res.ok) {
+            const data = await res.json()
+            const conv = data.conversation
+            if (conv) {
+              set(state => ({
+                conversations: [conv, ...state.conversations],
+                activeConversationId: conv.id,
+                messages: [],
+                quickReplies: [],
+              }))
+              return conv
+            }
+          }
+        } catch {
+          // Failed to create
+        }
+        return null
+      },
+
+      deleteConversation: async (conversationId, artistId) => {
+        try {
+          await fetch(`/api/artist-chat/conversations?id=${conversationId}`, { method: 'DELETE' })
+          const remaining = get().conversations.filter(c => c.id !== conversationId)
+          set({ conversations: remaining })
+
+          // If we deleted the active conversation, switch to most recent or clear
+          if (get().activeConversationId === conversationId) {
+            if (remaining.length > 0) {
+              await get().selectConversation(remaining[0].id, artistId)
+            } else {
+              set({ activeConversationId: null, messages: [] })
+            }
+          }
+        } catch {
+          // Failed to delete
+        }
+      },
+
       sendMessage: async (content, _userId, dna) => {
         const { activeArtistId, livingContext, memory, messages } = get()
         if (!activeArtistId) return
 
-        let { personalityPrint } = get()
+        let { personalityPrint, activeConversationId } = get()
 
         // If no personality print loaded, generate one on demand
         if (!personalityPrint) {
@@ -167,12 +283,21 @@ export const useArtistChatStore = create<ArtistChatState>()(
           }
         }
 
+        // Auto-create conversation if none active
+        if (!activeConversationId) {
+          const conv = await get().createConversation(activeArtistId)
+          if (conv) {
+            activeConversationId = conv.id
+          }
+        }
+
         set({ isSending: true, quickReplies: [] })
 
         // Optimistically add user message
         const tempUserMsg: ChatMessage = {
           id: `temp-${Date.now()}`,
           artistId: activeArtistId,
+          conversationId: activeConversationId || undefined,
           role: 'user',
           content,
           messageType: 'text',
@@ -185,6 +310,7 @@ export const useArtistChatStore = create<ArtistChatState>()(
         const streamingMsg: ChatMessage = {
           id: streamingMsgId,
           artistId: activeArtistId,
+          conversationId: activeConversationId || undefined,
           role: 'artist',
           content: '',
           messageType: 'text',
@@ -198,6 +324,7 @@ export const useArtistChatStore = create<ArtistChatState>()(
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               artistId: activeArtistId,
+              conversationId: activeConversationId,
               userMessage: content,
               dna,
               personalityPrint,
@@ -217,6 +344,22 @@ export const useArtistChatStore = create<ArtistChatState>()(
               ),
             }))
             return
+          }
+
+          // Auto-title conversation from first user message
+          if (activeConversationId && messages.length === 0) {
+            const title = content.length > 40 ? content.substring(0, 40) + '...' : content
+            fetch('/api/artist-chat/conversations', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ conversationId: activeConversationId, title }),
+            }).catch(() => {})
+            // Update local state
+            set(state => ({
+              conversations: state.conversations.map(c =>
+                c.id === activeConversationId ? { ...c, title } : c
+              ),
+            }))
           }
 
           // Read SSE stream
@@ -252,14 +395,12 @@ export const useArtistChatStore = create<ArtistChatState>()(
                 const event = JSON.parse(raw)
 
                 if (event.type === 'user_saved' && event.message) {
-                  // Replace temp user message with saved version
                   set(state => ({
                     messages: state.messages.map(m =>
                       m.id === tempUserMsg.id ? event.message : m
                     ),
                   }))
                 } else if (event.type === 'chunk' && event.content) {
-                  // Append chunk to streaming artist message
                   set(state => ({
                     messages: state.messages.map(m =>
                       m.id === streamingMsgId
@@ -268,7 +409,6 @@ export const useArtistChatStore = create<ArtistChatState>()(
                     ),
                   }))
                 } else if (event.type === 'done' && event.message) {
-                  // Replace streaming message with final saved version
                   set(state => ({
                     messages: state.messages.map(m =>
                       m.id === streamingMsgId ? event.message : m
@@ -276,7 +416,6 @@ export const useArtistChatStore = create<ArtistChatState>()(
                     quickReplies: event.quickReplies?.length ? event.quickReplies : [],
                   }))
 
-                  // Handle photo trigger
                   if (event.photoTrigger) {
                     get().requestPhoto('selfie from chat context', dna)
                   }
@@ -312,7 +451,6 @@ export const useArtistChatStore = create<ArtistChatState>()(
         const { activeArtistId } = get()
         if (!activeArtistId) return
 
-        // Optimistic update
         set(state => ({
           messages: state.messages.map(m =>
             m.id === messageId ? { ...m, reaction } : m
@@ -355,7 +493,6 @@ export const useArtistChatStore = create<ArtistChatState>()(
           if (res.ok) {
             const data = await res.json()
 
-            // Add photo message
             const photoMsg: ChatMessage = {
               id: `photo-${Date.now()}`,
               artistId: activeArtistId,
@@ -377,27 +514,23 @@ export const useArtistChatStore = create<ArtistChatState>()(
       },
 
       // Internal actions
-      loadMessages: async (artistId, userId) => {
+      loadMessages: async (artistId, userId, conversationId) => {
         try {
-          // Messages come from DB via service, but we call from client
-          // So we use the API pattern instead
-          const res = await fetch(`/api/artist-chat/message?artistId=${artistId}`, {
-            method: 'GET',
-          })
+          const params = new URLSearchParams({ artistId })
+          if (conversationId) params.set('conversationId', conversationId)
+          const res = await fetch(`/api/artist-chat/message?${params}`)
           if (res.ok) {
             const data = await res.json()
             set({ messages: data.messages || [] })
           }
         } catch {
-          // Messages will load fresh — no cached state needed
-          void userId // used for auth on server side
+          void userId
         }
       },
 
       loadMemory: async (artistId, userId) => {
         set({ isLoadingMemory: true })
         try {
-          // Memory is loaded server-side; for now just reset
           void artistId
           void userId
         } finally {
@@ -407,7 +540,6 @@ export const useArtistChatStore = create<ArtistChatState>()(
 
       loadPersonalityPrint: async (artistId, _userId) => {
         try {
-          // Fetch existing print from DB
           const res = await fetch(`/api/artist-chat/personality-print?artistId=${artistId}`)
           if (res.ok) {
             const data = await res.json()
@@ -416,8 +548,6 @@ export const useArtistChatStore = create<ArtistChatState>()(
               return
             }
           }
-          // No print found — it may not have been generated yet
-          // Leave as null; sendMessage will handle gracefully
         } catch (e) {
           console.error('Load personality print failed:', e)
         }
@@ -479,19 +609,21 @@ export const useArtistChatStore = create<ArtistChatState>()(
           messages: [],
           isLoading: false,
           isSending: false,
+          conversations: [],
+          activeConversationId: null,
+          isLoadingConversations: false,
           livingContext: null,
           isLoadingContext: false,
           memory: null,
           isLoadingMemory: false,
           personalityPrint: null,
           isGeneratingPhoto: false,
+          quickReplies: [],
         })
       },
     }),
     {
       name: 'artist-chat',
-      // Don't persist activeArtistId — stale IDs cause broken state on reload
-      // Chat is ephemeral; user picks artist fresh each time
       partialize: () => ({}),
     }
   )
