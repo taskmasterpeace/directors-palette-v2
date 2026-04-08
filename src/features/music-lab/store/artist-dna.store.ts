@@ -76,6 +76,9 @@ interface ArtistDnaState {
   setWizardStep: (step: WizardStep) => void
   startWizard: () => void
   applyWizardResult: (dna: ArtistDNA, seededFrom?: string | null) => void
+  buildFromPins: (request: { description?: string; pins?: Record<string, unknown> }) => Promise<boolean | 'insufficient_credits'>
+  isBuildingFromPins: boolean
+  suggestRename: (realName: string, genres?: string[], city?: string) => Promise<string[]>
 
   // Actions - Draft editing
   setActiveTab: (tab: ArtistDnaTab) => void
@@ -151,6 +154,7 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
       sunoOutput: null,
       combineVocalAndStyle: false,
       isSeedingFromArtist: false,
+      isBuildingFromPins: false,
       seededFrom: null,
       isAnalyzingCatalog: false,
       isGeneratingHeaderBg: false,
@@ -402,6 +406,49 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
           seededFrom: seededFrom || null,
           suggestionCache: {},
         })
+      },
+
+      buildFromPins: async (request) => {
+        set({ isBuildingFromPins: true })
+        try {
+          const res = await fetch('/api/artist-dna/build-from-pins', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(request),
+          })
+          if (!res.ok) {
+            set({ isBuildingFromPins: false })
+            if (res.status === 402) return 'insufficient_credits'
+            return false
+          }
+          const { dna } = await res.json()
+          if (!dna) {
+            set({ isBuildingFromPins: false })
+            return false
+          }
+          get().applyWizardResult(dna, null)
+          set({ isBuildingFromPins: false })
+          return true
+        } catch (error) {
+          logger.musicLab.error('buildFromPins error', { error: error instanceof Error ? error.message : String(error) })
+          set({ isBuildingFromPins: false })
+          return false
+        }
+      },
+
+      suggestRename: async (realName, genres, city) => {
+        try {
+          const res = await fetch('/api/artist-dna/suggest-rename', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ realName, genres, city }),
+          })
+          if (!res.ok) return []
+          const { alternatives } = await res.json()
+          return Array.isArray(alternatives) ? alternatives : []
+        } catch {
+          return []
+        }
       },
 
       setActiveTab: (tab) => set({ activeTab: tab }),
