@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ArrowLeft, Sparkles, Loader2 } from 'lucide-react'
+import { Sparkles, Loader2 } from 'lucide-react'
 import { useArtistDnaStore } from '../../../store/artist-dna.store'
 import { useCreditsStore } from '@/features/credits/store/credits.store'
+import { WizardScaffold } from './WizardScaffold'
 
 const LOADING_PHASES = [
   'Researching artist...',
@@ -13,6 +14,15 @@ const LOADING_PHASES = [
   'Assembling DNA profile...',
   'Fact-checking with web search...',
   'Verifying accuracy...',
+]
+
+const PRESET_ARTISTS = [
+  { name: 'Kendrick Lamar', genre: 'Hip-Hop · Compton' },
+  { name: 'Bad Bunny', genre: 'Reggaeton · PR' },
+  { name: 'Billie Eilish', genre: 'Alt-Pop · LA' },
+  { name: 'The Weeknd', genre: 'R&B · Toronto' },
+  { name: 'SZA', genre: 'R&B · NJ' },
+  { name: 'Taylor Swift', genre: 'Pop · Nashville' },
 ]
 
 export function Door1SeedFromArtist() {
@@ -68,51 +78,85 @@ export function Door1SeedFromArtist() {
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto py-8 px-4">
-      <button
-        onClick={() => setWizardStep('doors')}
-        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Back
-      </button>
-
-      <div className="space-y-2 mb-6">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 text-xs font-medium">
-          <Sparkles className="w-3 h-3" />
-          Inspired by an artist
-        </div>
-        <h1 className="text-3xl font-bold tracking-tight">Who inspires you?</h1>
-        <p className="text-muted-foreground">
-          Type a real artist. We&apos;ll build a full DNA profile from them, then help you rename them to something fictional on the next screen.
-        </p>
-      </div>
-
-      <div className="space-y-3">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => {
-            setInput(e.target.value)
-            setError('')
-          }}
-          onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-          placeholder="e.g. Kendrick Lamar, Bad Bunny, Billie Eilish..."
-          autoFocus
-          className="w-full rounded-md border bg-background px-4 py-3 text-base placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50"
-        />
-        {error && <p className="text-sm text-destructive">{error}</p>}
-
+    <WizardScaffold
+      theme="amber"
+      label="Choose your inspiration"
+      pillIcon={<Sparkles className="w-3 h-3" />}
+      pillText="Inspired by an artist"
+      heading="Who inspires you?"
+      description="Type a real artist. We'll build a full DNA profile from them, then help you rename them to something fictional on the next screen."
+      watermarkEmoji="🎤"
+      onBack={() => setWizardStep('doors')}
+      cta={
         <button
           onClick={handleSubmit}
           disabled={!input.trim()}
-          className="w-full inline-flex items-center justify-center gap-2 rounded-md bg-amber-500 px-5 py-3 text-sm font-semibold text-black hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 px-5 py-4 text-base font-bold text-black hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-[0_0_40px_-8px_rgba(251,191,36,0.6)]"
         >
-          <Sparkles className="w-4 h-4" />
-          Build Profile
-          <span className="text-xs font-normal opacity-70">25 pts</span>
+          <Sparkles className="w-5 h-5" />
+          BUILD PROFILE
+          <span className="text-xs font-semibold opacity-70">25 pts</span>
         </button>
+      }
+    >
+      <div className="space-y-5">
+        {/* Input */}
+        <div>
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => {
+              setInput(e.target.value)
+              setError('')
+            }}
+            onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+            placeholder="e.g. Kendrick Lamar"
+            autoFocus
+            className="w-full rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm px-4 py-4 text-base text-white placeholder:text-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:border-amber-400/50 transition-all"
+          />
+          {error && <p className="text-sm text-red-400 mt-2">{error}</p>}
+        </div>
+
+        {/* Preset suggestions */}
+        <div>
+          <div className="text-[11px] font-semibold tracking-[0.14em] uppercase text-white/40 mb-2">
+            Popular picks
+          </div>
+          <div className="space-y-2">
+            {PRESET_ARTISTS.map((a) => {
+              const active = input === a.name
+              return (
+                <button
+                  key={a.name}
+                  onClick={() => setInput(a.name)}
+                  className={`w-full flex items-center gap-3 rounded-xl border px-3 py-3 text-left transition-all ${
+                    active
+                      ? 'border-amber-400/60 bg-amber-500/10'
+                      : 'border-white/10 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/20'
+                  }`}
+                >
+                  <div
+                    className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-base font-bold ${
+                      active ? 'bg-amber-500 text-black' : 'bg-white/10 text-white/80'
+                    }`}
+                  >
+                    {a.name
+                      .split(' ')
+                      .map((w) => w[0])
+                      .join('')
+                      .slice(0, 2)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold text-white truncate">{a.name}</div>
+                    <div className="text-xs text-white/50 truncate">{a.genre}</div>
+                  </div>
+                  {active && <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />}
+                </button>
+              )
+            })}
+          </div>
+        </div>
       </div>
-    </div>
+    </WizardScaffold>
   )
 }

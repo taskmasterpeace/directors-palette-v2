@@ -117,8 +117,10 @@ async function main() {
 
   await login(page)
 
-  // Navigate to artist-dna
+  // Reset persisted wizard state from any prior run so we always start on the list
   await page.goto(`${BASE}/music-lab/artist-dna`, { waitUntil: 'domcontentloaded' })
+  await page.evaluate(() => localStorage.removeItem('artist-dna-editor'))
+  await page.reload({ waitUntil: 'domcontentloaded' })
   await page.waitForSelector('text=Create New Artist', { timeout: 20000 })
   await page.waitForTimeout(500)
   await shot(page, 'list')
@@ -153,17 +155,46 @@ async function main() {
   await page.waitForTimeout(500)
   await shot(page, 'door3')
 
-  // Mobile door selector
+  // Mobile: capture doors + each door interior
   await ctx.close()
-  const mobileCtx = await browser.newContext({ viewport: { width: 390, height: 844 } })
+  const mobileCtx = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    deviceScaleFactor: 2,
+  })
   await seedSupabaseSession(mobileCtx)
   const mp = await mobileCtx.newPage()
+
   await mp.goto(`${BASE}/music-lab/artist-dna`, { waitUntil: 'domcontentloaded' })
+  await mp.evaluate(() => localStorage.removeItem('artist-dna-editor'))
+  await mp.reload({ waitUntil: 'domcontentloaded' })
   await mp.waitForSelector('text=Create New Artist', { timeout: 15000 })
+  await shot(mp, 'mobile-list-debug')
   await mp.locator('text=Create New Artist').first().click()
+  await mp.waitForTimeout(800)
+  await shot(mp, 'mobile-afterclick-debug')
   await mp.waitForSelector('text=Inspired by an artist', { timeout: 10000 })
   await mp.waitForTimeout(400)
-  await shot(mp, 'doors-mobile')
+  await shot(mp, 'mobile-doors')
+
+  const mobileBack = async () => {
+    await mp.locator('button', { hasText: /^Back$/ }).first().click()
+    await mp.waitForSelector('text=Inspired by an artist', { timeout: 10000 })
+    await mp.waitForTimeout(300)
+  }
+
+  await mp.locator('text=Inspired by an artist').first().click()
+  await mp.waitForTimeout(500)
+  await shot(mp, 'mobile-door1')
+
+  await mobileBack()
+  await mp.locator('text=Build it').first().click()
+  await mp.waitForTimeout(500)
+  await shot(mp, 'mobile-door2')
+
+  await mobileBack()
+  await mp.locator('text=Surprise me').first().click()
+  await mp.waitForTimeout(500)
+  await shot(mp, 'mobile-door3')
 
   await browser.close()
   console.log('done')
