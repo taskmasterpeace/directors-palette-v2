@@ -16,7 +16,7 @@ export function Door3SurpriseMe() {
   const [lookHint, setLookHint] = useState('')
   const [error, setError] = useState('')
 
-  const canRoll = !!genre.base
+  const canRoll = !!(genre.base || genre.sub || genre.micro)
 
   const handleRoll = async () => {
     if (!canRoll) return

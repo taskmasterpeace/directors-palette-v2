@@ -34,7 +34,7 @@ export function Door2BuildIt() {
   const [error, setError] = useState('')
 
   const hasAnyPin =
-    !!pins.genre.base ||
+    !!(pins.genre.base || pins.genre.sub || pins.genre.micro) ||
     !!pins.region ||
     !!pins.ethnicity ||
     !!pins.gender ||
@@ -50,7 +50,7 @@ export function Door2BuildIt() {
     const result = await buildFromPins({
       description: description.trim() || undefined,
       pins: {
-        genre: pins.genre.base ? pins.genre : undefined,
+        genre: (pins.genre.base || pins.genre.sub || pins.genre.micro) ? pins.genre : undefined,
         region: pins.region ? { city: pins.region } : undefined,
         ethnicity: pins.ethnicity || undefined,
         gender: pins.gender || undefined,

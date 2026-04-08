@@ -693,3 +693,82 @@ export function getMicrogenres(selectedSubgenres: string[]): string[] {
   }
   return micros
 }
+
+export type GenreLevel = 'base' | 'sub' | 'micro'
+
+export interface GenreFlatEntry {
+  name: string
+  level: GenreLevel
+  base: string
+  sub?: string
+}
+
+/**
+ * Flat searchable index across all three tiers.
+ * Each entry knows its full ancestry so a standalone sub or micro selection
+ * can still hydrate parents for prompt context.
+ */
+export const GENRE_FLAT_INDEX: GenreFlatEntry[] = (() => {
+  const out: GenreFlatEntry[] = []
+  for (const base of GENRE_TAXONOMY) {
+    out.push({ name: base.name, level: 'base', base: base.name })
+    if (!base.children) continue
+    for (const sub of base.children) {
+      out.push({ name: sub.name, level: 'sub', base: base.name, sub: sub.name })
+      if (!sub.children) continue
+      for (const micro of sub.children) {
+        out.push({ name: micro.name, level: 'micro', base: base.name, sub: sub.name })
+      }
+    }
+  }
+  return out
+})()
+
+/** Resolve the hierarchy for any genre name by searching all levels. */
+export function findGenreEntry(name: string): GenreFlatEntry | undefined {
+  const lower = name.trim().toLowerCase()
+  return GENRE_FLAT_INDEX.find((e) => e.name.toLowerCase() === lower)
+}
+
+/** Normalize a genre name for fuzzy matching: lowercase, strip punctuation, collapse spaces. */
+function normalizeForSearch(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/[()[\]{}.,/\\&'"`]/g, ' ')
+    .replace(/-/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+/**
+ * Fuzzy search across all levels. Ranks by:
+ *   0 = exact name match
+ *   1 = normalized exact match
+ *   2 = starts-with (normalized)
+ *   3 = all query tokens present (normalized)
+ *   4 = substring match (normalized)
+ * Ties break by level (base < sub < micro).
+ */
+export function searchGenres(query: string, limit = 8): GenreFlatEntry[] {
+  const rawQ = query.trim().toLowerCase()
+  if (!rawQ) return []
+  const normQ = normalizeForSearch(query)
+  const tokens = normQ.split(' ').filter(Boolean)
+  const levelWeight = { base: 0, sub: 1, micro: 2 } as const
+
+  return GENRE_FLAT_INDEX
+    .map((e) => {
+      const rawN = e.name.toLowerCase()
+      const normN = normalizeForSearch(e.name)
+      if (rawN === rawQ) return { e, score: 0 }
+      if (normN === normQ) return { e, score: 1 }
+      if (normN.startsWith(normQ)) return { e, score: 2 }
+      if (tokens.length > 0 && tokens.every((t) => normN.includes(t))) return { e, score: 3 }
+      if (normN.includes(normQ)) return { e, score: 4 }
+      return null
+    })
+    .filter((x): x is { e: GenreFlatEntry; score: number } => x !== null)
+    .sort((a, b) => a.score - b.score || levelWeight[a.e.level] - levelWeight[b.e.level])
+    .slice(0, limit)
+    .map((x) => x.e)
+}
