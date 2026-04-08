@@ -17,6 +17,7 @@ import type {
   SunoPromptOutput,
   UserArtistProfile,
   VibeBeat,
+  WizardStep,
 } from '../types/artist-dna.types'
 import { createEmptyDNA } from '../types/artist-dna.types'
 import { artistDnaService } from '../services/artist-dna.service'
@@ -43,6 +44,7 @@ interface ArtistDnaState {
   draft: ArtistDNA
   isDirty: boolean
   activeTab: ArtistDnaTab
+  wizardStep: WizardStep
 
   // Personality print
   personalityPrintStatus: 'idle' | 'generating' | 'done' | 'error'
@@ -69,6 +71,11 @@ interface ArtistDnaState {
   isSeedingFromArtist: boolean
   seededFrom: string | null
   clearSeededFrom: () => void
+
+  // Actions - Wizard
+  setWizardStep: (step: WizardStep) => void
+  startWizard: () => void
+  applyWizardResult: (dna: ArtistDNA, seededFrom?: string | null) => void
 
   // Actions - Draft editing
   setActiveTab: (tab: ArtistDnaTab) => void
@@ -139,6 +146,7 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
       draft: createEmptyDNA(),
       isDirty: false,
       activeTab: 'identity',
+      wizardStep: 'doors',
       suggestionCache: {},
       sunoOutput: null,
       combineVocalAndStyle: false,
@@ -353,6 +361,45 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
           set({ isSeedingFromArtist: false })
           return false
         }
+      },
+
+      setWizardStep: (step) => set({ wizardStep: step }),
+
+      startWizard: () => set({
+        editorOpen: true,
+        activeArtistId: null,
+        draft: createEmptyDNA(),
+        isDirty: false,
+        activeTab: 'identity',
+        wizardStep: 'doors',
+        sunoOutput: null,
+        suggestionCache: {},
+        seededFrom: null,
+      }),
+
+      applyWizardResult: (dna, seededFrom) => {
+        const defaults = createEmptyDNA()
+        const merged: ArtistDNA = {
+          identity: { ...defaults.identity, ...dna.identity },
+          sound: { ...defaults.sound, ...dna.sound },
+          persona: { ...defaults.persona, ...dna.persona },
+          lexicon: { ...defaults.lexicon, ...dna.lexicon },
+          look: { ...defaults.look, ...dna.look },
+          catalog: { ...defaults.catalog, ...dna.catalog },
+          voices: Array.isArray(dna.voices) ? dna.voices : [],
+          socialCircle: dna.socialCircle || defaults.socialCircle,
+          phone: dna.phone,
+          headerBackgroundUrl: '',
+          lowConfidenceFields: Array.isArray(dna.lowConfidenceFields) ? dna.lowConfidenceFields : [],
+          vibeBeat: dna.vibeBeat,
+        }
+        set({
+          draft: merged,
+          isDirty: true,
+          wizardStep: 'review',
+          seededFrom: seededFrom || null,
+          suggestionCache: {},
+        })
       },
 
       setActiveTab: (tab) => set({ activeTab: tab }),
@@ -921,6 +968,7 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
         draft: state.draft,
         activeArtistId: state.activeArtistId,
         activeTab: state.activeTab,
+        wizardStep: state.wizardStep,
         combineVocalAndStyle: state.combineVocalAndStyle,
       }),
       merge: (persisted, current) => {
@@ -958,7 +1006,9 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
         }
         const validTabs = ['identity', 'sound', 'persona', 'lexicon', 'look', 'catalog']
         const activeTab = p.activeTab && validTabs.includes(p.activeTab) ? p.activeTab : 'identity'
-        return { ...current, ...p, draft, activeTab }
+        const validWizardSteps: WizardStep[] = ['doors', 'door1', 'door2', 'door3', 'review', 'advanced']
+        const wizardStep = p.wizardStep && validWizardSteps.includes(p.wizardStep) ? p.wizardStep : 'doors'
+        return { ...current, ...p, draft, activeTab, wizardStep }
       },
     }
   )

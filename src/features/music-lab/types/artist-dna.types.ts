@@ -267,6 +267,14 @@ export type ArtistDnaTab =
   | 'look'
   | 'catalog'
 
+export type WizardStep =
+  | 'doors'       // Door selection screen
+  | 'door1'       // Inspired by an artist (name input)
+  | 'door2'       // Build it (chat + pins)
+  | 'door3'       // Surprise me (genre + spice pins)
+  | 'review'      // Review & Remix screen (default post-creation editor)
+  | 'advanced'    // Old 6-tab ArtistEditor (power user)
+
 export const ARTIST_DNA_TABS: { id: ArtistDnaTab; label: string }[] = [
   { id: 'identity', label: 'Identity' },
   { id: 'sound', label: 'Sound' },
