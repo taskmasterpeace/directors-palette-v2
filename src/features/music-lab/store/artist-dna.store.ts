@@ -281,6 +281,7 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
             draft: merged,
             isDirty: false,
             activeTab: 'identity',
+            wizardStep: 'review',
             sunoOutput: null,
             seededFrom: null,
           })
@@ -294,6 +295,7 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
           draft: createEmptyDNA(),
           isDirty: false,
           activeTab: 'identity',
+          wizardStep: 'doors',
           sunoOutput: null,
           suggestionCache: {},
           seededFrom: null,
@@ -955,6 +957,7 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
           editorOpen: false,
           activeArtistId: null,
           activeTab: 'identity',
+          wizardStep: 'doors',
           sunoOutput: null,
           suggestionCache: {},
           seededFrom: null,
