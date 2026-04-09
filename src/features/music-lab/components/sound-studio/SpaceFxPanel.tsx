@@ -13,7 +13,7 @@ export function SpaceFxPanel() {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <Sparkles className="w-4 h-4 text-amber-400" />
+        <Sparkles className="w-4 h-4 text-cyan-400" />
         <h3 className="text-sm font-semibold text-foreground tracking-[-0.025em]">
           Space & FX
         </h3>
@@ -25,7 +25,7 @@ export function SpaceFxPanel() {
         items={SPACE_FX_TAGS}
         selected={settings.spaceFx}
         onChange={(v) => updateSetting('spaceFx', v)}
-        color="amber"
+        color="cyan"
         grouped
         compact
         artistPicks={artistPicks}

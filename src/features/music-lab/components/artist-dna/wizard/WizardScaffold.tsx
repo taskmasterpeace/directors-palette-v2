@@ -3,24 +3,61 @@
 import { ArrowLeft } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-type Theme = 'amber' | 'cyan' | 'fuchsia'
+/**
+ * Three doors, three rooms. Each wizard door has its own identity color for
+ * the label, pill, header label, and ambient orbs. Amber is reserved as the
+ * brand CTA color and is applied at the button level by each door, not here.
+ */
+export type Theme = 'rose' | 'emerald' | 'violet' | 'amber'
 
-// Unified brand theme — all wizard doors share the directors-palette amber gold.
-// The Theme prop is kept for backwards compatibility but every variant maps to amber.
-const AMBER_THEME = {
-  orb: 'bg-amber-500/10',
-  pillBg: 'bg-amber-500/15',
-  pillBorder: 'border-amber-500/30',
-  pillText: 'text-amber-400',
-  label: 'text-amber-400/80',
-  focusRing: 'focus-visible:ring-amber-400/50',
-} as const
+interface ThemeTokens {
+  orbA: string
+  orbB: string
+  pillBg: string
+  pillBorder: string
+  pillText: string
+  label: string
+  focusRing: string
+}
 
-const THEME = {
-  amber: AMBER_THEME,
-  cyan: AMBER_THEME,
-  fuchsia: AMBER_THEME,
-} as const
+const THEME: Record<Theme, ThemeTokens> = {
+  rose: {
+    orbA: 'bg-rose-500/12',
+    orbB: 'bg-amber-500/8',
+    pillBg: 'bg-rose-500/15',
+    pillBorder: 'border-rose-400/30',
+    pillText: 'text-rose-300',
+    label: 'text-rose-300/80',
+    focusRing: 'focus-visible:ring-rose-400/50',
+  },
+  emerald: {
+    orbA: 'bg-emerald-500/12',
+    orbB: 'bg-amber-500/8',
+    pillBg: 'bg-emerald-500/15',
+    pillBorder: 'border-emerald-400/30',
+    pillText: 'text-emerald-300',
+    label: 'text-emerald-300/80',
+    focusRing: 'focus-visible:ring-emerald-400/50',
+  },
+  violet: {
+    orbA: 'bg-violet-500/14',
+    orbB: 'bg-amber-500/8',
+    pillBg: 'bg-violet-500/15',
+    pillBorder: 'border-violet-400/30',
+    pillText: 'text-violet-300',
+    label: 'text-violet-300/80',
+    focusRing: 'focus-visible:ring-violet-400/50',
+  },
+  amber: {
+    orbA: 'bg-amber-500/12',
+    orbB: 'bg-amber-500/6',
+    pillBg: 'bg-amber-500/15',
+    pillBorder: 'border-amber-400/30',
+    pillText: 'text-amber-300',
+    label: 'text-amber-300/80',
+    focusRing: 'focus-visible:ring-amber-400/50',
+  },
+}
 
 interface WizardScaffoldProps {
   theme: Theme
@@ -50,10 +87,10 @@ export function WizardScaffold({
   const t = THEME[theme]
   return (
     <div className="relative w-full min-h-[calc(100vh-8rem)]">
-      {/* Ambient orbs */}
+      {/* Ambient orbs — door color + amber kiss */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className={`absolute -top-24 -left-24 w-[28rem] h-[28rem] rounded-full ${t.orb} blur-3xl`} />
-        <div className={`absolute top-1/2 -right-24 w-[30rem] h-[30rem] rounded-full ${t.orb} blur-3xl`} />
+        <div className={`absolute -top-24 -left-24 w-[28rem] h-[28rem] rounded-full ${t.orbA} blur-3xl`} />
+        <div className={`absolute top-1/2 -right-24 w-[30rem] h-[30rem] rounded-full ${t.orbB} blur-3xl`} />
       </div>
 
       {/* Watermark emoji */}

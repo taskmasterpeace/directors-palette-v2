@@ -27,7 +27,7 @@ export function EraPanel() {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <Clock className="w-4 h-4 text-amber-400" />
+        <Clock className="w-4 h-4 text-rose-400" />
         <h3 className="text-sm font-semibold text-foreground tracking-[-0.025em]">
           Era
         </h3>
@@ -40,7 +40,7 @@ export function EraPanel() {
 
       {Object.entries(groups).map(([group, tags]) => (
         <div key={group} className="space-y-1.5">
-          <p className="text-[10px] font-medium uppercase tracking-wider text-amber-400/70">
+          <p className="text-[10px] font-medium uppercase tracking-wider text-rose-400/70">
             {group}
           </p>
           <div className="flex flex-wrap gap-1.5">
@@ -51,10 +51,10 @@ export function EraPanel() {
                   key={tag.id}
                   type="button"
                   onClick={() => toggle(tag.label)}
-                  className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all hover:scale-[1.03] ${
                     active
-                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-[0_0_8px_oklch(0.6_0.2_55/0.15)]'
-                      : 'bg-muted/20 text-foreground/80 border-border hover:border-amber-500/40 hover:text-amber-300'
+                      ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-[0_0_8px_oklch(0.55_0.15_15/0.2)]'
+                      : 'bg-muted/20 text-foreground/80 border-border hover:border-rose-500/40 hover:text-rose-300'
                   }`}
                 >
                   {tag.label}

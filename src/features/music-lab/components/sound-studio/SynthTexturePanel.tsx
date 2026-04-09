@@ -13,7 +13,7 @@ export function SynthTexturePanel() {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <Disc3 className="w-4 h-4 text-amber-400" />
+        <Disc3 className="w-4 h-4 text-cyan-400" />
         <h3 className="text-sm font-semibold text-foreground tracking-[-0.025em]">
           Synth/Keys Texture
         </h3>
@@ -25,7 +25,7 @@ export function SynthTexturePanel() {
         items={SYNTH_TEXTURE_TAGS}
         selected={settings.synthTexture}
         onChange={(v) => updateSetting('synthTexture', v)}
-        color="amber"
+        color="cyan"
         compact
         artistPicks={artistPicks}
       />

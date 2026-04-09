@@ -57,6 +57,13 @@ const COLOR_SCHEMES = {
     tagActive: 'bg-pink-500/20 text-pink-300 border-pink-500/40 shadow-[0_0_8px_oklch(0.55_0.15_350/0.15)]',
     groupLabel: 'text-pink-400/70',
   },
+  violet: {
+    pill: 'bg-violet-500/20 text-violet-300 border-violet-500/30',
+    pillHover: 'hover:bg-violet-500/30',
+    tag: 'bg-muted/20 text-foreground/80 border-border hover:border-violet-500/40 hover:text-violet-300',
+    tagActive: 'bg-violet-500/25 text-violet-200 border-violet-500/50 shadow-[0_0_10px_oklch(0.55_0.18_295/0.25)]',
+    groupLabel: 'text-violet-400/70',
+  },
 } as const
 
 export type ColorScheme = keyof typeof COLOR_SCHEMES
@@ -142,11 +149,20 @@ export function MultiSelectPills({
         layout
         onClick={() => toggle(item.label)}
         initial={{ opacity: 0, y: 6, scale: 0.88 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
+        animate={
+          isSelected
+            ? { opacity: 1, y: 0, scale: [1, 1.15, 1] }
+            : { opacity: 1, y: 0, scale: 1 }
+        }
         exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.12 } }}
-        transition={{ ...spring, delay: Math.min(indexForDelay, 40) * 0.01 }}
+        transition={
+          isSelected
+            ? { ...spring, scale: { duration: 0.34, times: [0, 0.5, 1], ease: 'easeOut' } }
+            : { ...spring, delay: Math.min(indexForDelay, 40) * 0.01 }
+        }
+        whileHover={{ scale: isSelected ? 1.03 : 1.05, y: -2 }}
         whileTap={{ scale: 0.92 }}
-        className={`${tagSizeClass} rounded-full font-medium border inline-flex items-center gap-1 ${
+        className={`${tagSizeClass} rounded-full font-medium border inline-flex items-center gap-1 cursor-pointer ${
           isSelected ? scheme.tagActive : scheme.tag
         }`}
       >

@@ -43,7 +43,7 @@ export function InstrumentPalette() {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center gap-2">
-        <Piano className="w-4 h-4 text-amber-400" />
+        <Piano className="w-4 h-4 text-emerald-400" />
         <h3 className="text-sm font-semibold text-foreground tracking-[-0.025em]">
           Instruments
         </h3>
@@ -54,7 +54,7 @@ export function InstrumentPalette() {
         )}
       </div>
 
-      {/* Selected instruments as amber pills */}
+      {/* Selected instruments as emerald pills */}
       {selectedInstruments.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {selectedInstruments.map((inst) => {
@@ -62,13 +62,13 @@ export function InstrumentPalette() {
             return (
               <span
                 key={inst}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
               >
                 {isArtistPick && <ThumbsUp className="w-2.5 h-2.5 text-emerald-400" />}
                 {inst}
                 <button
                   onClick={() => removeInstrument(inst)}
-                  className="p-0.5 rounded-full hover:bg-amber-500/30 transition-colors"
+                  className="p-0.5 rounded-full hover:bg-emerald-500/30 transition-colors"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -95,7 +95,7 @@ export function InstrumentPalette() {
           onClick={() => setActiveCategory(null)}
           className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
             activeCategory === null
-              ? 'bg-amber-500 text-background'
+              ? 'bg-emerald-500 text-background'
               : 'bg-muted/20 text-muted-foreground hover:bg-muted/40'
           }`}
         >
@@ -107,7 +107,7 @@ export function InstrumentPalette() {
             onClick={() => setActiveCategory(cat.id)}
             className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
               activeCategory === cat.id
-                ? 'bg-amber-500 text-background'
+                ? 'bg-emerald-500 text-background'
                 : 'bg-muted/20 text-muted-foreground hover:bg-muted/40'
             }`}
           >
@@ -125,9 +125,9 @@ export function InstrumentPalette() {
             <button
               key={tag.id}
               onClick={() => toggleInstrument(tag.label)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all inline-flex items-center gap-1 ${
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all inline-flex items-center gap-1 hover:scale-[1.03] ${
                 isSelected
-                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-[0_0_8px_oklch(0.6_0.2_55/0.15)]'
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-[0_0_8px_oklch(0.55_0.15_155/0.2)]'
                   : 'bg-muted/20 text-foreground/80 border border-border hover:border-border hover:text-foreground'
               }`}
             >

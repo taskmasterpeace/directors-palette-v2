@@ -63,10 +63,10 @@ export function Door1SeedFromArtist() {
       <div className="w-full max-w-2xl mx-auto py-16 px-4 text-center">
         <div className="inline-flex flex-col items-center gap-4">
           <div className="relative">
-            <div className="w-20 h-20 rounded-full bg-amber-500/10 flex items-center justify-center">
-              <Loader2 className="w-10 h-10 text-amber-400 animate-spin" />
+            <div className="w-20 h-20 rounded-full bg-rose-500/10 flex items-center justify-center">
+              <Loader2 className="w-10 h-10 text-rose-300 animate-spin" />
             </div>
-            <Sparkles className="w-5 h-5 text-amber-400 absolute -top-1 -right-1 animate-pulse" />
+            <Sparkles className="w-5 h-5 text-amber-300 absolute -top-1 -right-1 animate-pulse" />
           </div>
           <div className="space-y-1">
             <p className="text-lg font-semibold">Building DNA for {input}</p>
@@ -79,7 +79,7 @@ export function Door1SeedFromArtist() {
 
   return (
     <WizardScaffold
-      theme="amber"
+      theme="rose"
       label="Choose your inspiration"
       pillIcon={<Sparkles className="w-3 h-3" />}
       pillText="Inspired by an artist"
@@ -112,7 +112,7 @@ export function Door1SeedFromArtist() {
             onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
             placeholder="e.g. Kendrick Lamar"
             autoFocus
-            className="w-full rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm px-4 py-4 text-base text-white placeholder:text-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:border-amber-400/50 transition-all"
+            className="w-full rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm px-4 py-4 text-base text-white placeholder:text-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/50 focus-visible:border-rose-400/50 transition-all"
           />
           {error && <p className="text-sm text-red-400 mt-2">{error}</p>}
         </div>
@@ -131,13 +131,13 @@ export function Door1SeedFromArtist() {
                   onClick={() => setInput(a.name)}
                   className={`w-full flex items-center gap-3 rounded-xl border px-3 py-3 text-left transition-all ${
                     active
-                      ? 'border-amber-400/60 bg-amber-500/10'
+                      ? 'border-rose-400/60 bg-rose-500/10'
                       : 'border-white/10 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/20'
                   }`}
                 >
                   <div
                     className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-base font-bold ${
-                      active ? 'bg-amber-500 text-black' : 'bg-white/10 text-white/80'
+                      active ? 'bg-rose-400 text-black' : 'bg-white/10 text-white/80'
                     }`}
                   >
                     {a.name
@@ -150,7 +150,7 @@ export function Door1SeedFromArtist() {
                     <div className="text-sm font-semibold text-white truncate">{a.name}</div>
                     <div className="text-xs text-white/50 truncate">{a.genre}</div>
                   </div>
-                  {active && <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />}
+                  {active && <Sparkles className="w-4 h-4 text-rose-300 shrink-0" />}
                 </button>
               )
             })}

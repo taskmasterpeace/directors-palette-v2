@@ -14,7 +14,7 @@ export function HarmonyPanel() {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <Music className="w-4 h-4 text-amber-400" />
+        <Music className="w-4 h-4 text-cyan-400" />
         <h3 className="text-sm font-semibold text-foreground tracking-[-0.025em]">
           Harmony & Key
         </h3>
@@ -27,11 +27,11 @@ export function HarmonyPanel() {
 
       {/* Key selector */}
       <div className="space-y-1.5">
-        <p className="text-[10px] font-medium uppercase tracking-wider text-amber-400/70">Key</p>
+        <p className="text-[10px] font-medium uppercase tracking-wider text-cyan-400/70">Key</p>
         <select
           value={settings.key || ''}
           onChange={(e) => updateSetting('key', e.target.value || null)}
-          className="w-full px-3 py-1.5 rounded-lg text-xs bg-muted/20 border border-border text-foreground focus:border-amber-500/50 focus:outline-none"
+          className="w-full px-3 py-1.5 rounded-lg text-xs bg-muted/20 border border-border text-foreground focus:border-cyan-500/50 focus:outline-none"
         >
           <option value="">No specific key</option>
           {keys.map((k) => (
@@ -45,7 +45,7 @@ export function HarmonyPanel() {
         items={HARMONY_COLOR_TAGS}
         selected={settings.harmonyColor}
         onChange={(v) => updateSetting('harmonyColor', v)}
-        color="amber"
+        color="cyan"
         compact
         artistPicks={artistPicks}
       />

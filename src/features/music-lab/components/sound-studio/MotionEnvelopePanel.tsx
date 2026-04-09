@@ -11,7 +11,7 @@ export function MotionEnvelopePanel() {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <Waves className="w-4 h-4 text-amber-400" />
+        <Waves className="w-4 h-4 text-rose-400" />
         <h3 className="text-sm font-semibold text-foreground tracking-[-0.025em]">
           Motion & Envelope
         </h3>
@@ -25,7 +25,7 @@ export function MotionEnvelopePanel() {
         items={MOTION_ENVELOPE_TAGS}
         selected={settings.motionEnvelope}
         onChange={(v) => updateSetting('motionEnvelope', v)}
-        color="amber"
+        color="rose"
         grouped
         compact
       />

@@ -3,24 +3,34 @@
 import { Sparkles, Wand2, Dices, X, ArrowRight, Mic2, Palette, Zap } from 'lucide-react'
 import { useArtistDnaStore } from '../../../store/artist-dna.store'
 
+/**
+ * Three-door entry point to artist creation.
+ *
+ * Design intent: each door is a distinct "room" with its own identity color —
+ * rose for the analog/real door, emerald for the crafted door, violet for the
+ * chance door. Amber is reserved for brand moments (the "Start here" CTA and
+ * the new badge) so the trio reads as a cohesive palette, not a yellow wash.
+ */
 export function ArtistDoorSelector() {
   const { setWizardStep, closeEditor } = useArtistDnaStore()
 
   return (
     <div className="relative w-full min-h-[calc(100vh-8rem)] flex flex-col">
-      {/* Ambient background orbs */}
+      {/* Ambient background orbs — one per door color + a subtle amber kiss */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-24 -left-24 w-[32rem] h-[32rem] rounded-full bg-amber-500/10 blur-3xl" />
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[36rem] h-[36rem] rounded-full bg-amber-400/10 blur-3xl" />
-        <div className="absolute -bottom-24 -right-24 w-[32rem] h-[32rem] rounded-full bg-amber-600/10 blur-3xl" />
+        <div className="absolute -top-32 -left-24 w-[34rem] h-[34rem] rounded-full bg-rose-500/10 blur-3xl" />
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[36rem] h-[36rem] rounded-full bg-emerald-500/8 blur-3xl" />
+        <div className="absolute -bottom-32 -right-24 w-[34rem] h-[34rem] rounded-full bg-violet-500/12 blur-3xl" />
+        {/* Brand amber, tiny and off-center — a whisper, not a shout */}
+        <div className="absolute top-8 right-1/3 w-[18rem] h-[18rem] rounded-full bg-amber-500/6 blur-3xl" />
       </div>
 
       {/* Header */}
       <div className="relative z-10 flex items-start justify-between px-4 pt-6 md:pt-10 max-w-6xl mx-auto w-full">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm px-3 py-1 mb-4">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span className="text-xs font-medium text-white/70 tracking-wide uppercase">New · Artist Studio</span>
+          <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-500/10 backdrop-blur-sm px-3 py-1 mb-4">
+            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+            <span className="text-xs font-medium text-amber-200/90 tracking-wide uppercase">New · Artist Studio</span>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight bg-gradient-to-br from-white to-white/60 bg-clip-text text-transparent">
             Create an artist
@@ -46,15 +56,18 @@ export function ArtistDoorSelector() {
             emoji="🎤"
             title="Inspired by an artist"
             tagline="Start from someone real. Make them yours."
-            detail="We build the DNA from a real artist using live web search, then help you rename them to something fictional."
-            chips={['Real DNA', 'Web-verified', 'Rename nudge']}
+            detail="We build the DNA from a real artist using live web search, then auto-rename and fictionalize everything so you're starting from a legally distinct persona."
+            chips={['Real DNA', 'Web-verified', 'Auto-fictionalized']}
             cost="26 pts"
-            gradient="from-amber-500/25 via-amber-500/5 to-transparent"
-            ring="ring-amber-500/40 hover:ring-amber-400/80"
-            glow="group-hover:shadow-[0_0_40px_-8px_rgba(251,191,36,0.6)]"
-            accent="text-amber-400"
-            accentBg="bg-amber-500/15"
-            accentBorder="border-amber-500/30"
+            gradient="from-rose-500/30 via-rose-500/8 to-transparent"
+            ring="ring-rose-500/40 hover:ring-rose-300/80"
+            glow="group-hover:shadow-[0_0_50px_-8px_rgba(244,63,94,0.55)]"
+            accent="text-rose-300"
+            accentBg="bg-rose-500/15"
+            accentBorder="border-rose-400/30"
+            chipBg="bg-rose-500/10"
+            chipText="text-rose-200/90"
+            chipBorder="border-rose-400/25"
             onClick={() => setWizardStep('door1')}
           />
           <DoorCard
@@ -65,12 +78,15 @@ export function ArtistDoorSelector() {
             detail="Describe your artist in your own words and pin specific traits. We fill the rest coherently — guaranteed."
             chips={['Pin traits', 'Free-form', 'Guided']}
             cost="15 pts"
-            gradient="from-amber-500/25 via-amber-500/5 to-transparent"
-            ring="ring-amber-500/40 hover:ring-amber-400/80"
-            glow="group-hover:shadow-[0_0_40px_-8px_rgba(251,191,36,0.6)]"
-            accent="text-amber-400"
-            accentBg="bg-amber-500/15"
-            accentBorder="border-amber-500/30"
+            gradient="from-emerald-500/30 via-emerald-500/8 to-transparent"
+            ring="ring-emerald-500/40 hover:ring-emerald-300/80"
+            glow="group-hover:shadow-[0_0_50px_-8px_rgba(16,185,129,0.55)]"
+            accent="text-emerald-300"
+            accentBg="bg-emerald-500/15"
+            accentBorder="border-emerald-400/30"
+            chipBg="bg-emerald-500/10"
+            chipText="text-emerald-200/90"
+            chipBorder="border-emerald-400/25"
             onClick={() => setWizardStep('door2')}
           />
           <DoorCard
@@ -81,12 +97,15 @@ export function ArtistDoorSelector() {
             detail="Choose a genre, sprinkle optional spice — stage name, region, vibe, look — and roll the dice."
             chips={['One click', 'Full random', 'Fastest']}
             cost="15 pts"
-            gradient="from-amber-500/25 via-amber-500/5 to-transparent"
-            ring="ring-amber-500/40 hover:ring-amber-400/80"
-            glow="group-hover:shadow-[0_0_40px_-8px_rgba(251,191,36,0.6)]"
-            accent="text-amber-400"
-            accentBg="bg-amber-500/15"
-            accentBorder="border-amber-500/30"
+            gradient="from-violet-500/30 via-violet-500/8 to-transparent"
+            ring="ring-violet-500/40 hover:ring-violet-300/80"
+            glow="group-hover:shadow-[0_0_50px_-8px_rgba(139,92,246,0.55)]"
+            accent="text-violet-300"
+            accentBg="bg-violet-500/15"
+            accentBorder="border-violet-400/30"
+            chipBg="bg-violet-500/10"
+            chipText="text-violet-200/90"
+            chipBorder="border-violet-400/25"
             onClick={() => setWizardStep('door3')}
           />
         </div>
@@ -122,6 +141,9 @@ function DoorCard({
   accent,
   accentBg,
   accentBorder,
+  chipBg,
+  chipText,
+  chipBorder,
   onClick,
 }: {
   icon: React.ReactNode
@@ -137,6 +159,9 @@ function DoorCard({
   accent: string
   accentBg: string
   accentBorder: string
+  chipBg: string
+  chipText: string
+  chipBorder: string
   onClick: () => void
 }) {
   return (
@@ -144,7 +169,7 @@ function DoorCard({
       onClick={onClick}
       className={`group relative text-left rounded-2xl overflow-hidden bg-zinc-950/60 backdrop-blur-sm ring-1 ${ring} ${glow} transition-all duration-300 hover:-translate-y-1 hover:bg-zinc-900/70`}
     >
-      {/* Gradient wash */}
+      {/* Gradient wash — door-specific */}
       <div className={`absolute inset-0 bg-gradient-to-br ${gradient} pointer-events-none`} />
       {/* Decorative giant emoji */}
       <div className="absolute top-4 right-4 text-6xl opacity-10 group-hover:opacity-20 transition-opacity duration-300 select-none pointer-events-none">
@@ -160,12 +185,14 @@ function DoorCard({
       />
 
       <div className="relative p-6 md:p-7 flex flex-col min-h-[22rem]">
-        {/* Icon badge */}
+        {/* Icon badge + cost */}
         <div className="flex items-start justify-between mb-5">
           <div className={`inline-flex items-center justify-center w-14 h-14 rounded-xl ${accentBg} ${accentBorder} border ${accent}`}>
             {icon}
           </div>
-          <span className={`text-xs font-semibold tracking-wider uppercase ${accent}`}>{cost}</span>
+          <span className="text-xs font-semibold tracking-wider uppercase text-amber-300/90">
+            {cost}
+          </span>
         </div>
 
         {/* Title + tagline */}
@@ -180,15 +207,15 @@ function DoorCard({
           {chips.map((c) => (
             <span
               key={c}
-              className={`text-[11px] font-medium px-2 py-1 rounded-md ${accentBg} ${accent} border ${accentBorder}`}
+              className={`text-[11px] font-medium px-2 py-1 rounded-md ${chipBg} ${chipText} border ${chipBorder}`}
             >
               {c}
             </span>
           ))}
         </div>
 
-        {/* CTA */}
-        <div className={`inline-flex items-center gap-1.5 text-sm font-semibold ${accent} group-hover:gap-3 transition-all duration-300`}>
+        {/* CTA — amber arrow, brand action */}
+        <div className="inline-flex items-center gap-1.5 text-sm font-semibold text-amber-300 group-hover:gap-3 transition-all duration-300">
           Start here
           <ArrowRight className="w-4 h-4" />
         </div>

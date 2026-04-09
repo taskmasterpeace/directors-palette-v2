@@ -44,12 +44,12 @@ export function MoodSelector() {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center gap-2">
-        <Heart className="w-4 h-4 text-amber-400" />
+        <Heart className="w-4 h-4 text-rose-400" />
         <h3 className="text-sm font-semibold text-foreground tracking-[-0.025em]">
           Mood
         </h3>
         {settings.moods.length > 0 && (
-          <span className="text-xs text-amber-400 ml-auto">{settings.moods.length} selected</span>
+          <span className="text-xs text-rose-400 ml-auto">{settings.moods.length} selected</span>
         )}
       </div>
 

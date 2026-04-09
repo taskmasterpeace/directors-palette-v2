@@ -11,7 +11,7 @@ export function SampleCharacterPanel() {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <Film className="w-4 h-4 text-amber-400" />
+        <Film className="w-4 h-4 text-rose-400" />
         <h3 className="text-sm font-semibold text-foreground tracking-[-0.025em]">
           Sample Character
         </h3>
@@ -25,7 +25,7 @@ export function SampleCharacterPanel() {
         items={SAMPLE_CHARACTER_TAGS}
         selected={settings.sampleCharacter}
         onChange={(v) => updateSetting('sampleCharacter', v)}
-        color="amber"
+        color="rose"
         grouped
         compact
       />

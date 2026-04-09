@@ -74,8 +74,8 @@ export function Door2BuildIt() {
     return (
       <div className="w-full max-w-2xl mx-auto py-16 px-4 text-center">
         <div className="inline-flex flex-col items-center gap-4">
-          <div className="w-20 h-20 rounded-full bg-amber-500/10 flex items-center justify-center">
-            <Loader2 className="w-10 h-10 text-amber-400 animate-spin" />
+          <div className="w-20 h-20 rounded-full bg-emerald-500/10 flex items-center justify-center">
+            <Loader2 className="w-10 h-10 text-emerald-300 animate-spin" />
           </div>
           <p className="text-lg font-semibold">Building your artist...</p>
         </div>
@@ -85,7 +85,7 @@ export function Door2BuildIt() {
 
   return (
     <WizardScaffold
-      theme="cyan"
+      theme="emerald"
       label="Describe your artist"
       pillIcon={<Wand2 className="w-3 h-3" />}
       pillText="Build from scratch"
@@ -112,7 +112,7 @@ export function Door2BuildIt() {
           onChange={(e) => setDescription(e.target.value)}
           placeholder="e.g. Texas trap artist, knee-length colorful dreads, melodic but raw, somewhere between Travis Scott and Playboi Carti with a harder edge..."
           rows={5}
-          className="w-full rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm px-4 py-3 text-sm md:text-base text-white placeholder:text-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:border-amber-400/50 resize-none transition-all"
+          className="w-full rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm px-4 py-3 text-sm md:text-base text-white placeholder:text-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/50 focus-visible:border-emerald-400/50 resize-none transition-all"
         />
 
         {/* Genre */}
@@ -196,8 +196,8 @@ function IconField({
   placeholder: string
 }) {
   return (
-    <label className="block rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 hover:border-white/20 focus-within:border-amber-400/50 focus-within:bg-amber-500/[0.04] transition-all">
-      <div className="flex items-center gap-1.5 text-[11px] font-semibold tracking-wide text-amber-400/80 mb-1">
+    <label className="block rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 hover:border-white/20 focus-within:border-emerald-400/50 focus-within:bg-emerald-500/[0.04] transition-all">
+      <div className="flex items-center gap-1.5 text-[11px] font-semibold tracking-wide text-emerald-400/80 mb-1">
         {icon}
         {label}
       </div>
