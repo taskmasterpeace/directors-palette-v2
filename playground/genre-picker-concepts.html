@@ -1,0 +1,1072 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Genre Picker — 4 Concepts</title>
+<style>
+  :root {
+    --bg: #05050a;
+    --panel: rgba(255,255,255,0.04);
+    --panel-border: rgba(255,255,255,0.08);
+    --text: #f5f5f7;
+    --text-dim: rgba(255,255,255,0.55);
+    --text-faint: rgba(255,255,255,0.32);
+    --cyan: #22d3ee;
+    --amber: #fbbf24;
+    --fuchsia: #d946ef;
+    --lime: #a3e635;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif;
+    font-size: 14px; line-height: 1.5; min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    background:
+      radial-gradient(700px 500px at 15% 10%, rgba(217,70,239,0.08), transparent 70%),
+      radial-gradient(800px 600px at 85% 60%, rgba(34,211,238,0.08), transparent 70%),
+      radial-gradient(500px 400px at 50% 100%, rgba(251,191,36,0.06), transparent 70%),
+      var(--bg);
+  }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 24px; }
+
+  header { margin-bottom: 18px; }
+  h1 {
+    font-size: 26px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 4px;
+    background: linear-gradient(to bottom right, #fff, rgba(255,255,255,0.5));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  header .sub { color: var(--text-dim); font-size: 13px; }
+
+  /* Tabs */
+  .tabs {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px;
+    background: var(--panel); border: 1px solid var(--panel-border);
+    border-radius: 12px; padding: 6px;
+  }
+  .tab {
+    flex: 1 1 auto; padding: 12px 14px; border-radius: 8px;
+    background: transparent; border: 1px solid transparent; color: var(--text-dim);
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    text-align: center; min-width: 130px;
+    transition: all 0.2s;
+  }
+  .tab:hover { background: rgba(255,255,255,0.03); color: var(--text); }
+  .tab.active {
+    background: rgba(34,211,238,0.1); border-color: rgba(34,211,238,0.4);
+    color: var(--cyan);
+  }
+  .tab small {
+    display: block; font-size: 10px; font-weight: 500; margin-top: 2px;
+    opacity: 0.6; letter-spacing: 0.04em;
+  }
+
+  /* Stage */
+  .stage {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 16px;
+    padding: 20px;
+    min-height: 600px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Shared: selection readout */
+  .readout {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 12px 14px; border-radius: 12px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(255,255,255,0.08);
+    margin-top: 16px;
+  }
+  .readout-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--text-faint);
+  }
+  .readout-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 10px; border-radius: 999px;
+    font-size: 12px; font-weight: 600;
+  }
+  .readout-pill.base  { background: rgba(251,191,36,0.15); color: var(--amber); border: 1px solid rgba(251,191,36,0.4); }
+  .readout-pill.sub   { background: rgba(34,211,238,0.15); color: var(--cyan);  border: 1px solid rgba(34,211,238,0.4); }
+  .readout-pill.micro { background: rgba(217,70,239,0.15); color: var(--fuchsia);border: 1px solid rgba(217,70,239,0.4); }
+  .readout-arrow { color: var(--text-faint); font-size: 12px; }
+  .readout-empty { color: var(--text-faint); font-size: 12px; font-style: italic; }
+  .readout-reset {
+    margin-left: auto; font-size: 11px; padding: 5px 10px;
+    background: rgba(217,70,239,0.08); border: 1px solid rgba(217,70,239,0.3);
+    color: var(--fuchsia); border-radius: 6px; cursor: pointer; font-weight: 600;
+  }
+
+  /* Concept title inside stage */
+  .concept-title {
+    position: absolute; top: 20px; left: 20px; z-index: 5;
+    pointer-events: none;
+  }
+  .concept-title .label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--cyan);
+  }
+  .concept-title h2 {
+    font-size: 22px; font-weight: 700; margin: 2px 0 0; letter-spacing: -0.02em;
+  }
+
+  .back-btn {
+    position: absolute; top: 20px; right: 20px; z-index: 6;
+    padding: 8px 14px; border-radius: 10px;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12);
+    color: var(--text); font-size: 12px; font-weight: 600; cursor: pointer;
+    display: none;
+  }
+  .back-btn.on { display: inline-flex; align-items: center; gap: 6px; }
+  .back-btn:hover { background: rgba(255,255,255,0.1); }
+
+  /* ============================================================
+     CONCEPT 1: SOLAR SYSTEM
+     ============================================================ */
+  #concept-solar {
+    position: relative; width: 100%; height: 560px;
+    display: none;
+  }
+  #concept-solar.active { display: block; }
+  #concept-solar .universe {
+    position: absolute; inset: 0;
+    perspective: 1000px;
+  }
+  #concept-solar .planet {
+    position: absolute; left: 50%; top: 50%;
+    width: 120px; height: 120px; margin: -60px 0 0 -60px;
+    border-radius: 50%; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; text-align: center;
+    padding: 14px; color: #fff;
+    transition: transform 700ms cubic-bezier(0.65, 0, 0.35, 1),
+                opacity 500ms ease, filter 500ms ease;
+    user-select: none;
+  }
+  #concept-solar .planet .label { z-index: 2; text-shadow: 0 1px 10px rgba(0,0,0,0.8); }
+  #concept-solar .planet::before {
+    content: ''; position: absolute; inset: 0; border-radius: 50%;
+    background: var(--planet-color, radial-gradient(circle at 35% 35%, #fbbf24, #92400e));
+    box-shadow: 0 0 60px var(--planet-glow, rgba(251,191,36,0.5)),
+                inset -10px -15px 30px rgba(0,0,0,0.5);
+  }
+  #concept-solar .planet:hover::before { filter: brightness(1.15); }
+  #concept-solar.level-1 .planet:not(.focus) { opacity: 0.15; transform: scale(0.7) translate(var(--tx,0), var(--ty,0)); pointer-events: none; }
+  #concept-solar.level-1 .planet.focus { transform: scale(1.5) translate(0,0); }
+  #concept-solar.level-2 .planet:not(.focus) { opacity: 0.08; transform: scale(0.5) translate(var(--tx,0), var(--ty,0)); pointer-events: none; }
+  #concept-solar.level-2 .planet.focus { transform: scale(2.3) translate(0,0); }
+
+  #concept-solar .orbit-ring {
+    position: absolute; left: 50%; top: 50%;
+    border: 1px dashed rgba(255,255,255,0.12);
+    border-radius: 50%;
+    opacity: 0; pointer-events: none;
+    transition: opacity 600ms ease;
+  }
+  #concept-solar.level-1 .orbit-ring.r1 { opacity: 1; }
+  #concept-solar.level-2 .orbit-ring.r1 { opacity: 0.3; }
+  #concept-solar.level-2 .orbit-ring.r2 { opacity: 1; }
+
+  #concept-solar .moon {
+    position: absolute; left: 50%; top: 50%;
+    width: 64px; height: 64px; margin: -32px 0 0 -32px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 600; text-align: center; padding: 6px;
+    color: #fff; cursor: pointer;
+    opacity: 0; transform: translate(0,0) scale(0.3);
+    transition: all 700ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.9);
+  }
+  #concept-solar .moon::before {
+    content: ''; position: absolute; inset: 0; border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #22d3ee, #164e63);
+    box-shadow: 0 0 24px rgba(34,211,238,0.6), inset -5px -8px 15px rgba(0,0,0,0.5);
+  }
+  #concept-solar .moon.show {
+    opacity: 1; pointer-events: auto;
+    transform: translate(var(--mx), var(--my)) scale(1);
+  }
+  #concept-solar .moon:hover::before { filter: brightness(1.2); }
+
+  #concept-solar .satellite {
+    position: absolute; left: 50%; top: 50%;
+    width: 42px; height: 42px; margin: -21px 0 0 -21px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 8px; font-weight: 600; text-align: center; padding: 4px;
+    color: #fff; cursor: pointer;
+    opacity: 0; transform: translate(0,0) scale(0.2);
+    transition: all 700ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+  }
+  #concept-solar .satellite::before {
+    content: ''; position: absolute; inset: 0; border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #d946ef, #701a75);
+    box-shadow: 0 0 16px rgba(217,70,239,0.7), inset -3px -5px 10px rgba(0,0,0,0.5);
+  }
+  #concept-solar .satellite.show {
+    opacity: 1; pointer-events: auto;
+    transform: translate(var(--sx), var(--sy)) scale(1);
+  }
+
+  @keyframes drift {
+    0%,100% { transform: translate(var(--tx,0), var(--ty,0)) scale(1); }
+    50%     { transform: translate(calc(var(--tx,0) + 8px), calc(var(--ty,0) + 6px)) scale(1); }
+  }
+  #concept-solar.level-0 .planet { animation: drift 8s ease-in-out infinite; }
+
+  /* ============================================================
+     CONCEPT 2: CONSTELLATION GRAPH
+     ============================================================ */
+  #concept-constellation {
+    display: none; position: relative; width: 100%; height: 560px;
+  }
+  #concept-constellation.active { display: block; }
+  #concept-constellation svg {
+    width: 100%; height: 100%;
+    user-select: none;
+  }
+  #concept-constellation .edge {
+    stroke: rgba(255,255,255,0.08);
+    stroke-width: 1;
+    transition: all 0.4s ease;
+  }
+  #concept-constellation .edge.active {
+    stroke: rgba(34,211,238,0.6);
+    stroke-width: 1.5;
+    filter: drop-shadow(0 0 4px rgba(34,211,238,0.6));
+  }
+  #concept-constellation .node {
+    cursor: pointer;
+    transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  #concept-constellation .node circle {
+    transition: all 0.4s ease;
+  }
+  #concept-constellation .node.lvl-base circle { fill: #fbbf24; }
+  #concept-constellation .node.lvl-sub circle   { fill: #22d3ee; opacity: 0.6; }
+  #concept-constellation .node.lvl-micro circle { fill: #d946ef; opacity: 0.4; }
+  #concept-constellation .node.active circle {
+    opacity: 1;
+    filter: drop-shadow(0 0 10px currentColor);
+  }
+  #concept-constellation .node.dim circle { opacity: 0.15; }
+  #concept-constellation .node text {
+    fill: #fff; font-size: 10px; font-weight: 600; text-anchor: middle;
+    pointer-events: none; transition: opacity 0.3s;
+  }
+  #concept-constellation .node.lvl-base text { font-size: 12px; }
+  #concept-constellation .node.dim text { opacity: 0.2; }
+  #concept-constellation .node:hover circle { filter: drop-shadow(0 0 12px currentColor) brightness(1.2); }
+
+  /* ============================================================
+     CONCEPT 3: RIPPLE LAYERS (concentric rings)
+     ============================================================ */
+  #concept-ripple {
+    display: none; width: 100%; height: 560px;
+    align-items: center; justify-content: center;
+    position: relative;
+  }
+  #concept-ripple.active { display: flex; }
+  #concept-ripple svg {
+    max-width: 500px; max-height: 500px; width: 100%; height: 100%;
+  }
+  #concept-ripple .ring-bg { fill: rgba(255,255,255,0.03); stroke: rgba(255,255,255,0.08); stroke-width: 1; }
+  #concept-ripple .seg {
+    cursor: pointer; transition: all 0.35s ease;
+    stroke: rgba(0,0,0,0.4); stroke-width: 1;
+  }
+  #concept-ripple .seg.base  { fill: rgba(251,191,36,0.15); }
+  #concept-ripple .seg.sub   { fill: rgba(34,211,238,0.12); }
+  #concept-ripple .seg.micro { fill: rgba(217,70,239,0.12); }
+  #concept-ripple .seg:hover { filter: brightness(1.3); }
+  #concept-ripple .seg.active.base  { fill: rgba(251,191,36,0.55); filter: drop-shadow(0 0 18px rgba(251,191,36,0.7)); }
+  #concept-ripple .seg.active.sub   { fill: rgba(34,211,238,0.55); filter: drop-shadow(0 0 18px rgba(34,211,238,0.7)); }
+  #concept-ripple .seg.active.micro { fill: rgba(217,70,239,0.55); filter: drop-shadow(0 0 18px rgba(217,70,239,0.7)); }
+  #concept-ripple .seg-label {
+    font-size: 9px; font-weight: 600; fill: #fff; pointer-events: none;
+    text-anchor: middle;
+  }
+  #concept-ripple .center-label {
+    font-size: 14px; font-weight: 700; fill: #fff; text-anchor: middle;
+    pointer-events: none;
+  }
+  #concept-ripple .center-label.dim { fill: rgba(255,255,255,0.3); }
+
+  /* ============================================================
+     CONCEPT 4: DNA HELIX
+     ============================================================ */
+  #concept-helix {
+    display: none; width: 100%; height: 560px;
+    position: relative;
+    overflow: hidden;
+  }
+  #concept-helix.active { display: block; }
+  #concept-helix .helix-stage {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    perspective: 1200px;
+    touch-action: pan-y;
+  }
+  #concept-helix .helix {
+    position: relative;
+    width: 400px; height: 440px;
+    transform-style: preserve-3d;
+    transform: rotateY(var(--rot, 0deg));
+    transition: transform 0.15s linear;
+  }
+  #concept-helix .strand-bg {
+    position: absolute; left: 50%; top: 0; bottom: 0; width: 3px; margin-left: -1.5px;
+    background: linear-gradient(180deg, transparent, rgba(34,211,238,0.25), transparent);
+    transform-style: preserve-3d;
+  }
+  #concept-helix .rung {
+    position: absolute; left: 50%; top: 50%;
+    width: 220px; height: 40px; margin: -20px 0 0 -110px;
+    transform-style: preserve-3d;
+    transform: translateY(var(--y)) rotateY(var(--r));
+    display: flex; align-items: center; gap: 8px;
+    pointer-events: none;
+  }
+  #concept-helix .rung .strand {
+    width: 12px; height: 12px; border-radius: 50%;
+    box-shadow: 0 0 14px currentColor;
+    flex-shrink: 0;
+  }
+  #concept-helix .rung .strand.left  { background: #fbbf24; color: #fbbf24; }
+  #concept-helix .rung .strand.right { background: #d946ef; color: #d946ef; }
+  #concept-helix .rung .rung-bar {
+    flex: 1; height: 2px;
+    background: linear-gradient(90deg, rgba(251,191,36,0.6), rgba(217,70,239,0.6));
+  }
+  #concept-helix .rung .pill {
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    padding: 6px 12px; border-radius: 999px;
+    background: rgba(0,0,0,0.8); border: 1px solid rgba(34,211,238,0.5);
+    font-size: 11px; font-weight: 600; color: var(--cyan);
+    white-space: nowrap; pointer-events: auto; cursor: pointer;
+    transition: all 0.3s;
+    backdrop-filter: blur(8px);
+  }
+  #concept-helix .rung.active .pill {
+    background: rgba(34,211,238,0.2); border-color: var(--cyan);
+    box-shadow: 0 0 20px rgba(34,211,238,0.6);
+    transform: translate(-50%,-50%) scale(1.15);
+  }
+  #concept-helix .rung .pill:hover {
+    background: rgba(34,211,238,0.15);
+    border-color: var(--cyan);
+  }
+
+  #concept-helix .helix-controls {
+    position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 6px; z-index: 5;
+  }
+  #concept-helix .helix-controls button {
+    padding: 10px 18px; border-radius: 10px;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+    color: #fff; font-size: 14px; cursor: pointer; font-weight: 700;
+  }
+  #concept-helix .helix-scale-info {
+    position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+    font-size: 10px; color: var(--text-faint);
+    text-transform: uppercase; letter-spacing: 0.12em;
+  }
+
+  /* Hint */
+  .hint {
+    position: absolute; bottom: 14px; left: 14px; right: 14px;
+    font-size: 11px; color: var(--text-faint); text-align: center;
+    pointer-events: none;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header>
+    <h1>Genre Picker — 4 Concepts</h1>
+    <div class="sub">Tap a tab to try each concept. Your selection persists across all four.</div>
+  </header>
+
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-tab="solar">🪐 Solar System<small>tap + zoom</small></button>
+    <button class="tab" data-tab="constellation">✦ Constellation<small>node graph</small></button>
+    <button class="tab" data-tab="ripple">◎ Ripple Layers<small>dartboard</small></button>
+    <button class="tab" data-tab="helix">🧬 DNA Helix<small>outside the box</small></button>
+  </div>
+
+  <div class="stage">
+
+    <!-- CONCEPT 1: SOLAR SYSTEM -->
+    <div id="concept-solar" class="active level-0">
+      <div class="concept-title">
+        <div class="label">Concept 1 · spatial zoom</div>
+        <h2>Genre Solar System</h2>
+      </div>
+      <button class="back-btn" id="solar-back">← Zoom out</button>
+
+      <div class="universe" id="universe">
+        <div class="orbit-ring r1"></div>
+        <div class="orbit-ring r2"></div>
+      </div>
+      <div class="hint">Tap a planet to zoom in · tap a moon to go deeper · tap "Zoom out" to return</div>
+    </div>
+
+    <!-- CONCEPT 2: CONSTELLATION -->
+    <div id="concept-constellation">
+      <div class="concept-title">
+        <div class="label">Concept 2 · node network</div>
+        <h2>Constellation Graph</h2>
+      </div>
+      <svg id="constellation-svg" viewBox="0 0 900 560"></svg>
+      <div class="hint">Tap any node to light its branch · related genres stay connected by faint edges</div>
+    </div>
+
+    <!-- CONCEPT 3: RIPPLE LAYERS -->
+    <div id="concept-ripple">
+      <div class="concept-title">
+        <div class="label">Concept 3 · concentric rings</div>
+        <h2>Ripple Layers</h2>
+      </div>
+      <svg id="ripple-svg" viewBox="-260 -260 520 520"></svg>
+      <div class="hint">Outer ring = base · middle = sub · bullseye = micro · tap segments to drill down</div>
+    </div>
+
+    <!-- CONCEPT 4: DNA HELIX -->
+    <div id="concept-helix">
+      <div class="concept-title">
+        <div class="label">Concept 4 · outside the box</div>
+        <h2>Artist DNA Helix</h2>
+      </div>
+      <div class="helix-scale-info" id="helix-scale">Hip-Hop / Rap · 5 subgenres</div>
+      <div class="helix-stage" id="helix-stage">
+        <div class="helix" id="helix"></div>
+      </div>
+      <div class="helix-controls">
+        <button id="helix-prev">‹</button>
+        <button id="helix-next">›</button>
+      </div>
+      <div class="hint">Drag horizontally to rotate · tap a pill to lock it in · ‹ › buttons step genre-by-genre</div>
+    </div>
+
+  </div>
+
+  <!-- Shared readout -->
+  <div class="readout" id="readout"></div>
+
+</div>
+
+<script>
+/* =====================================================================
+   DATA
+   ===================================================================== */
+const TAXONOMY = {
+  "Hip-Hop / Rap": {
+    "Drill":    ["UK Drill", "Brooklyn Drill", "Chicago Drill", "Afro Drill"],
+    "Trap":     ["Cloud Trap", "Plugg", "Hyperpop Trap"],
+    "Phonk":    ["Memphis Phonk", "Rage Phonk", "Drift Phonk"],
+    "Boom Bap": ["Jazzy Boom Bap"],
+  },
+  "Electronic": {
+    "Hyperpop":    ["Glitchcore", "Digicore"],
+    "Jersey Club": ["Philly Club"],
+    "Dubstep":     ["Riddim"],
+  },
+  "R&B": {
+    "Alt R&B": ["PBR&B", "Dark R&B"],
+    "Neo-Soul":["Future Soul"],
+  },
+  "Rock": {
+    "Indie":     ["Bedroom Pop"],
+    "Shoegaze":  ["Blackgaze"],
+    "Post-Punk": ["Dance-Punk"],
+  },
+  "Pop": {
+    "Synth-Pop": ["Dream Pop", "Electropop"],
+    "K-Pop":     [],
+  },
+  "Latin": {
+    "Reggaeton": ["Perreo", "Neo Perreo"],
+    "Corridos Tumbados": [],
+  },
+};
+
+const BASES = Object.keys(TAXONOMY);
+
+/* Shared selection state */
+const state = { base: null, sub: null, micro: null, tab: "solar" };
+
+/* =====================================================================
+   SHARED UI — readout, tab switching
+   ===================================================================== */
+const $ = (id) => document.getElementById(id);
+
+function renderReadout() {
+  const el = $("readout");
+  const has = state.base || state.sub || state.micro;
+  if (!has) {
+    el.innerHTML = `<span class="readout-label">Your selection</span>
+      <span class="readout-empty">nothing selected yet — pick a genre in any concept above</span>`;
+    return;
+  }
+  const pills = [];
+  if (state.base)  pills.push(`<span class="readout-pill base">${state.base}</span>`);
+  if (state.sub)   pills.push(`<span class="readout-pill sub">${state.sub}</span>`);
+  if (state.micro) pills.push(`<span class="readout-pill micro">${state.micro}</span>`);
+  el.innerHTML = `<span class="readout-label">Your selection</span>
+    ${pills.join('<span class="readout-arrow">›</span>')}
+    <button class="readout-reset" id="readout-reset">Clear</button>`;
+  $("readout-reset").addEventListener("click", () => {
+    state.base = null; state.sub = null; state.micro = null;
+    renderAll();
+  });
+}
+
+function switchTab(t) {
+  state.tab = t;
+  document.querySelectorAll(".tab").forEach(el => el.classList.toggle("active", el.dataset.tab === t));
+  document.querySelectorAll("#concept-solar,#concept-constellation,#concept-ripple,#concept-helix")
+    .forEach(el => el.classList.remove("active"));
+  $("concept-" + t).classList.add("active");
+  renderAll();
+}
+document.querySelectorAll(".tab").forEach(el => el.addEventListener("click", () => switchTab(el.dataset.tab)));
+
+function renderAll() {
+  renderReadout();
+  if (state.tab === "solar")        renderSolar();
+  if (state.tab === "constellation") renderConstellation();
+  if (state.tab === "ripple")        renderRipple();
+  if (state.tab === "helix")         renderHelix();
+}
+
+/* =====================================================================
+   CONCEPT 1: SOLAR SYSTEM
+   ===================================================================== */
+const PLANET_COLORS = {
+  "Hip-Hop / Rap": { core: "#fbbf24", edge: "#92400e", glow: "rgba(251,191,36,0.6)" },
+  "Electronic":    { core: "#22d3ee", edge: "#164e63", glow: "rgba(34,211,238,0.6)" },
+  "R&B":           { core: "#f472b6", edge: "#831843", glow: "rgba(244,114,182,0.6)" },
+  "Rock":          { core: "#ef4444", edge: "#7f1d1d", glow: "rgba(239,68,68,0.6)" },
+  "Pop":           { core: "#a3e635", edge: "#3f6212", glow: "rgba(163,230,53,0.6)" },
+  "Latin":         { core: "#d946ef", edge: "#701a75", glow: "rgba(217,70,239,0.6)" },
+};
+
+function buildSolar() {
+  const u = $("universe");
+  u.querySelectorAll(".planet,.moon,.satellite").forEach(el => el.remove());
+
+  const R = 200; // radius for planet ring
+  BASES.forEach((name, i) => {
+    const angle = (i / BASES.length) * Math.PI * 2 - Math.PI/2;
+    const tx = Math.cos(angle) * R;
+    const ty = Math.sin(angle) * R;
+    const p = document.createElement("div");
+    p.className = "planet";
+    p.dataset.base = name;
+    const col = PLANET_COLORS[name];
+    p.style.setProperty("--tx", tx + "px");
+    p.style.setProperty("--ty", ty + "px");
+    p.style.setProperty("--planet-color", `radial-gradient(circle at 35% 35%, ${col.core}, ${col.edge})`);
+    p.style.setProperty("--planet-glow", col.glow);
+    p.style.transform = `translate(${tx}px,${ty}px)`;
+    p.style.animationDelay = (i * 0.3) + "s";
+    p.innerHTML = `<span class="label">${name}</span>`;
+    u.appendChild(p);
+  });
+
+  // orbit rings
+  u.querySelector(".r1").style.width = (R*2) + "px";
+  u.querySelector(".r1").style.height = (R*2) + "px";
+  u.querySelector(".r1").style.marginLeft = -R + "px";
+  u.querySelector(".r1").style.marginTop = -R + "px";
+  u.querySelector(".r2").style.width = "260px";
+  u.querySelector(".r2").style.height = "260px";
+  u.querySelector(".r2").style.marginLeft = "-130px";
+  u.querySelector(".r2").style.marginTop = "-130px";
+}
+
+function renderSolar() {
+  const root = $("concept-solar");
+  root.classList.remove("level-0", "level-1", "level-2");
+
+  // Reset moons/satellites
+  root.querySelectorAll(".moon, .satellite").forEach(el => el.classList.remove("show"));
+  root.querySelectorAll(".planet").forEach(el => el.classList.remove("focus"));
+
+  if (!state.base) {
+    root.classList.add("level-0");
+    $("solar-back").classList.remove("on");
+    return;
+  }
+
+  $("solar-back").classList.add("on");
+  const focusPlanet = root.querySelector(`.planet[data-base="${state.base}"]`);
+  if (focusPlanet) focusPlanet.classList.add("focus");
+
+  // Show subgenre moons
+  const subs = Object.keys(TAXONOMY[state.base]);
+  const R = 150;
+  subs.forEach((sub, i) => {
+    let moon = root.querySelector(`.moon[data-sub="${CSS.escape(sub)}"]`);
+    if (!moon) {
+      moon = document.createElement("div");
+      moon.className = "moon";
+      moon.dataset.sub = sub;
+      moon.innerHTML = `<span class="label">${sub}</span>`;
+      moon.addEventListener("click", () => {
+        state.sub = sub; state.micro = null;
+        renderAll();
+      });
+      $("universe").appendChild(moon);
+    }
+    const angle = (i / subs.length) * Math.PI * 2 - Math.PI/2;
+    const mx = Math.cos(angle) * R;
+    const my = Math.sin(angle) * R;
+    moon.style.setProperty("--mx", mx + "px");
+    moon.style.setProperty("--my", my + "px");
+    moon.classList.toggle("selected", state.sub === sub);
+    // delay show for stagger
+    setTimeout(() => moon.classList.add("show"), 100 + i * 50);
+  });
+
+  if (!state.sub) {
+    root.classList.add("level-1");
+    return;
+  }
+  root.classList.add("level-2");
+
+  // Show microgenre satellites around the selected moon
+  const micros = TAXONOMY[state.base][state.sub] || [];
+  const focusMoon = root.querySelector(`.moon[data-sub="${CSS.escape(state.sub)}"]`);
+  if (!focusMoon) return;
+  const mx = parseFloat(focusMoon.style.getPropertyValue("--mx") || 0);
+  const my = parseFloat(focusMoon.style.getPropertyValue("--my") || 0);
+  const Rs = 70;
+  micros.forEach((micro, i) => {
+    let sat = root.querySelector(`.satellite[data-micro="${CSS.escape(micro)}"]`);
+    if (!sat) {
+      sat = document.createElement("div");
+      sat.className = "satellite";
+      sat.dataset.micro = micro;
+      sat.innerHTML = `<span class="label">${micro}</span>`;
+      sat.addEventListener("click", () => { state.micro = micro; renderAll(); });
+      $("universe").appendChild(sat);
+    }
+    const angle = (i / Math.max(micros.length, 1)) * Math.PI * 2 - Math.PI/2;
+    const sx = mx + Math.cos(angle) * Rs;
+    const sy = my + Math.sin(angle) * Rs;
+    sat.style.setProperty("--sx", sx + "px");
+    sat.style.setProperty("--sy", sy + "px");
+    sat.classList.toggle("selected", state.micro === micro);
+    setTimeout(() => sat.classList.add("show"), 150 + i * 60);
+  });
+}
+
+/* Solar click handlers */
+$("universe").addEventListener("click", (e) => {
+  const p = e.target.closest(".planet");
+  if (p && p.dataset.base) {
+    state.base = p.dataset.base;
+    state.sub = null; state.micro = null;
+    renderAll();
+  }
+});
+$("solar-back").addEventListener("click", () => {
+  if (state.micro) state.micro = null;
+  else if (state.sub) state.sub = null;
+  else state.base = null;
+  renderAll();
+});
+
+/* =====================================================================
+   CONCEPT 2: CONSTELLATION
+   ===================================================================== */
+function buildConstellation() {
+  const svg = $("constellation-svg");
+  svg.innerHTML = "";
+
+  const nodes = [];
+  const edges = [];
+  const W = 900, H = 560;
+  const cx = W/2, cy = H/2;
+
+  // Place base genres in a ring
+  BASES.forEach((base, i) => {
+    const a = (i / BASES.length) * Math.PI * 2 - Math.PI/2;
+    const x = cx + Math.cos(a) * 200;
+    const y = cy + Math.sin(a) * 180;
+    nodes.push({ id: base, name: base, level: "base", x, y, parent: null });
+
+    // Place subs in a small ring around base
+    const subs = Object.keys(TAXONOMY[base]);
+    subs.forEach((sub, j) => {
+      const sa = a + (j - subs.length/2 + 0.5) * 0.35;
+      const sr = 85;
+      const sx = x + Math.cos(sa) * sr;
+      const sy = y + Math.sin(sa) * sr;
+      nodes.push({ id: base + "/" + sub, name: sub, level: "sub", x: sx, y: sy, parent: base });
+      edges.push({ from: base, to: base + "/" + sub });
+
+      // Place micros close to subs
+      const micros = TAXONOMY[base][sub];
+      micros.forEach((mc, k) => {
+        const ma = sa + (k - micros.length/2 + 0.5) * 0.18;
+        const mr = 40;
+        const mx = sx + Math.cos(ma) * mr;
+        const my = sy + Math.sin(ma) * mr;
+        nodes.push({ id: base + "/" + sub + "/" + mc, name: mc, level: "micro", x: mx, y: my, parent: base + "/" + sub });
+        edges.push({ from: base + "/" + sub, to: base + "/" + sub + "/" + mc });
+      });
+    });
+  });
+
+  // Render edges first
+  edges.forEach(e => {
+    const f = nodes.find(n => n.id === e.from);
+    const t = nodes.find(n => n.id === e.to);
+    if (!f || !t) return;
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("class", "edge");
+    line.setAttribute("x1", f.x); line.setAttribute("y1", f.y);
+    line.setAttribute("x2", t.x); line.setAttribute("y2", t.y);
+    line.dataset.from = e.from; line.dataset.to = e.to;
+    svg.appendChild(line);
+  });
+
+  // Render nodes
+  nodes.forEach(n => {
+    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    g.setAttribute("class", "node lvl-" + n.level);
+    g.setAttribute("transform", `translate(${n.x},${n.y})`);
+    g.dataset.id = n.id; g.dataset.level = n.level; g.dataset.name = n.name;
+
+    const r = n.level === "base" ? 20 : n.level === "sub" ? 11 : 6;
+    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    circle.setAttribute("r", r);
+    g.appendChild(circle);
+
+    if (n.level !== "micro") {
+      const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      text.setAttribute("y", r + 12);
+      text.textContent = n.name;
+      g.appendChild(text);
+    }
+    g.addEventListener("click", () => handleConstellationClick(n));
+    svg.appendChild(g);
+  });
+}
+
+function handleConstellationClick(n) {
+  if (n.level === "base") { state.base = n.name; state.sub = null; state.micro = null; }
+  if (n.level === "sub")  {
+    state.base = n.parent; state.sub = n.name; state.micro = null;
+  }
+  if (n.level === "micro") {
+    const [b, s] = n.parent.split("/");
+    // parent is base + "/" + sub
+    const parts = n.id.split("/");
+    state.base = parts[0]; state.sub = parts[1]; state.micro = parts[2];
+  }
+  renderAll();
+}
+
+function renderConstellation() {
+  const svg = $("constellation-svg");
+  // Highlight active node path
+  svg.querySelectorAll(".node").forEach(g => {
+    g.classList.remove("active","dim");
+  });
+  svg.querySelectorAll(".edge").forEach(e => e.classList.remove("active"));
+
+  if (!state.base) return;
+
+  const activeIds = [state.base];
+  if (state.sub)   activeIds.push(state.base + "/" + state.sub);
+  if (state.micro) activeIds.push(state.base + "/" + state.sub + "/" + state.micro);
+
+  svg.querySelectorAll(".node").forEach(g => {
+    if (activeIds.includes(g.dataset.id)) g.classList.add("active");
+    else if (!g.dataset.id.startsWith(state.base)) g.classList.add("dim");
+  });
+  svg.querySelectorAll(".edge").forEach(e => {
+    if (activeIds.includes(e.dataset.from) && activeIds.includes(e.dataset.to)) e.classList.add("active");
+  });
+}
+
+/* =====================================================================
+   CONCEPT 3: RIPPLE LAYERS (concentric rings)
+   ===================================================================== */
+function arcPath(cx, cy, rOuter, rInner, startAngle, endAngle) {
+  const p = (r, a) => [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+  const [x1, y1] = p(rOuter, startAngle);
+  const [x2, y2] = p(rOuter, endAngle);
+  const [x3, y3] = p(rInner, endAngle);
+  const [x4, y4] = p(rInner, startAngle);
+  const largeArc = endAngle - startAngle > Math.PI ? 1 : 0;
+  return `M ${x1} ${y1} A ${rOuter} ${rOuter} 0 ${largeArc} 1 ${x2} ${y2} L ${x3} ${y3} A ${rInner} ${rInner} 0 ${largeArc} 0 ${x4} ${y4} Z`;
+}
+
+function buildRipple() {
+  const svg = $("ripple-svg");
+  svg.innerHTML = "";
+  // Background rings
+  [250, 180, 110].forEach(r => {
+    const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    c.setAttribute("class","ring-bg");
+    c.setAttribute("r", r);
+    svg.appendChild(c);
+  });
+}
+
+function renderRipple() {
+  const svg = $("ripple-svg");
+  // Clear dynamic elements
+  svg.querySelectorAll(".seg,.seg-label,.center-label").forEach(el => el.remove());
+
+  const baseR = [180, 250];   // inner, outer
+  const subR  = [110, 180];
+  const microR= [30, 110];
+
+  // Base segments
+  BASES.forEach((name, i) => {
+    const a1 = (i / BASES.length) * Math.PI * 2 - Math.PI/2;
+    const a2 = ((i+1) / BASES.length) * Math.PI * 2 - Math.PI/2;
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("class", "seg base" + (state.base === name ? " active" : ""));
+    path.setAttribute("d", arcPath(0, 0, baseR[1], baseR[0], a1, a2));
+    path.addEventListener("click", () => {
+      state.base = state.base === name ? null : name;
+      state.sub = null; state.micro = null;
+      renderAll();
+    });
+    svg.appendChild(path);
+
+    // Label
+    const mid = (a1 + a2) / 2;
+    const lr = (baseR[0] + baseR[1]) / 2;
+    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    text.setAttribute("class", "seg-label");
+    text.setAttribute("x", Math.cos(mid) * lr);
+    text.setAttribute("y", Math.sin(mid) * lr + 3);
+    text.textContent = name;
+    svg.appendChild(text);
+  });
+
+  // Sub segments (only if base picked)
+  if (state.base) {
+    const subs = Object.keys(TAXONOMY[state.base]);
+    subs.forEach((sub, i) => {
+      const a1 = (i / subs.length) * Math.PI * 2 - Math.PI/2;
+      const a2 = ((i+1) / subs.length) * Math.PI * 2 - Math.PI/2;
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("class", "seg sub" + (state.sub === sub ? " active" : ""));
+      path.setAttribute("d", arcPath(0, 0, subR[1], subR[0], a1, a2));
+      path.addEventListener("click", () => {
+        state.sub = state.sub === sub ? null : sub;
+        state.micro = null;
+        renderAll();
+      });
+      svg.appendChild(path);
+
+      const mid = (a1 + a2) / 2;
+      const lr = (subR[0] + subR[1]) / 2;
+      const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      text.setAttribute("class", "seg-label");
+      text.setAttribute("x", Math.cos(mid) * lr);
+      text.setAttribute("y", Math.sin(mid) * lr + 3);
+      text.textContent = sub;
+      svg.appendChild(text);
+    });
+  }
+
+  // Micro segments (only if sub picked and has micros)
+  if (state.base && state.sub) {
+    const micros = TAXONOMY[state.base][state.sub] || [];
+    if (micros.length) {
+      micros.forEach((mc, i) => {
+        const a1 = (i / micros.length) * Math.PI * 2 - Math.PI/2;
+        const a2 = ((i+1) / micros.length) * Math.PI * 2 - Math.PI/2;
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("class", "seg micro" + (state.micro === mc ? " active" : ""));
+        path.setAttribute("d", arcPath(0, 0, microR[1], microR[0], a1, a2));
+        path.addEventListener("click", () => {
+          state.micro = state.micro === mc ? null : mc;
+          renderAll();
+        });
+        svg.appendChild(path);
+
+        const mid = (a1 + a2) / 2;
+        const lr = (microR[0] + microR[1]) / 2;
+        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        text.setAttribute("class", "seg-label");
+        text.setAttribute("x", Math.cos(mid) * lr);
+        text.setAttribute("y", Math.sin(mid) * lr + 3);
+        text.textContent = mc;
+        svg.appendChild(text);
+      });
+    }
+  }
+
+  // Center label
+  const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  label.setAttribute("class", "center-label" + (state.base ? "" : " dim"));
+  label.setAttribute("y", 4);
+  label.textContent = state.micro || state.sub || state.base || "pick a genre";
+  svg.appendChild(label);
+}
+
+/* =====================================================================
+   CONCEPT 4: DNA HELIX
+   ===================================================================== */
+const helixState = { rotation: 0, level: "base", context: null, items: [], index: 0, dragStart: null };
+
+function getHelixItems() {
+  if (helixState.level === "base") return BASES.map(b => ({ name: b, level: "base" }));
+  if (helixState.level === "sub") {
+    const base = helixState.context;
+    return Object.keys(TAXONOMY[base]).map(s => ({ name: s, level: "sub", parent: base }));
+  }
+  if (helixState.level === "micro") {
+    const [base, sub] = helixState.context.split("/");
+    return (TAXONOMY[base][sub] || []).map(m => ({ name: m, level: "micro", parent: sub, grandparent: base }));
+  }
+  return [];
+}
+
+function buildHelix() {
+  helixState.items = getHelixItems();
+  const helix = $("helix");
+  helix.innerHTML = `<div class="strand-bg"></div>`;
+
+  helixState.items.forEach((item, i) => {
+    const rung = document.createElement("div");
+    rung.className = "rung";
+    const r = (i / Math.max(helixState.items.length, 1)) * 360;
+    const y = (i - helixState.items.length / 2) * 50;
+    rung.style.setProperty("--y", y + "px");
+    rung.style.setProperty("--r", r + "deg");
+    rung.dataset.index = i;
+    rung.innerHTML = `
+      <div class="strand left"></div>
+      <div class="rung-bar"></div>
+      <div class="strand right"></div>
+      <button class="pill" data-idx="${i}">${item.name}</button>
+    `;
+    helix.appendChild(rung);
+  });
+
+  // Scale info
+  const info = $("helix-scale");
+  if (helixState.level === "base") info.textContent = "Browsing: base genres · " + BASES.length + " total";
+  if (helixState.level === "sub")  info.textContent = "Browsing: " + helixState.context + " subgenres · " + helixState.items.length + " total";
+  if (helixState.level === "micro")info.textContent = "Browsing: " + helixState.context.split("/")[1] + " micros · " + helixState.items.length + " total";
+}
+
+function renderHelix() {
+  const helix = $("helix");
+  if (!helix.children.length) buildHelix();
+
+  // Highlight active rung
+  helix.querySelectorAll(".rung").forEach((r, i) => {
+    const item = helixState.items[i];
+    if (!item) return;
+    const isActive =
+      (item.level === "base" && state.base === item.name) ||
+      (item.level === "sub" && state.sub === item.name) ||
+      (item.level === "micro" && state.micro === item.name);
+    r.classList.toggle("active", isActive);
+  });
+
+  // Apply rotation
+  const rot = helixState.rotation;
+  helix.style.setProperty("--rot", rot + "deg");
+}
+
+function handleHelixPillClick(idx) {
+  const item = helixState.items[idx];
+  if (!item) return;
+  if (item.level === "base") {
+    state.base = item.name; state.sub = null; state.micro = null;
+    helixState.level = "sub"; helixState.context = item.name;
+    buildHelix();
+  } else if (item.level === "sub") {
+    state.sub = item.name; state.micro = null;
+    if (!state.base) state.base = item.parent;
+    const micros = TAXONOMY[item.parent][item.name] || [];
+    if (micros.length) {
+      helixState.level = "micro"; helixState.context = item.parent + "/" + item.name;
+      buildHelix();
+    }
+  } else if (item.level === "micro") {
+    state.micro = item.name;
+  }
+  renderAll();
+}
+
+/* Helix drag handlers */
+let helixDrag = null;
+$("helix-stage").addEventListener("pointerdown", (e) => {
+  if (e.target.closest("button")) return;
+  helixDrag = { x: e.clientX, startRot: helixState.rotation };
+});
+window.addEventListener("pointermove", (e) => {
+  if (!helixDrag) return;
+  const dx = e.clientX - helixDrag.x;
+  helixState.rotation = helixDrag.startRot + dx * 0.8;
+  renderHelix();
+});
+window.addEventListener("pointerup", () => { helixDrag = null; });
+
+$("helix").addEventListener("click", (e) => {
+  const btn = e.target.closest(".pill");
+  if (!btn) return;
+  handleHelixPillClick(parseInt(btn.dataset.idx, 10));
+});
+
+$("helix-prev").addEventListener("click", () => {
+  helixState.rotation -= 360 / Math.max(helixState.items.length, 1);
+  renderHelix();
+});
+$("helix-next").addEventListener("click", () => {
+  helixState.rotation += 360 / Math.max(helixState.items.length, 1);
+  renderHelix();
+});
+
+/* Add a "back" option to helix by tapping the scale info */
+$("helix-scale").addEventListener("click", () => {
+  if (helixState.level === "micro") {
+    helixState.level = "sub"; helixState.context = helixState.context.split("/")[0];
+  } else if (helixState.level === "sub") {
+    helixState.level = "base"; helixState.context = null;
+  }
+  buildHelix();
+  renderAll();
+});
+$("helix-scale").style.cursor = "pointer";
+$("helix-scale").title = "Tap to zoom out";
+
+/* =====================================================================
+   INIT
+   ===================================================================== */
+buildSolar();
+buildConstellation();
+buildRipple();
+buildHelix();
+renderAll();
+</script>
+</body>
+</html>

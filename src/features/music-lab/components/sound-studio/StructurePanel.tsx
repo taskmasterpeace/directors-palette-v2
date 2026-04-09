@@ -9,7 +9,7 @@ export function StructurePanel() {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center justify-center gap-2">
         <LayoutList className="w-4 h-4 text-emerald-400" />
         <h3 className="text-sm font-semibold text-foreground tracking-[-0.025em]">
           Structure
@@ -24,7 +24,7 @@ export function StructurePanel() {
         )}
       </div>
 
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-1.5 justify-center">
         {STRUCTURE_PRESETS.map((preset) => {
           const isActive = settings.structure === preset.value
           return (

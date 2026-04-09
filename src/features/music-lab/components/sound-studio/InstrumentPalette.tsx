@@ -42,7 +42,7 @@ export function InstrumentPalette() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center justify-center gap-2">
         <Piano className="w-4 h-4 text-emerald-400" />
         <h3 className="text-sm font-semibold text-foreground tracking-[-0.025em]">
           Instruments
@@ -56,7 +56,7 @@ export function InstrumentPalette() {
 
       {/* Selected instruments as emerald pills */}
       {selectedInstruments.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1.5 justify-center">
           {selectedInstruments.map((inst) => {
             const isArtistPick = artistInstruments.includes(inst)
             return (
@@ -90,7 +90,7 @@ export function InstrumentPalette() {
       </div>
 
       {/* Category tabs */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 justify-center flex-wrap">
         <button
           onClick={() => setActiveCategory(null)}
           className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
@@ -117,7 +117,7 @@ export function InstrumentPalette() {
       </div>
 
       {/* Instrument grid */}
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-1.5 justify-center">
         {filteredTags.map((tag) => {
           const isSelected = selectedInstruments.includes(tag.label)
           const isArtistPick = artistInstruments.includes(tag.label)

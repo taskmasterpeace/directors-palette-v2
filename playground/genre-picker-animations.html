@@ -1,0 +1,867 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Genre Picker v2 — Pyramid + Marquee</title>
+<style>
+  :root {
+    --bg: #07070a;
+    --panel: rgba(255,255,255,0.04);
+    --panel-border: rgba(255,255,255,0.08);
+    --text: #f5f5f7;
+    --text-dim: rgba(255,255,255,0.55);
+    --text-faint: rgba(255,255,255,0.32);
+    --cyan: #22d3ee;
+    --amber: #fbbf24;
+    --fuchsia: #d946ef;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif;
+    font-size: 14px; line-height: 1.5;
+    min-height: 100vh;
+  }
+  body {
+    background:
+      radial-gradient(600px 400px at 15% 10%, rgba(217,70,239,0.08), transparent 70%),
+      radial-gradient(700px 500px at 85% 60%, rgba(34,211,238,0.08), transparent 70%),
+      var(--bg);
+  }
+  .wrap {
+    max-width: 1400px; margin: 0 auto; padding: 24px;
+    display: grid; grid-template-columns: 300px 1fr; gap: 24px;
+  }
+  @media (max-width: 960px) { .wrap { grid-template-columns: 1fr; } }
+
+  h1 {
+    font-size: 22px; font-weight: 700; letter-spacing: -0.02em;
+    margin: 0 0 4px;
+    background: linear-gradient(to bottom right, #fff, rgba(255,255,255,0.5));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .sub { color: var(--text-dim); font-size: 13px; margin-bottom: 20px; }
+
+  /* Sidebar controls */
+  .controls {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 16px;
+    padding: 18px;
+    height: fit-content;
+    position: sticky; top: 24px;
+  }
+  .section { margin-bottom: 20px; }
+  .section:last-child { margin-bottom: 0; }
+  .section-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--text-faint); margin-bottom: 10px;
+  }
+
+  .toggle {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 12px; border-radius: 10px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    cursor: pointer; margin-bottom: 6px;
+    transition: all 0.2s;
+  }
+  .toggle span { font-size: 13px; }
+  .toggle.on { border-color: rgba(34,211,238,0.4); }
+  .switch {
+    width: 34px; height: 20px; border-radius: 10px;
+    background: rgba(255,255,255,0.15);
+    position: relative; transition: background 0.2s;
+  }
+  .switch::after {
+    content: ''; position: absolute;
+    top: 2px; left: 2px; width: 16px; height: 16px;
+    background: #fff; border-radius: 50%;
+    transition: transform 0.2s;
+  }
+  .toggle.on .switch { background: var(--cyan); }
+  .toggle.on .switch::after { transform: translateX(14px); }
+
+  label.slider { display: block; margin-bottom: 12px; }
+  label.slider .row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+  label.slider .name { font-size: 12px; color: var(--text-dim); }
+  label.slider .val { font-size: 12px; font-family: ui-monospace, SFMono-Regular, monospace; color: var(--text); }
+  input[type=range] { width: 100%; -webkit-appearance: none; appearance: none; background: transparent; height: 4px; }
+  input[type=range]::-webkit-slider-runnable-track { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--cyan); margin-top: -5px; cursor: pointer; }
+
+  .btn {
+    width: 100%; padding: 10px; border-radius: 10px;
+    background: rgba(217,70,239,0.08); border: 1px solid rgba(217,70,239,0.3);
+    color: var(--fuchsia); font-weight: 600; font-size: 12px;
+    cursor: pointer;
+  }
+
+  /* Stage */
+  .stage {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 16px;
+    padding: 20px;
+    min-height: 700px;
+  }
+  .stage-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--cyan); margin-bottom: 8px;
+  }
+  .stage h2 {
+    font-size: 26px; font-weight: 700; letter-spacing: -0.02em;
+    margin: 0 0 4px;
+  }
+  .stage-sub {
+    font-size: 13px; color: var(--text-dim); margin: 0 0 20px;
+  }
+
+  /* Search */
+  .search { position: relative; margin-bottom: 14px; }
+  .search input {
+    width: 100%; padding: 14px 14px 14px 42px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: var(--text); font-size: 15px;
+    outline: none; transition: all 0.2s;
+  }
+  .search input::placeholder { color: var(--text-faint); }
+  .search input:focus {
+    border-color: rgba(34,211,238,0.5);
+    background: rgba(34,211,238,0.04);
+  }
+  .search svg {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    color: var(--text-faint); width: 18px; height: 18px;
+  }
+
+  /* Search dropdown results */
+  .search-results {
+    position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 50;
+    background: #0e0e12; border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px; padding: 6px; max-height: 320px; overflow-y: auto;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+    display: none;
+  }
+  .search-results.open { display: block; }
+  .search-result {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 8px; cursor: pointer;
+    font-size: 13px;
+  }
+  .search-result:hover { background: rgba(255,255,255,0.05); }
+  .search-result .tier-tag {
+    font-size: 9px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 3px 7px; border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .tier-tag.base  { background: rgba(251,191,36,0.15); color: var(--amber); }
+  .tier-tag.sub   { background: rgba(34,211,238,0.15); color: var(--cyan); }
+  .tier-tag.micro { background: rgba(217,70,239,0.15); color: var(--fuchsia); }
+  .tier-tag.custom{ background: rgba(163,230,53,0.15); color: #a3e635; }
+  .search-result .meta { color: var(--text-faint); font-size: 11px; margin-left: auto; }
+
+  /* Marquee */
+  .marquee-wrap {
+    overflow: hidden; margin-bottom: 16px;
+    border: 1px dashed rgba(255,255,255,0.08); border-radius: 10px;
+    padding: 10px 0;
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  }
+  .marquee-label {
+    font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--fuchsia); padding: 0 14px; margin-bottom: 6px;
+  }
+  .marquee {
+    display: flex; gap: 8px;
+    animation: marquee-scroll 30s linear infinite;
+    width: max-content;
+    padding: 0 14px;
+  }
+  .marquee:hover { animation-play-state: paused; }
+  .marquee .chip {
+    white-space: nowrap; padding: 6px 12px; border-radius: 999px;
+    background: rgba(217,70,239,0.08); border: 1px solid rgba(217,70,239,0.25);
+    color: #f5d0fe; font-size: 12px; font-weight: 500; cursor: pointer;
+  }
+  .marquee .chip:hover { background: rgba(217,70,239,0.2); }
+  @keyframes marquee-scroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  /* === PICKER BODY: grid left, pyramid right === */
+  .picker-body {
+    display: grid; grid-template-columns: 1fr 180px;
+    gap: 18px; align-items: start;
+  }
+  @media (max-width: 760px) {
+    .picker-body { grid-template-columns: 1fr; }
+    .pyramid-card { order: -1; }
+  }
+
+  /* Grid rows */
+  .row-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--text-faint);
+    margin: 14px 0 8px; display: flex; align-items: center; gap: 8px;
+  }
+  .row-label .pill-count {
+    font-weight: 500; color: var(--text-faint); font-size: 9px;
+    padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.05);
+  }
+  .row-label:first-of-type { margin-top: 0; }
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .chip {
+    padding: 8px 14px; border-radius: 999px;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer;
+    transition:
+      transform 350ms cubic-bezier(0.34, 1.56, 0.64, 1),
+      opacity 250ms ease,
+      background 200ms ease,
+      border-color 200ms ease;
+  }
+  .chip:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); }
+  .chip.selected {
+    background: rgba(34,211,238,0.15); border-color: rgba(34,211,238,0.6); color: var(--cyan);
+    box-shadow: 0 0 20px -6px rgba(34,211,238,0.5);
+  }
+  .chip.stagger-in { animation: stagger-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+  @keyframes stagger-in {
+    0%   { transform: translateY(16px) scale(0.85); opacity: 0; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+  }
+
+  /* Subgenre reveal panel */
+  .sub-panel {
+    overflow: hidden; max-height: 0; opacity: 0;
+    transition: max-height 0.5s ease, opacity 0.3s ease, margin 0.3s ease;
+  }
+  .sub-panel.open { max-height: 600px; opacity: 1; }
+
+  /* === PYRAMID PATH INDICATOR === */
+  .pyramid-card {
+    background: linear-gradient(180deg, rgba(34,211,238,0.04), rgba(217,70,239,0.04));
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px; padding: 16px 14px; position: sticky; top: 24px;
+  }
+  .pyramid-title {
+    font-size: 9px; font-weight: 700; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--text-faint); text-align: center; margin-bottom: 12px;
+  }
+  .pyramid {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  .tier {
+    background: rgba(255,255,255,0.03);
+    border: 1px dashed rgba(255,255,255,0.12);
+    border-radius: 8px;
+    padding: 10px 8px; text-align: center;
+    transition: all 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .tier .tier-hint {
+    font-size: 8px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text-faint);
+    margin-bottom: 2px; display: block;
+  }
+  .tier .tier-name {
+    font-size: 12px; font-weight: 600; color: var(--text-dim);
+    line-height: 1.2; display: block;
+    white-space: nowrap; text-overflow: ellipsis; overflow: hidden;
+  }
+  .tier.t-base  { width: 100%; }
+  .tier.t-sub   { width: 78%; }
+  .tier.t-micro { width: 56%; }
+
+  /* Filled tiers — colored per level */
+  .tier.filled { border-style: solid; transform: scale(1); }
+  .tier.t-base.filled {
+    background: rgba(251,191,36,0.12); border-color: rgba(251,191,36,0.55);
+    box-shadow: 0 0 24px -10px rgba(251,191,36,0.8);
+  }
+  .tier.t-base.filled .tier-hint { color: var(--amber); }
+  .tier.t-base.filled .tier-name { color: var(--amber); }
+
+  .tier.t-sub.filled {
+    background: rgba(34,211,238,0.12); border-color: rgba(34,211,238,0.55);
+    box-shadow: 0 0 24px -10px rgba(34,211,238,0.8);
+  }
+  .tier.t-sub.filled .tier-hint { color: var(--cyan); }
+  .tier.t-sub.filled .tier-name { color: var(--cyan); }
+
+  .tier.t-micro.filled {
+    background: rgba(217,70,239,0.12); border-color: rgba(217,70,239,0.55);
+    box-shadow: 0 0 24px -10px rgba(217,70,239,0.8);
+  }
+  .tier.t-micro.filled .tier-hint { color: var(--fuchsia); }
+  .tier.t-micro.filled .tier-name { color: var(--fuchsia); }
+
+  .tier.filled { animation: tier-lock 0.55s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes tier-lock {
+    0%   { transform: scale(0.6); opacity: 0; }
+    60%  { transform: scale(1.08); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  /* Empty state message */
+  .pyramid-empty-msg {
+    font-size: 11px; color: var(--text-faint);
+    text-align: center; margin-top: 10px; line-height: 1.5; font-style: italic;
+  }
+
+  /* Result summary */
+  .pyramid-result {
+    margin-top: 14px; padding-top: 14px; border-top: 1px dashed rgba(255,255,255,0.1);
+    font-size: 11px; color: var(--text-dim); text-align: center;
+  }
+  .pyramid-result b { color: #fff; display: block; margin-top: 4px; }
+
+  /* Free-text "subs by themselves" hint */
+  .tier-standalone {
+    font-size: 9px; color: var(--lime, #a3e635); text-align: center;
+    margin-top: 6px; opacity: 0.8;
+  }
+
+  /* Caption + prompt */
+  .caption {
+    margin-top: 20px;
+    padding: 14px 16px;
+    background: rgba(0,0,0,0.35);
+    border: 1px dashed rgba(255,255,255,0.1);
+    border-radius: 12px;
+    font-size: 12px; color: var(--text-dim); line-height: 1.6;
+  }
+  .caption b { color: var(--text); font-weight: 600; }
+  .caption code {
+    background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-size: 11px; color: var(--amber);
+  }
+  .prompt-box {
+    margin-top: 18px;
+    background: rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px; padding: 14px 16px;
+  }
+  .prompt-header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
+  }
+  .prompt-header .label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--text-faint);
+  }
+  .copy-btn {
+    font-size: 11px; padding: 5px 10px;
+    background: rgba(34,211,238,0.12);
+    border: 1px solid rgba(34,211,238,0.35);
+    color: var(--cyan);
+    border-radius: 6px; cursor: pointer; font-weight: 600;
+  }
+  .copy-btn:hover { background: rgba(34,211,238,0.2); }
+  #prompt {
+    font-size: 12.5px; line-height: 1.6; color: var(--text);
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    white-space: pre-wrap; margin: 0;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- CONTROLS -->
+  <aside class="controls">
+    <h1>Picker v2</h1>
+    <div class="sub">Pyramid + spring dock + marquee + standalone tiers.</div>
+
+    <div class="section">
+      <div class="section-label">Features</div>
+      <div class="toggle on" data-toggle="marquee"><span>Trending marquee</span><div class="switch"></div></div>
+      <div class="toggle on" data-toggle="stagger"><span>Spring-in sub rows</span><div class="switch"></div></div>
+      <div class="toggle on" data-toggle="pyramid"><span>Pyramid path indicator</span><div class="switch"></div></div>
+      <div class="toggle on" data-toggle="standalone"><span>Allow standalone sub/micro</span><div class="switch"></div></div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Tuning</div>
+      <label class="slider">
+        <div class="row"><span class="name">Stagger delay (ms)</span><span class="val" id="v-stagger">30</span></div>
+        <input type="range" id="s-stagger" min="0" max="120" step="5" value="30" />
+      </label>
+      <label class="slider">
+        <div class="row"><span class="name">Marquee speed (s)</span><span class="val" id="v-speed">30</span></div>
+        <input type="range" id="s-speed" min="10" max="80" step="2" value="30" />
+      </label>
+    </div>
+
+    <div class="section">
+      <button class="btn" id="reset">↺ Reset selection</button>
+    </div>
+
+    <div class="section" style="font-size:11px; color:var(--text-faint); line-height:1.55">
+      <b style="color:var(--text); font-size:11px;">Try this:</b><br>
+      1. Type <code style="background:rgba(255,255,255,0.08); padding:1px 5px; border-radius:3px">drill</code> — results show sub/micro with tier tags<br>
+      2. Click "UK Drill" → pyramid tip lights fuchsia even though you never picked base<br>
+      3. Type something weird → pick the "Use: …" option → green custom tier<br>
+      4. Click any pyramid tier to clear it
+    </div>
+  </aside>
+
+  <!-- STAGE -->
+  <main class="stage">
+    <div class="stage-label">Describe your artist · Build from scratch</div>
+    <h2>Pick a genre.</h2>
+    <p class="stage-sub">Type, tap, or scroll the marquee. Microgenres can stand on their own — no parent required.</p>
+
+    <!-- Search with dropdown -->
+    <div class="search">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="search" type="text" placeholder='Search any genre — try "drill", "phonk", or "sigilkore"…' autocomplete="off" />
+      <div class="search-results" id="search-results"></div>
+    </div>
+
+    <!-- Marquee -->
+    <div class="marquee-wrap" id="marquee-wrap">
+      <div class="marquee-label">Trending · discovery rail · hover to pause</div>
+      <div class="marquee" id="marquee"></div>
+    </div>
+
+    <!-- Picker body: grid + pyramid -->
+    <div class="picker-body">
+      <div class="grid-col">
+        <div class="row-label">Base genres <span class="pill-count" id="base-count"></span></div>
+        <div class="chips" id="base-row"></div>
+
+        <div class="sub-panel" id="sub-panel">
+          <div class="row-label">Subgenres <span class="pill-count" id="sub-count"></span></div>
+          <div class="chips" id="sub-row"></div>
+        </div>
+
+        <div class="sub-panel" id="micro-panel">
+          <div class="row-label">Microgenres <span class="pill-count" id="micro-count"></span></div>
+          <div class="chips" id="micro-row"></div>
+        </div>
+      </div>
+
+      <!-- Pyramid path indicator -->
+      <aside class="pyramid-card" id="pyramid-card">
+        <div class="pyramid-title">Your path</div>
+        <div class="pyramid" id="pyramid">
+          <div class="tier t-micro" data-level="micro">
+            <span class="tier-hint">Micro</span>
+            <span class="tier-name">—</span>
+          </div>
+          <div class="tier t-sub" data-level="sub">
+            <span class="tier-hint">Sub</span>
+            <span class="tier-name">—</span>
+          </div>
+          <div class="tier t-base" data-level="base">
+            <span class="tier-hint">Base</span>
+            <span class="tier-name">—</span>
+          </div>
+        </div>
+        <div class="pyramid-empty-msg" id="pyramid-empty">tap any chip to start</div>
+        <div class="pyramid-result" id="pyramid-result" style="display:none">
+          you will build an artist in<b id="pyramid-summary"></b>
+        </div>
+        <div class="tier-standalone" id="tier-standalone" style="display:none">
+          ✨ standalone mode — no parent required
+        </div>
+      </aside>
+    </div>
+
+    <div class="caption">
+      <b>New in v2:</b> the horizontal dock is gone — replaced by a compact <b>pyramid path indicator</b>
+      next to the grid (or above, on mobile). Each tier lights up independently, so you can pick
+      <b>just</b> a subgenre or microgenre without selecting a base — the search does this automatically
+      when you tap a result with a tier tag. If nothing matches, the search offers a <b>custom tier</b>
+      (shown in lime green) so truly obscure genres like <code>sigilkore</code> or <code>wonky</code> still work.
+      Click any filled tier in the pyramid to clear it.
+    </div>
+
+    <div class="prompt-box">
+      <div class="prompt-header">
+        <span class="label">Implementation prompt</span>
+        <button class="copy-btn" id="copy">Copy</button>
+      </div>
+      <pre id="prompt"></pre>
+    </div>
+  </main>
+</div>
+
+<script>
+/* -------------------------------------------------------------------
+   DATA
+   ------------------------------------------------------------------- */
+const TAXONOMY = {
+  "Hip-Hop / Rap": {
+    "Drill": ["UK Drill", "Drill (Brooklyn)", "Drill (Chicago)", "Afro Drill", "Flint Drill"],
+    "Trap": ["Cloud Trap", "Gospel Trap", "Hyperpop Trap", "Plugg", "Pluggnb"],
+    "Boom Bap": ["90s Boom Bap", "Jazzy Boom Bap"],
+    "Phonk": ["Memphis Phonk", "Rage Phonk", "Drift Phonk"],
+    "Rage Rap": ["Rage Beat"]
+  },
+  "Electronic": {
+    "Hyperpop": ["Glitchcore", "Bubblegum Bass", "Digicore"],
+    "Jersey Club": ["Philly Club"],
+    "Dubstep": ["Riddim", "Melodic Dub"],
+    "Witch House": []
+  },
+  "R&B": {
+    "Alt R&B": ["PBR&B", "Dark R&B"],
+    "Neo-Soul": ["Future Soul"]
+  },
+  "Rock": {
+    "Indie": ["Bedroom Pop", "Lo-Fi Indie"],
+    "Shoegaze": ["Blackgaze", "Nu-gaze"],
+    "Post-Punk": ["Dance-Punk"]
+  },
+  "Pop": {
+    "Synth-Pop": ["Electropop", "Dream Pop"],
+    "K-Pop": []
+  },
+  "Latin": {
+    "Reggaeton": ["Perreo", "Neo Perreo"],
+    "Corridos Tumbados": []
+  }
+};
+
+const TRENDING = [
+  "UK Drill", "Rage Phonk", "Hyperpop Trap", "Afro Drill", "Digicore", "Sigilkore",
+  "Plugg", "Wonky", "Drift Phonk", "Bedroom Pop", "Jersey Club", "Glitchcore",
+  "Pluggnb", "Dark R&B", "Corridos Tumbados", "Neo Perreo", "Blackgaze", "Philly Club"
+];
+
+/* Flat index for search: { name, level, parent } */
+const FLAT_INDEX = [];
+for (const base of Object.keys(TAXONOMY)) {
+  FLAT_INDEX.push({ name: base, level: "base", parent: null });
+  for (const sub of Object.keys(TAXONOMY[base])) {
+    FLAT_INDEX.push({ name: sub, level: "sub", parent: base });
+    for (const micro of TAXONOMY[base][sub]) {
+      FLAT_INDEX.push({ name: micro, level: "micro", parent: sub, grandparent: base });
+    }
+  }
+}
+
+/* -------------------------------------------------------------------
+   STATE
+   ------------------------------------------------------------------- */
+const DEFAULTS = {
+  marquee: true, stagger: true, pyramid: true, standalone: true,
+  staggerMs: 30, speed: 30,
+};
+const state = {
+  ...DEFAULTS,
+  base: null, sub: null, micro: null,
+  customLevel: null, // 'base' | 'sub' | 'micro' when user picks "Use: ..."
+  query: "",
+};
+
+/* -------------------------------------------------------------------
+   RENDER
+   ------------------------------------------------------------------- */
+const $ = (id) => document.getElementById(id);
+
+function renderMarquee() {
+  const el = $("marquee");
+  const items = [...TRENDING, ...TRENDING];
+  el.innerHTML = items.map(g => `<span class="chip" data-marquee="${g}">${g}</span>`).join("");
+  el.style.animationDuration = state.speed + "s";
+  $("marquee-wrap").style.display = state.marquee ? "" : "none";
+}
+
+function renderBase() {
+  const el = $("base-row");
+  const keys = Object.keys(TAXONOMY);
+  el.innerHTML = keys.map(g =>
+    `<span class="chip ${state.base===g?'selected':''}" data-base="${g}">${g}</span>`
+  ).join("");
+  $("base-count").textContent = keys.length + " available";
+}
+
+function renderSub() {
+  const panel = $("sub-panel");
+  const row = $("sub-row");
+  if (!state.base) { panel.classList.remove("open"); row.innerHTML = ""; $("sub-count").textContent = ""; return; }
+  const subs = Object.keys(TAXONOMY[state.base]);
+  row.innerHTML = subs.map((g, i) =>
+    `<span class="chip ${state.stagger?'stagger-in':''} ${state.sub===g?'selected':''}" data-sub="${g}" style="animation-delay:${i*state.staggerMs}ms">${g}</span>`
+  ).join("");
+  panel.classList.add("open");
+  $("sub-count").textContent = subs.length + " in " + state.base;
+}
+
+function renderMicro() {
+  const panel = $("micro-panel");
+  const row = $("micro-row");
+  if (!state.base || !state.sub) { panel.classList.remove("open"); row.innerHTML = ""; $("micro-count").textContent = ""; return; }
+  const micros = TAXONOMY[state.base][state.sub] || [];
+  if (!micros.length) { panel.classList.remove("open"); row.innerHTML = ""; $("micro-count").textContent = ""; return; }
+  row.innerHTML = micros.map((g, i) =>
+    `<span class="chip ${state.stagger?'stagger-in':''} ${state.micro===g?'selected':''}" data-micro="${g}" style="animation-delay:${i*state.staggerMs}ms">${g}</span>`
+  ).join("");
+  panel.classList.add("open");
+  $("micro-count").textContent = micros.length + " in " + state.sub;
+}
+
+function renderPyramid() {
+  const card = $("pyramid-card");
+  card.style.display = state.pyramid ? "" : "none";
+
+  const hasAny = state.base || state.sub || state.micro;
+  $("pyramid-empty").style.display = hasAny ? "none" : "block";
+  $("pyramid-result").style.display = hasAny ? "block" : "none";
+
+  // fill / name each tier
+  const tiers = card.querySelectorAll(".tier");
+  tiers.forEach(t => {
+    const lvl = t.dataset.level;
+    const val = state[lvl];
+    const nameEl = t.querySelector(".tier-name");
+    const oldFilled = t.classList.contains("filled");
+    if (val) {
+      nameEl.textContent = val;
+      if (!oldFilled) {
+        // trigger re-animation
+        t.classList.remove("filled");
+        void t.offsetWidth;
+        t.classList.add("filled");
+      } else {
+        t.classList.add("filled");
+      }
+    } else {
+      nameEl.textContent = "—";
+      t.classList.remove("filled");
+    }
+  });
+
+  // summary
+  if (hasAny) {
+    const bits = [];
+    if (state.micro) bits.push(state.micro);
+    else if (state.sub) bits.push(state.sub);
+    else if (state.base) bits.push(state.base);
+    $("pyramid-summary").textContent = bits.join("");
+  }
+
+  // standalone indicator
+  const isStandalone = (state.sub && !state.base) || (state.micro && !state.sub);
+  $("tier-standalone").style.display = isStandalone ? "block" : "none";
+}
+
+/* -------------------------------------------------------------------
+   SEARCH (fuzzy-ish contains) with custom fallback
+   ------------------------------------------------------------------- */
+function renderSearchResults() {
+  const q = state.query.trim();
+  const box = $("search-results");
+  if (!q) { box.classList.remove("open"); box.innerHTML = ""; return; }
+  const ql = q.toLowerCase();
+  const matches = FLAT_INDEX
+    .filter(it => it.name.toLowerCase().includes(ql))
+    .slice(0, 10);
+
+  const results = matches.map(it => {
+    const parent = it.level === "micro" ? `in ${it.parent}` : it.level === "sub" ? `under ${it.parent}` : "";
+    return `<div class="search-result" data-result='${JSON.stringify(it).replace(/'/g,"&#39;")}'>
+      <span class="tier-tag ${it.level}">${it.level}</span>
+      <span>${it.name}</span>
+      <span class="meta">${parent}</span>
+    </div>`;
+  });
+
+  // Custom "use:" fallback — always offer if query has length
+  if (q.length >= 2) {
+    const custom = { name: q, level: "custom" };
+    results.push(`<div class="search-result" data-result='${JSON.stringify(custom).replace(/'/g,"&#39;")}'>
+      <span class="tier-tag custom">custom</span>
+      <span>Use "${q}"</span>
+      <span class="meta">free-text genre</span>
+    </div>`);
+  }
+
+  box.innerHTML = results.join("") || `<div class="search-result"><span class="meta">no matches — type 2+ chars to use as custom</span></div>`;
+  box.classList.add("open");
+}
+
+function applySearchResult(item) {
+  if (item.level === "base")  { state.base = item.name; state.sub = null; state.micro = null; state.customLevel = null; }
+  if (item.level === "sub")   { state.base = state.standalone ? null : item.parent; state.sub = item.name; state.micro = null; state.customLevel = null; }
+  if (item.level === "micro") { state.base = state.standalone ? null : item.grandparent; state.sub = state.standalone ? null : item.parent; state.micro = item.name; state.customLevel = null; }
+  if (item.level === "custom") {
+    // Default custom to "sub" slot if nothing else picked, otherwise fill the first empty slot
+    const slot = !state.base ? "base" : !state.sub ? "sub" : "micro";
+    state[slot] = item.name;
+    state.customLevel = slot;
+  }
+  state.query = "";
+  $("search").value = "";
+  $("search-results").classList.remove("open");
+  updateAll();
+}
+
+/* -------------------------------------------------------------------
+   PROMPT
+   ------------------------------------------------------------------- */
+function updatePrompt() {
+  const lines = [
+    "Rebuild GenrePickerStandalone.tsx with these v2 mechanics:",
+    "",
+    "VISUAL:",
+    "  • Grid on the left, compact PYRAMID path indicator on the right (stacks above on mobile <760px)",
+    "  • 3 tiers stacked: Base (widest, amber) / Sub (cyan) / Micro (fuchsia, narrowest)",
+    "  • Each tier animates in with spring on fill (scale 0.6→1.08→1)",
+    "  • Click a tier to clear it (+ downstream if it's a parent level)",
+    "",
+    "DATA MODEL (breaking change from v1):",
+    "  • Value = { base?: string; sub?: string; micro?: string; customLevel?: 'base'|'sub'|'micro' }",
+    "  • All tiers INDEPENDENT — any combination is valid:",
+    "      { sub: 'Drill' }              // standalone sub, no base",
+    "      { micro: 'UK Drill' }         // standalone micro, no parent",
+    "      { base: 'Hip-Hop / Rap', sub: 'Drill', micro: 'UK Drill' }",
+    "      { base: 'sigilkore', customLevel: 'base' }  // free-text custom",
+    "",
+    "INTERACTIONS:",
+    "  • Marquee: auto-scrolling trending row (" + state.speed + "s loop, pause on hover, tap to select — docks to its taxonomy level)",
+    "  • Grid: tap base → sub row deals in with " + state.staggerMs + "ms stagger → tap sub → micro row deals in",
+    "  • Search: dropdown with tier-tagged results (BASE/SUB/MICRO/CUSTOM pills)",
+    "      - Tapping sub/micro from search docks ONLY that tier (skips parent)",
+    "      - No matches? Always offer 'Use \"<query>\"' as custom at bottom of dropdown",
+    "",
+    "BACKEND:",
+    "  • /api/artist-dna/build-from-pins accepts any combo of the value shape above",
+    "  • When customLevel is set, pass the raw string to the LLM with a hint:",
+    '      "user-authored genre: <name> (not in taxonomy, infer sound)"',
+    "  • Standalone sub/micro: pass with no parent; LLM infers any needed context",
+    "",
+    "KEEP: existing cyan/fuchsia theme, staggered reveal, spring easings, framer-motion layout.",
+    "DROP: the horizontal breadcrumb dock (replaced by pyramid).",
+  ];
+
+  const sel = [];
+  if (state.base)  sel.push("base=" + state.base + (state.customLevel==='base'?' (custom)':''));
+  if (state.sub)   sel.push("sub=" + state.sub + (state.customLevel==='sub'?' (custom)':''));
+  if (state.micro) sel.push("micro=" + state.micro + (state.customLevel==='micro'?' (custom)':''));
+  if (sel.length) lines.push("", "Demo selection: " + sel.join(", "));
+
+  $("prompt").textContent = lines.join("\n");
+}
+
+/* -------------------------------------------------------------------
+   EVENTS
+   ------------------------------------------------------------------- */
+function updateAll() {
+  renderMarquee();
+  renderBase();
+  renderSub();
+  renderMicro();
+  renderPyramid();
+  updatePrompt();
+}
+
+/* Grid chip clicks */
+document.querySelector(".stage").addEventListener("click", (e) => {
+  const chip = e.target.closest(".chip");
+  if (!chip) return;
+
+  if (chip.dataset.base) {
+    const g = chip.dataset.base;
+    if (state.base === g) { state.base = null; state.sub = null; state.micro = null; }
+    else { state.base = g; state.sub = null; state.micro = null; state.customLevel = null; }
+    updateAll();
+    return;
+  }
+  if (chip.dataset.sub) {
+    const g = chip.dataset.sub;
+    state.sub = state.sub === g ? null : g;
+    state.micro = null;
+    updateAll();
+    return;
+  }
+  if (chip.dataset.micro) {
+    const g = chip.dataset.micro;
+    state.micro = state.micro === g ? null : g;
+    updateAll();
+    return;
+  }
+  if (chip.dataset.marquee) {
+    // Match marquee selection to its tier from the flat index
+    const name = chip.dataset.marquee;
+    const match = FLAT_INDEX.find(it => it.name === name);
+    if (match) applySearchResult(match);
+    else applySearchResult({ name, level: "custom" });
+    return;
+  }
+});
+
+/* Pyramid tier click to clear */
+$("pyramid").addEventListener("click", (e) => {
+  const t = e.target.closest(".tier");
+  if (!t) return;
+  const lvl = t.dataset.level;
+  if (lvl === "base")  { state.base = null; state.sub = null; state.micro = null; }
+  if (lvl === "sub")   { state.sub = null; state.micro = null; }
+  if (lvl === "micro") { state.micro = null; }
+  if (state.customLevel === lvl) state.customLevel = null;
+  updateAll();
+});
+
+/* Search */
+$("search").addEventListener("input", (e) => {
+  state.query = e.target.value;
+  renderSearchResults();
+});
+$("search").addEventListener("blur", () => {
+  // Delay so click on result fires first
+  setTimeout(() => $("search-results").classList.remove("open"), 200);
+});
+$("search-results").addEventListener("click", (e) => {
+  const row = e.target.closest(".search-result");
+  if (!row || !row.dataset.result) return;
+  const item = JSON.parse(row.dataset.result.replace(/&#39;/g, "'"));
+  applySearchResult(item);
+});
+
+/* Toggles */
+document.querySelectorAll(".toggle").forEach(t => {
+  t.addEventListener("click", () => {
+    const k = t.dataset.toggle;
+    state[k] = !state[k];
+    t.classList.toggle("on", state[k]);
+    updateAll();
+  });
+});
+
+/* Sliders */
+$("s-stagger").addEventListener("input", e => { state.staggerMs = parseInt(e.target.value,10); $("v-stagger").textContent = state.staggerMs; updateAll(); });
+$("s-speed").addEventListener("input", e => { state.speed = parseInt(e.target.value,10); $("v-speed").textContent = state.speed; renderMarquee(); updatePrompt(); });
+
+/* Reset */
+$("reset").addEventListener("click", () => {
+  state.base = null; state.sub = null; state.micro = null; state.customLevel = null; state.query = "";
+  $("search").value = ""; $("search-results").classList.remove("open");
+  updateAll();
+});
+
+/* Copy */
+$("copy").addEventListener("click", () => {
+  navigator.clipboard.writeText($("prompt").textContent).then(() => {
+    const btn = $("copy"); const old = btn.textContent;
+    btn.textContent = "Copied!";
+    setTimeout(() => btn.textContent = old, 1200);
+  });
+});
+
+updateAll();
+</script>
+</body>
+</html>

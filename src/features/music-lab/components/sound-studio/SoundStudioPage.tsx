@@ -8,6 +8,7 @@ import {
   Plus,
   X,
   Tag,
+  Trash2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -52,7 +53,7 @@ function ProductionTagsSection() {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center justify-center gap-2">
         <Tag className="w-4 h-4 text-emerald-400" />
         <h3 className="text-sm font-semibold text-foreground tracking-[-0.025em]">
           Production Style
@@ -102,7 +103,7 @@ function NegativeTagsInput() {
       <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
         Negative Tags (exclude from prompt)
       </p>
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-1.5 justify-center">
         {settings.negativeTags.map((tag) => (
           <span
             key={tag}
@@ -241,50 +242,62 @@ export function SoundStudioPage({ userId }: SoundStudioPageProps) {
           </DropdownMenu>
         )}
 
-        {/* Reset button */}
+        {/* Clear All */}
         <Button
           variant="ghost"
           size="sm"
-          onClick={activeArtist ? handleLoadFromActive : resetToDefaults}
-          className="text-muted-foreground hover:text-foreground/80 hover:bg-muted/30"
-          title={activeArtist ? 'Reset to artist defaults' : 'Reset to defaults'}
+          onClick={resetToDefaults}
+          className="text-red-400/70 hover:text-red-300 hover:bg-red-500/10 gap-1.5"
+          title="Clear all selections"
         >
-          <RotateCcw className="w-4 h-4" />
+          <Trash2 className="w-4 h-4" />
+          <span className="text-xs hidden sm:inline">Clear All</span>
         </Button>
+
+        {/* Reset to artist */}
+        {activeArtist && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleLoadFromActive}
+            className="text-muted-foreground hover:text-foreground/80 hover:bg-muted/30"
+            title="Reset to artist defaults"
+          >
+            <RotateCcw className="w-4 h-4" />
+          </Button>
+        )}
       </div>
 
       {/* Full-screen 2-column layout */}
       <div className="flex-1 overflow-hidden">
         <div className="h-full xl:grid xl:grid-cols-[1fr_380px]">
           {/* LEFT COLUMN — scrollable controls */}
-          <div className="h-full overflow-y-auto p-4 space-y-4">
-            {/* Genre — amber (brand anchor, identity) */}
+          <div className="h-full overflow-y-auto p-4 space-y-3">
+            {/* Genre — amber (brand anchor) */}
             <PanelCard theme="amber" emoji="🎧" index={0}>
               <GenrePicker />
             </PanelCard>
 
-            {/* BPM (rhythm/amber) + Energy (atmosphere/rose) row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* BPM + Energy + Mood row — compact controls */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <PanelCard theme="amber" emoji="⏱" index={1}>
                 <BpmSlider />
               </PanelCard>
               <PanelCard theme="rose" emoji="⚡" index={2}>
                 <EnergySlider />
               </PanelCard>
+              <PanelCard theme="rose" emoji="🎬" index={3}>
+                <EraPanel />
+              </PanelCard>
             </div>
 
-            {/* Mood — atmosphere/rose */}
-            <PanelCard theme="rose" emoji="🌙" index={3}>
+            {/* Mood — full width (needs room for 3 valence rows) */}
+            <PanelCard theme="rose" emoji="🌙" index={4}>
               <MoodSelector />
             </PanelCard>
 
-            {/* Era — atmosphere/rose */}
-            <PanelCard theme="rose" emoji="🎬" index={4}>
-              <EraPanel />
-            </PanelCard>
-
             {/* Sample Character + Motion & Envelope — atmosphere/rose */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <PanelCard theme="rose" emoji="🎞" index={5}>
                 <SampleCharacterPanel />
               </PanelCard>
@@ -294,7 +307,7 @@ export function SoundStudioPage({ userId }: SoundStudioPageProps) {
             </div>
 
             {/* Drum Design + Groove Feel — rhythm/amber */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <PanelCard theme="amber" emoji="🥁" index={7}>
                 <DrumDesignPanel />
               </PanelCard>
@@ -303,23 +316,26 @@ export function SoundStudioPage({ userId }: SoundStudioPageProps) {
               </PanelCard>
             </div>
 
-            {/* Bass (low end/violet) + Synth (texture/cyan) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Bass + Synth + Harmony — 3-col */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <PanelCard theme="violet" emoji="🎸" index={9}>
                 <BassStylePanel />
               </PanelCard>
               <PanelCard theme="cyan" emoji="✨" index={10}>
                 <SynthTexturePanel />
               </PanelCard>
-            </div>
-
-            {/* Harmony + Space/FX — texture/cyan */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <PanelCard theme="cyan" emoji="🎹" index={11}>
                 <HarmonyPanel />
               </PanelCard>
+            </div>
+
+            {/* Space/FX + Ear Candy — texture/cyan */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <PanelCard theme="cyan" emoji="🌌" index={12}>
                 <SpaceFxPanel />
+              </PanelCard>
+              <PanelCard theme="cyan" emoji="🍬" index={12}>
+                <EarCandyPanel />
               </PanelCard>
             </div>
 
@@ -328,22 +344,17 @@ export function SoundStudioPage({ userId }: SoundStudioPageProps) {
               <InstrumentPalette />
             </PanelCard>
 
-            {/* Ear Candy (texture/cyan) + Structure (structure/emerald) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <PanelCard theme="cyan" emoji="🍬" index={12}>
-                <EarCandyPanel />
-              </PanelCard>
+            {/* Structure + Production Tags — emerald side by side */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <PanelCard theme="emerald" emoji="🏗" index={12}>
                 <StructurePanel />
               </PanelCard>
+              <PanelCard theme="emerald" emoji="🏷" index={12}>
+                <ProductionTagsSection />
+              </PanelCard>
             </div>
 
-            {/* Production Tags — structure/emerald */}
-            <PanelCard theme="emerald" emoji="🏷" index={12}>
-              <ProductionTagsSection />
-            </PanelCard>
-
-            {/* Negative Tags — neutral (red accent stays) */}
+            {/* Negative Tags */}
             <PanelCard theme="emerald" emoji="🚫" index={12}>
               <NegativeTagsInput />
             </PanelCard>

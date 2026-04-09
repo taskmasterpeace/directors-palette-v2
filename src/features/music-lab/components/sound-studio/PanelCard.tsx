@@ -16,8 +16,7 @@ const cardSpring = { type: 'spring' as const, stiffness: 260, damping: 26, mass:
 
 /**
  * Themed panel wrapper. Applies a colored border, corner ambient orb,
- * watermark emoji, and a staggered fade+rise entrance. Replaces the
- * plain <Card> wrapper used previously in SoundStudioPage.
+ * watermark emoji, and a staggered fade+rise entrance.
  */
 export function PanelCard({ theme, emoji, index = 0, className = '', children }: PanelCardProps) {
   const t = PANEL_THEMES[theme]

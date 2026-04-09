@@ -10,7 +10,7 @@ export function SampleCharacterPanel() {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center justify-center gap-2">
         <Film className="w-4 h-4 text-rose-400" />
         <h3 className="text-sm font-semibold text-foreground tracking-[-0.025em]">
           Sample Character

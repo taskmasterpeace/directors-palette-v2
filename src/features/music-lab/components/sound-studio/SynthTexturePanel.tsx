@@ -12,7 +12,7 @@ export function SynthTexturePanel() {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center justify-center gap-2">
         <Disc3 className="w-4 h-4 text-cyan-400" />
         <h3 className="text-sm font-semibold text-foreground tracking-[-0.025em]">
           Synth/Keys Texture

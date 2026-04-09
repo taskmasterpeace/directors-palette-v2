@@ -176,7 +176,7 @@ export function MultiSelectPills({
     <div className="space-y-2.5">
       {/* Selected pills */}
       {selected.length > 0 && (
-        <motion.div layout className="flex flex-wrap gap-1.5">
+        <motion.div layout className="flex flex-wrap gap-1.5 justify-center">
           <AnimatePresence mode="popLayout">
             {selected.map((label) => (
               <motion.span
@@ -222,7 +222,7 @@ export function MultiSelectPills({
               <p className={`text-[10px] font-medium uppercase tracking-wider mb-1 ${scheme.groupLabel}`}>
                 {groupName}
               </p>
-              <motion.div layout className="flex flex-wrap gap-1.5">
+              <motion.div layout className="flex flex-wrap gap-1.5 justify-center">
                 <AnimatePresence mode="popLayout" initial={false}>
                   {groupItems.map((item, i) => renderTagButton(item, i))}
                 </AnimatePresence>
@@ -232,7 +232,7 @@ export function MultiSelectPills({
         </div>
       ) : (
         /* Flat display */
-        <motion.div layout className="flex flex-wrap gap-1.5">
+        <motion.div layout className="flex flex-wrap gap-1.5 justify-center">
           <AnimatePresence mode="popLayout" initial={false}>
             {filtered.map((item, i) => renderTagButton(item, i))}
           </AnimatePresence>

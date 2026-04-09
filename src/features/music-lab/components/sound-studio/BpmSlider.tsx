@@ -43,7 +43,7 @@ export function BpmSlider() {
   return (
     <div className="space-y-4">
       {/* Header with prominent BPM */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center justify-center gap-2">
         <Gauge className={`w-4 h-4 ${isActive ? 'text-amber-400' : 'text-muted-foreground/40'}`} />
         <h3 className="text-sm font-semibold text-foreground tracking-[-0.025em]">
           Tempo

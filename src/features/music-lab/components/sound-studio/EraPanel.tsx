@@ -26,7 +26,7 @@ export function EraPanel() {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center justify-center gap-2">
         <Clock className="w-4 h-4 text-rose-400" />
         <h3 className="text-sm font-semibold text-foreground tracking-[-0.025em]">
           Era
@@ -43,7 +43,7 @@ export function EraPanel() {
           <p className="text-[10px] font-medium uppercase tracking-wider text-rose-400/70">
             {group}
           </p>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-1.5 justify-center">
             {tags.map((tag) => {
               const active = settings.era === tag.label
               return (

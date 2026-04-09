@@ -40,7 +40,7 @@ export function EnergySlider() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center justify-center gap-2">
         <Zap className={`w-4 h-4 ${isActive ? 'text-rose-400' : 'text-muted-foreground/40'}`} />
         <h3 className="text-sm font-semibold text-foreground tracking-[-0.025em]">
           Energy

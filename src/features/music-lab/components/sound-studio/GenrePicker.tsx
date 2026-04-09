@@ -55,7 +55,7 @@ export function GenrePicker() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 mb-1">
+      <div className="flex items-center justify-center gap-2 mb-1">
         <Music2 className="w-4 h-4 text-amber-400" />
         <h3 className="text-sm font-semibold text-foreground tracking-[-0.025em]">
           Genre

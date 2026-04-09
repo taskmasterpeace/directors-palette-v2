@@ -43,7 +43,7 @@ export function MoodSelector() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center justify-center gap-2">
         <Heart className="w-4 h-4 text-rose-400" />
         <h3 className="text-sm font-semibold text-foreground tracking-[-0.025em]">
           Mood
@@ -64,7 +64,7 @@ export function MoodSelector() {
               <p className={`text-[11px] font-medium uppercase tracking-wider ${config.headerColor}`}>
                 {config.label}
               </p>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-1.5 justify-center">
                 {tags.map((tag) => {
                   const isActive = settings.moods.includes(tag.label)
                   const isArtistPick = artistMoods.includes(tag.label)
