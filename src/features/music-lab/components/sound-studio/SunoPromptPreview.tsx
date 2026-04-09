@@ -93,6 +93,9 @@ export function SunoPromptPreview() {
   const hasBreakdown =
     settings.genres.length > 0 ||
     settings.moods.length > 0 ||
+    !!settings.era ||
+    settings.sampleCharacter.length > 0 ||
+    settings.motionEnvelope.length > 0 ||
     settings.drumDesign.length > 0 ||
     settings.grooveFeel.length > 0 ||
     settings.bassStyle.length > 0 ||
@@ -149,6 +152,11 @@ export function SunoPromptPreview() {
             </div>
           )}
           <SectionBadge label="Mood" items={settings.moods} color="text-amber-400/60" />
+          {settings.era && (
+            <SectionBadge label="Era" items={[settings.era]} color="text-amber-400/60" />
+          )}
+          <SectionBadge label="Sample Character" items={settings.sampleCharacter} color="text-amber-400/60" />
+          <SectionBadge label="Motion & Envelope" items={settings.motionEnvelope} color="text-amber-400/60" />
           <SectionBadge label="Drums" items={settings.drumDesign} color="text-amber-400/60" />
           <SectionBadge label="Groove" items={settings.grooveFeel} color="text-amber-400/60" />
           <SectionBadge label="Bass" items={settings.bassStyle} color="text-amber-400/60" />

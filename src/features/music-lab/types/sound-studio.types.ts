@@ -51,6 +51,8 @@ export interface SoundStudioSettings {
   key: string | null
   spaceFx: string[]
   earCandy: string[]
+  sampleCharacter: string[]
+  motionEnvelope: string[]
   structure: string | null
 
   // Instruments & tags
@@ -101,6 +103,8 @@ export function createDefaultSettings(): SoundStudioSettings {
     key: null,
     spaceFx: [],
     earCandy: [],
+    sampleCharacter: [],
+    motionEnvelope: [],
     structure: null,
     instruments: [],
     productionTags: [],

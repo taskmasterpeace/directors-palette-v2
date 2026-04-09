@@ -48,7 +48,7 @@ export function ArtistDoorSelector() {
             tagline="Start from someone real. Make them yours."
             detail="We build the DNA from a real artist using live web search, then help you rename them to something fictional."
             chips={['Real DNA', 'Web-verified', 'Rename nudge']}
-            cost="25 pts"
+            cost="26 pts"
             gradient="from-amber-500/25 via-amber-500/5 to-transparent"
             ring="ring-amber-500/40 hover:ring-amber-400/80"
             glow="group-hover:shadow-[0_0_40px_-8px_rgba(251,191,36,0.6)]"

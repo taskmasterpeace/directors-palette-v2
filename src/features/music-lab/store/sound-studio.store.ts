@@ -36,6 +36,9 @@ function buildSunoPrompt(settings: SoundStudioSettings): string {
   // Key
   if (settings.key) parts.push(`key of ${settings.key}`)
 
+  // Sample character (source material descriptors)
+  if (settings.sampleCharacter.length) parts.push(settings.sampleCharacter.join(', '))
+
   // Production sections
   if (settings.drumDesign.length) parts.push(settings.drumDesign.join(', '))
   if (settings.grooveFeel.length) parts.push(settings.grooveFeel.join(', '))
@@ -44,6 +47,9 @@ function buildSunoPrompt(settings: SoundStudioSettings): string {
   if (settings.harmonyColor.length) parts.push(settings.harmonyColor.join(', '))
   if (settings.spaceFx.length) parts.push(settings.spaceFx.join(', '))
   if (settings.earCandy.length) parts.push(settings.earCandy.join(', '))
+
+  // Motion & envelope (verbs that shape the bed)
+  if (settings.motionEnvelope.length) parts.push(settings.motionEnvelope.join(', '))
 
   // Structure
   if (settings.structure) parts.push(settings.structure)
@@ -112,6 +118,8 @@ function migrateSettings(raw: OldSettings): SoundStudioSettings {
     key: typeof raw.key === 'string' ? raw.key : defaults.key,
     spaceFx: Array.isArray(raw.spaceFx) ? raw.spaceFx as string[] : defaults.spaceFx,
     earCandy: Array.isArray(raw.earCandy) ? raw.earCandy as string[] : defaults.earCandy,
+    sampleCharacter: Array.isArray(raw.sampleCharacter) ? raw.sampleCharacter as string[] : defaults.sampleCharacter,
+    motionEnvelope: Array.isArray(raw.motionEnvelope) ? raw.motionEnvelope as string[] : defaults.motionEnvelope,
     structure: typeof raw.structure === 'string' ? raw.structure : defaults.structure,
     instruments: Array.isArray(raw.instruments) ? raw.instruments as string[] : defaults.instruments,
     productionTags: Array.isArray(raw.productionTags) ? raw.productionTags as string[] : defaults.productionTags,
@@ -339,7 +347,7 @@ export const useSoundStudioStore = create<SoundStudioState>()(
         }
         return persisted
       },
-      version: 2,
+      version: 3,
     }
   )
 )

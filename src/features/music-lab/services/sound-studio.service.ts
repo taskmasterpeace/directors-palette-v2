@@ -116,6 +116,9 @@ class SoundStudioService {
     // Key
     if (settings.key) parts.push(`key of ${settings.key}`)
 
+    // Sample character
+    if (settings.sampleCharacter.length) parts.push(settings.sampleCharacter.join(', '))
+
     // Production sections
     if (settings.drumDesign.length) parts.push(settings.drumDesign.join(', '))
     if (settings.grooveFeel.length) parts.push(settings.grooveFeel.join(', '))
@@ -124,6 +127,9 @@ class SoundStudioService {
     if (settings.harmonyColor.length) parts.push(settings.harmonyColor.join(', '))
     if (settings.spaceFx.length) parts.push(settings.spaceFx.join(', '))
     if (settings.earCandy.length) parts.push(settings.earCandy.join(', '))
+
+    // Motion & envelope
+    if (settings.motionEnvelope.length) parts.push(settings.motionEnvelope.join(', '))
 
     // Structure
     if (settings.structure) parts.push(settings.structure)

@@ -20,9 +20,10 @@ const GENERATION_MODEL = 'openai/gpt-4.1'
 const REFINEMENT_MODEL = 'perplexity/sonar-pro'
 const FICTIONALIZE_MODEL = 'openai/gpt-4.1-mini'
 
-// 2-pass cost: GPT-4.1 (~$0.035) + Perplexity Sonar Pro (~$0.053) = ~$0.09 actual cost
-// Price: 25 credits ($0.25) — ~2.8x margin, consistent with image gen pricing
-const SEED_ARTIST_COST_CENTS = 25
+// 3-pass cost: GPT-4.1 (~$0.035) + Perplexity Sonar Pro (~$0.053) + gpt-4.1-mini
+// fictionalize (~$0.005) = ~$0.093 actual cost
+// Price: 26 credits ($0.26) — ~2.8x margin, consistent with image gen pricing
+const SEED_ARTIST_COST_CENTS = 26
 
 // ─── Pass 1: Generate initial profile ────────────────────────────────────────
 

@@ -95,7 +95,7 @@ export function Door1SeedFromArtist() {
         >
           <Sparkles className="w-5 h-5" />
           BUILD PROFILE
-          <span className="text-xs font-semibold opacity-70">25 pts</span>
+          <span className="text-xs font-semibold opacity-70">26 pts</span>
         </button>
       }
     >

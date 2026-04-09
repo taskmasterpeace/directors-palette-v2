@@ -35,6 +35,9 @@ import { HarmonyPanel } from './HarmonyPanel'
 import { SpaceFxPanel } from './SpaceFxPanel'
 import { EarCandyPanel } from './EarCandyPanel'
 import { StructurePanel } from './StructurePanel'
+import { EraPanel } from './EraPanel'
+import { SampleCharacterPanel } from './SampleCharacterPanel'
+import { MotionEnvelopePanel } from './MotionEnvelopePanel'
 import { PRODUCTION_STYLE_TAGS } from '@/features/music-lab/data/production-tags.data'
 import { MultiSelectPills } from './MultiSelectPills'
 
@@ -283,6 +286,21 @@ export function SoundStudioPage({ userId }: SoundStudioPageProps) {
             <Card>
               <MoodSelector />
             </Card>
+
+            {/* Era */}
+            <Card>
+              <EraPanel />
+            </Card>
+
+            {/* Sample Character + Motion & Envelope row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card>
+                <SampleCharacterPanel />
+              </Card>
+              <Card>
+                <MotionEnvelopePanel />
+              </Card>
+            </div>
 
             {/* Drum Design + Groove Feel row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
