@@ -1,10 +1,14 @@
 /**
- * Artist DNA Seed API — 2-Pass Architecture
+ * Artist DNA Seed API — 3-Pass Architecture
  *
  * Pass 1: GPT-4.1 generates the initial profile from training data
  * Pass 2: Perplexity Sonar (web search) fact-checks, fills gaps, and corrects errors
+ * Pass 3: GPT-4.1-mini fictionalizes — invents new names, rewrites backstory and
+ *         events, strips real-artist references so the result is a legally distinct
+ *         persona inspired by (not a copy of) the source.
  *
- * This produces significantly more accurate profiles than a single-pass approach.
+ * The user arrives at the review screen with a fully fictionalized artist and can
+ * still edit anything they want.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -14,6 +18,7 @@ import { logger } from '@/lib/logger'
 
 const GENERATION_MODEL = 'openai/gpt-4.1'
 const REFINEMENT_MODEL = 'perplexity/sonar-pro'
+const FICTIONALIZE_MODEL = 'openai/gpt-4.1-mini'
 
 // 2-pass cost: GPT-4.1 (~$0.035) + Perplexity Sonar Pro (~$0.053) = ~$0.09 actual cost
 // Price: 25 credits ($0.25) — ~2.8x margin, consistent with image gen pricing
@@ -145,6 +150,39 @@ RULES:
 - Add any major recent albums, tours, or events that are missing from significantEvents
 - Verify the genreEvolution covers the artist's full career including most recent work
 - Check if ad-libs are accurate — remove fabricated ones`
+
+// ─── Pass 3: Fictionalization (force rename + scrub real-person refs) ────────
+
+const FICTIONALIZE_PROMPT = `You are a creative ghostwriter. You've been given a fact-checked artist DNA profile built from a REAL artist. Your job is to transform it into a FICTIONAL persona that is clearly inspired by — but legally distinct from — the source.
+
+You MUST:
+1. Invent a NEW stage name (2-3 words max, memorable, genre-appropriate, NOT a direct riff on the real name — no "Lil X" if the source is "Lil Y").
+2. Invent a NEW real/birth name (plausible, culturally coherent with the ethnicity/region in the profile).
+3. Rewrite the backstory so it tells the fictional artist's origin — same vibe, same city/region/genre energy, but with the new names and NO mention of the real artist, their real labels, their real groups, or their real mentors. Invent plausible fictional equivalents where needed.
+4. Rewrite every significantEvents entry so it describes the FICTIONAL artist's career milestones — keep the tone, years, and scale similar, but never name-drop the real artist's actual albums, real collaborators, or real labels. Invent fictional project names.
+5. Scrub signaturePhrases and adLibs of anything that is a real trademark phrase of the source artist. Replace with generic or invented phrases that fit the persona, or use an empty array if nothing fits.
+6. Rewrite soundDescription, visualDescription, and worldview to remove any mentions of the real artist's name, real album titles, or real collaborators. Keep the sonic/visual/philosophical essence.
+7. Clear keyCollaborators and artistInfluences — replace keyCollaborators with [] and artistInfluences with 2-3 vague genre descriptors instead of real names (e.g. "90s Memphis underground rap", "early 2000s Bay Area hyphy").
+
+DO NOT change: genres, subgenres, microgenres, vocalTextures, flowStyle, melodyBias, language, persona.traits, persona.likes, persona.dislikes, persona.attitude, look.skinTone, look.hairStyle, look.fashionStyle, look.jewelry, look.tattoos, identity.ethnicity, identity.city, identity.state, identity.neighborhood. The whole point is that the sound and look carry over — only the identity is rewritten.
+
+Return ONLY a JSON object (no markdown, no code fences) with this exact shape:
+
+{
+  "identity.stageName": "new fictional stage name",
+  "identity.realName": "new fictional real name",
+  "identity.backstory": "rewritten 3-4 sentence backstory",
+  "identity.significantEvents": ["rewritten milestone 1", "rewritten milestone 2", ...],
+  "sound.soundDescription": "rewritten 3-4 sentence sound description",
+  "sound.keyCollaborators": [],
+  "sound.artistInfluences": ["vague descriptor 1", "vague descriptor 2", "vague descriptor 3"],
+  "persona.worldview": "rewritten 3-4 sentence worldview",
+  "lexicon.signaturePhrases": [...],
+  "lexicon.adLibs": [...],
+  "look.visualDescription": "rewritten 3-4 sentence visual description"
+}
+
+CRITICAL: Every string you return must be free of the source artist's real name and any of their real project/label/collaborator names. Double-check before returning.`
 
 export async function POST(request: NextRequest) {
   try {
@@ -309,6 +347,107 @@ export async function POST(request: NextRequest) {
       logger.api.warn('Pass 2 failed, using Pass 1 result', { error: e instanceof Error ? e.message : String(e) })
     }
 
+    // ─── Pass 3: Fictionalization (force rename + scrub real-person refs) ──
+
+    try {
+      const pass3Response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+          'X-Title': "Director's Palette - Artist DNA Fictionalize",
+        },
+        body: JSON.stringify({
+          model: FICTIONALIZE_MODEL,
+          messages: [
+            { role: 'system', content: FICTIONALIZE_PROMPT },
+            {
+              role: 'user',
+              content: `Source artist: "${trimmedName}"\n\nFact-checked DNA to fictionalize:\n\n${JSON.stringify(dna, null, 2)}`,
+            },
+          ],
+          temperature: 0.9,
+          max_tokens: 2500,
+        }),
+      })
+
+      if (pass3Response.ok) {
+        const pass3Data = await pass3Response.json()
+        const pass3Content = pass3Data.choices?.[0]?.message?.content || ''
+
+        if (pass3Content.trim()) {
+          try {
+            const cleaned3 = pass3Content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+            const fictionalization = JSON.parse(cleaned3) as Record<string, unknown>
+
+            for (const [path, value] of Object.entries(fictionalization)) {
+              setNestedValue(dna, path, value)
+            }
+
+            // Belt-and-suspenders: strip any lingering mentions of the real name
+            // from the rewritten text fields. Simple case-insensitive replacement.
+            const newStageName = (dna.identity as Record<string, unknown>)?.stageName as string | undefined
+            if (newStageName && typeof newStageName === 'string') {
+              const textFields: Array<[string, string]> = [
+                ['identity', 'backstory'],
+                ['sound', 'soundDescription'],
+                ['persona', 'worldview'],
+                ['look', 'visualDescription'],
+              ]
+              const nameRegex = new RegExp(escapeRegex(trimmedName), 'gi')
+              for (const [section, field] of textFields) {
+                const sec = dna[section] as Record<string, unknown> | undefined
+                const val = sec?.[field]
+                if (typeof val === 'string') {
+                  sec![field] = val.replace(nameRegex, newStageName)
+                }
+              }
+              const identity = dna.identity as Record<string, unknown>
+              const events = identity.significantEvents
+              if (Array.isArray(events)) {
+                identity.significantEvents = events.map((e) =>
+                  typeof e === 'string' ? e.replace(nameRegex, newStageName) : e
+                )
+              }
+            }
+
+            // Clear lowConfidenceFields for fields we rewrote — they're fictional now
+            const fictionalized = new Set([
+              'identity.stageName',
+              'identity.realName',
+              'identity.backstory',
+              'identity.significantEvents',
+              'sound.keyCollaborators',
+              'sound.artistInfluences',
+              'lexicon.adLibs',
+              'lexicon.signaturePhrases',
+            ])
+            if (Array.isArray(dna.lowConfidenceFields)) {
+              dna.lowConfidenceFields = (dna.lowConfidenceFields as string[]).filter(
+                (f) => !fictionalized.has(f)
+              )
+            }
+
+            logger.api.info('Pass 3 fictionalization', {
+              source: trimmedName,
+              newStage: newStageName,
+            })
+          } catch (e) {
+            logger.api.warn('Pass 3 parse failed, returning fact-checked DNA as-is', {
+              error: e instanceof Error ? e.message : String(e),
+            })
+          }
+        }
+      } else {
+        logger.api.warn('Pass 3 request failed, returning fact-checked DNA as-is')
+      }
+    } catch (e) {
+      logger.api.warn('Pass 3 failed, returning fact-checked DNA as-is', {
+        error: e instanceof Error ? e.message : String(e),
+      })
+    }
+
     return NextResponse.json({ dna, seededFrom: trimmedName })
   } catch (error) {
     logger.api.error('Seed error', { error: error instanceof Error ? error.message : String(error) })
@@ -331,4 +470,8 @@ function setNestedValue(obj: Record<string, unknown>, path: string, value: unkno
     current = current[parts[i]] as Record<string, unknown>
   }
   current[parts[parts.length - 1]] = value
+}
+
+function escapeRegex(s: string) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
