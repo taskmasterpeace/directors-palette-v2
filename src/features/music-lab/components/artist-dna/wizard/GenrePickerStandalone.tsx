@@ -118,7 +118,7 @@ export function GenrePickerStandalone({ value, onChange }: Props) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search any genre, subgenre, or microgenre…"
-          className="w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-9 py-2.5 text-sm text-white placeholder:text-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400/40 focus-visible:border-fuchsia-400/40 transition-all"
+          className="w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-9 py-2.5 text-sm text-white placeholder:text-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/40 focus-visible:border-amber-400/40 transition-all"
         />
         {query && (
           <button
@@ -170,7 +170,7 @@ export function GenrePickerStandalone({ value, onChange }: Props) {
               <button
                 type="button"
                 onClick={() => applyCustom(trimmedQuery)}
-                className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-sm text-fuchsia-300 hover:bg-fuchsia-500/10 transition border-t border-white/5"
+                className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-sm text-amber-300 hover:bg-amber-500/10 transition border-t border-white/5"
               >
                 <Sparkles className="w-4 h-4" />
                 Use <span className="font-semibold">&ldquo;{trimmedQuery}&rdquo;</span> as a custom genre
@@ -189,10 +189,10 @@ export function GenrePickerStandalone({ value, onChange }: Props) {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={spring}
-            className="flex items-center gap-2 flex-wrap rounded-xl border border-fuchsia-400/30 bg-fuchsia-500/10 px-3 py-2"
+            className="flex items-center gap-2 flex-wrap rounded-xl border border-amber-400/30 bg-amber-500/10 px-3 py-2"
           >
-            <Lock className="w-3.5 h-3.5 text-fuchsia-300 shrink-0" />
-            <span className="text-[11px] font-semibold tracking-wide uppercase text-fuchsia-300">
+            <Lock className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+            <span className="text-[11px] font-semibold tracking-wide uppercase text-amber-300">
               Locked:
             </span>
             {value.base && (
@@ -231,7 +231,7 @@ export function GenrePickerStandalone({ value, onChange }: Props) {
               </>
             )}
             {value.custom && (
-              <span className="ml-1 text-[10px] font-semibold uppercase tracking-wide text-fuchsia-200/80">
+              <span className="ml-1 text-[10px] font-semibold uppercase tracking-wide text-amber-200/80">
                 custom
               </span>
             )}
@@ -305,8 +305,8 @@ export function GenrePickerStandalone({ value, onChange }: Props) {
                       whileTap={{ scale: 0.94 }}
                       className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${
                         active
-                          ? 'bg-cyan-400 text-black border-cyan-300 shadow-[0_0_20px_-6px_rgba(34,211,238,0.8)]'
-                          : 'bg-white/[0.04] text-white/80 border-white/10 hover:border-cyan-300/50 hover:bg-white/[0.08]'
+                          ? 'bg-amber-400 text-black border-amber-300 shadow-[0_0_20px_-6px_rgba(251,191,36,0.8)]'
+                          : 'bg-white/[0.04] text-white/80 border-white/10 hover:border-amber-300/50 hover:bg-white/[0.08]'
                       }`}
                     >
                       {sg}
@@ -348,8 +348,8 @@ export function GenrePickerStandalone({ value, onChange }: Props) {
                       whileTap={{ scale: 0.94 }}
                       className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${
                         active
-                          ? 'bg-fuchsia-400 text-black border-fuchsia-300 shadow-[0_0_20px_-6px_rgba(217,70,239,0.8)]'
-                          : 'bg-white/[0.04] text-white/80 border-white/10 hover:border-fuchsia-300/50 hover:bg-white/[0.08]'
+                          ? 'bg-amber-400 text-black border-amber-300 shadow-[0_0_20px_-6px_rgba(251,191,36,0.8)]'
+                          : 'bg-white/[0.04] text-white/80 border-white/10 hover:border-amber-300/50 hover:bg-white/[0.08]'
                       }`}
                     >
                       {mg}
@@ -368,8 +368,8 @@ export function GenrePickerStandalone({ value, onChange }: Props) {
 function LevelBadge({ level }: { level: GenreLevel }) {
   const map = {
     base: { label: 'Genre', cls: 'bg-amber-400/15 text-amber-300 border-amber-400/30' },
-    sub: { label: 'Sub', cls: 'bg-cyan-400/15 text-cyan-300 border-cyan-400/30' },
-    micro: { label: 'Micro', cls: 'bg-fuchsia-400/15 text-fuchsia-300 border-fuchsia-400/30' },
+    sub: { label: 'Sub', cls: 'bg-amber-400/15 text-amber-300 border-amber-400/30' },
+    micro: { label: 'Micro', cls: 'bg-amber-400/15 text-amber-300 border-amber-400/30' },
   } as const
   const { label, cls } = map[level]
   return (
@@ -394,8 +394,8 @@ function LockChip({
     level === 'base'
       ? 'border-amber-300/50 text-amber-100'
       : level === 'sub'
-        ? 'border-cyan-300/50 text-cyan-100'
-        : 'border-fuchsia-300/50 text-fuchsia-100'
+        ? 'border-amber-300/50 text-amber-100'
+        : 'border-amber-300/50 text-amber-100'
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-full border bg-white/[0.04] px-2 py-0.5 text-[11px] ${ring} ${

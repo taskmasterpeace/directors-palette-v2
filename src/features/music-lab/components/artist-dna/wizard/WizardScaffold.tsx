@@ -5,31 +5,21 @@ import type { ReactNode } from 'react'
 
 type Theme = 'amber' | 'cyan' | 'fuchsia'
 
+// Unified brand theme — all wizard doors share the directors-palette amber gold.
+// The Theme prop is kept for backwards compatibility but every variant maps to amber.
+const AMBER_THEME = {
+  orb: 'bg-amber-500/10',
+  pillBg: 'bg-amber-500/15',
+  pillBorder: 'border-amber-500/30',
+  pillText: 'text-amber-400',
+  label: 'text-amber-400/80',
+  focusRing: 'focus-visible:ring-amber-400/50',
+} as const
+
 const THEME = {
-  amber: {
-    orb: 'bg-amber-500/10',
-    pillBg: 'bg-amber-500/15',
-    pillBorder: 'border-amber-500/30',
-    pillText: 'text-amber-400',
-    label: 'text-amber-400/80',
-    focusRing: 'focus-visible:ring-amber-400/50',
-  },
-  cyan: {
-    orb: 'bg-cyan-500/10',
-    pillBg: 'bg-cyan-500/15',
-    pillBorder: 'border-cyan-500/30',
-    pillText: 'text-cyan-400',
-    label: 'text-cyan-400/80',
-    focusRing: 'focus-visible:ring-cyan-400/50',
-  },
-  fuchsia: {
-    orb: 'bg-fuchsia-500/10',
-    pillBg: 'bg-fuchsia-500/15',
-    pillBorder: 'border-fuchsia-500/30',
-    pillText: 'text-fuchsia-400',
-    label: 'text-fuchsia-400/80',
-    focusRing: 'focus-visible:ring-fuchsia-400/50',
-  },
+  amber: AMBER_THEME,
+  cyan: AMBER_THEME,
+  fuchsia: AMBER_THEME,
 } as const
 
 interface WizardScaffoldProps {

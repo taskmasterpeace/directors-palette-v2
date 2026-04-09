@@ -141,21 +141,21 @@ export function SunoPromptPreview() {
                 <span className="text-[10px] font-mono text-muted-foreground">{settings.bpm} BPM</span>
               )}
               {settings.key && (
-                <span className="text-[10px] font-mono text-cyan-400/70">{settings.key}</span>
+                <span className="text-[10px] font-mono text-amber-400/70">{settings.key}</span>
               )}
               {settings.energy !== null && (
                 <span className="text-[10px] font-mono text-muted-foreground">{energyToLabel(settings.energy)}</span>
               )}
             </div>
           )}
-          <SectionBadge label="Mood" items={settings.moods} color="text-blue-400/60" />
-          <SectionBadge label="Drums" items={settings.drumDesign} color="text-rose-400/60" />
-          <SectionBadge label="Groove" items={settings.grooveFeel} color="text-emerald-400/60" />
-          <SectionBadge label="Bass" items={settings.bassStyle} color="text-orange-400/60" />
-          <SectionBadge label="Synth" items={settings.synthTexture} color="text-cyan-400/60" />
-          <SectionBadge label="Harmony" items={settings.harmonyColor} color="text-cyan-400/60" />
-          <SectionBadge label="Space/FX" items={settings.spaceFx} color="text-blue-400/60" />
-          <SectionBadge label="Ear Candy" items={settings.earCandy} color="text-pink-400/60" />
+          <SectionBadge label="Mood" items={settings.moods} color="text-amber-400/60" />
+          <SectionBadge label="Drums" items={settings.drumDesign} color="text-amber-400/60" />
+          <SectionBadge label="Groove" items={settings.grooveFeel} color="text-amber-400/60" />
+          <SectionBadge label="Bass" items={settings.bassStyle} color="text-amber-400/60" />
+          <SectionBadge label="Synth" items={settings.synthTexture} color="text-amber-400/60" />
+          <SectionBadge label="Harmony" items={settings.harmonyColor} color="text-amber-400/60" />
+          <SectionBadge label="Space/FX" items={settings.spaceFx} color="text-amber-400/60" />
+          <SectionBadge label="Ear Candy" items={settings.earCandy} color="text-amber-400/60" />
           <SectionBadge label="Instruments" items={settings.instruments} color="text-amber-400/60" />
           <SectionBadge label="Production" items={settings.productionTags} color="text-muted-foreground" />
         </div>
@@ -200,7 +200,7 @@ export function SunoPromptPreview() {
           value={beatTitle}
           onChange={(e) => setBeatTitle(e.target.value)}
           placeholder="Beat title (optional)"
-          className="w-full rounded-[0.625rem] border border-border bg-background px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-cyan-500/40"
+          className="w-full rounded-[0.625rem] border border-border bg-background px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-amber-500/40"
         />
       </div>
 
@@ -209,7 +209,7 @@ export function SunoPromptPreview() {
         <button
           onClick={handleGenerate}
           disabled={!activeArtist || isGenerating || !sunoPrompt}
-          className="flex-1 flex items-center justify-center gap-2 py-2 rounded-[0.625rem] bg-cyan-500/20 border border-cyan-500/30 text-xs font-medium text-cyan-400 hover:bg-cyan-500/30 hover:text-cyan-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex-1 flex items-center justify-center gap-2 py-2 rounded-[0.625rem] bg-amber-500/20 border border-amber-500/30 text-xs font-medium text-amber-400 hover:bg-amber-500/30 hover:text-amber-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <Sparkles className="w-3.5 h-3.5" />
           {isGenerating ? 'Generating...' : 'Generate Beat — 12 pts'}

@@ -13,7 +13,7 @@ export function BassStylePanel() {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <AudioLines className="w-4 h-4 text-orange-400" />
+        <AudioLines className="w-4 h-4 text-amber-400" />
         <h3 className="text-sm font-semibold text-foreground tracking-[-0.025em]">
           Bass & Low-End
         </h3>
@@ -25,7 +25,7 @@ export function BassStylePanel() {
         items={BASS_STYLE_TAGS}
         selected={settings.bassStyle}
         onChange={(v) => updateSetting('bassStyle', v)}
-        color="orange"
+        color="amber"
         compact
         artistPicks={artistPicks}
       />

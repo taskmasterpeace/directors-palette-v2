@@ -11,8 +11,8 @@ export function ArtistDoorSelector() {
       {/* Ambient background orbs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-24 -left-24 w-[32rem] h-[32rem] rounded-full bg-amber-500/10 blur-3xl" />
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[36rem] h-[36rem] rounded-full bg-cyan-500/10 blur-3xl" />
-        <div className="absolute -bottom-24 -right-24 w-[32rem] h-[32rem] rounded-full bg-fuchsia-500/10 blur-3xl" />
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[36rem] h-[36rem] rounded-full bg-amber-400/10 blur-3xl" />
+        <div className="absolute -bottom-24 -right-24 w-[32rem] h-[32rem] rounded-full bg-amber-600/10 blur-3xl" />
       </div>
 
       {/* Header */}
@@ -65,12 +65,12 @@ export function ArtistDoorSelector() {
             detail="Describe your artist in your own words and pin specific traits. We fill the rest coherently — guaranteed."
             chips={['Pin traits', 'Free-form', 'Guided']}
             cost="15 pts"
-            gradient="from-cyan-500/25 via-cyan-500/5 to-transparent"
-            ring="ring-cyan-500/40 hover:ring-cyan-400/80"
-            glow="group-hover:shadow-[0_0_40px_-8px_rgba(34,211,238,0.6)]"
-            accent="text-cyan-400"
-            accentBg="bg-cyan-500/15"
-            accentBorder="border-cyan-500/30"
+            gradient="from-amber-500/25 via-amber-500/5 to-transparent"
+            ring="ring-amber-500/40 hover:ring-amber-400/80"
+            glow="group-hover:shadow-[0_0_40px_-8px_rgba(251,191,36,0.6)]"
+            accent="text-amber-400"
+            accentBg="bg-amber-500/15"
+            accentBorder="border-amber-500/30"
             onClick={() => setWizardStep('door2')}
           />
           <DoorCard
@@ -81,12 +81,12 @@ export function ArtistDoorSelector() {
             detail="Choose a genre, sprinkle optional spice — stage name, region, vibe, look — and roll the dice."
             chips={['One click', 'Full random', 'Fastest']}
             cost="15 pts"
-            gradient="from-fuchsia-500/25 via-fuchsia-500/5 to-transparent"
-            ring="ring-fuchsia-500/40 hover:ring-fuchsia-400/80"
-            glow="group-hover:shadow-[0_0_40px_-8px_rgba(217,70,239,0.6)]"
-            accent="text-fuchsia-400"
-            accentBg="bg-fuchsia-500/15"
-            accentBorder="border-fuchsia-500/30"
+            gradient="from-amber-500/25 via-amber-500/5 to-transparent"
+            ring="ring-amber-500/40 hover:ring-amber-400/80"
+            glow="group-hover:shadow-[0_0_40px_-8px_rgba(251,191,36,0.6)]"
+            accent="text-amber-400"
+            accentBg="bg-amber-500/15"
+            accentBorder="border-amber-500/30"
             onClick={() => setWizardStep('door3')}
           />
         </div>

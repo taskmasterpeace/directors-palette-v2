@@ -45,8 +45,8 @@ export function Door3SurpriseMe() {
     return (
       <div className="w-full max-w-2xl mx-auto py-16 px-4 text-center">
         <div className="inline-flex flex-col items-center gap-4">
-          <div className="w-20 h-20 rounded-full bg-fuchsia-500/10 flex items-center justify-center">
-            <Loader2 className="w-10 h-10 text-fuchsia-400 animate-spin" />
+          <div className="w-20 h-20 rounded-full bg-amber-500/10 flex items-center justify-center">
+            <Loader2 className="w-10 h-10 text-amber-400 animate-spin" />
           </div>
           <p className="text-lg font-semibold">Rolling the dice...</p>
         </div>
@@ -68,7 +68,7 @@ export function Door3SurpriseMe() {
         <button
           onClick={handleRoll}
           disabled={!canRoll}
-          className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-fuchsia-500 px-5 py-4 text-base font-bold text-white hover:bg-fuchsia-400 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-[0_0_40px_-8px_rgba(217,70,239,0.6)]"
+          className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 px-5 py-4 text-base font-bold text-black hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-[0_0_40px_-8px_rgba(251,191,36,0.6)]"
         >
           <Dices className="w-5 h-5" />
           ROLL
@@ -80,7 +80,7 @@ export function Door3SurpriseMe() {
         {/* Genre */}
         <div>
           <div className="text-[11px] font-semibold tracking-[0.14em] uppercase text-white/40 mb-2">
-            Genre <span className="text-fuchsia-400">*</span>
+            Genre <span className="text-amber-400">*</span>
           </div>
           <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
             <GenrePickerStandalone value={genre} onChange={setGenre} requireBase />
@@ -144,12 +144,12 @@ function SpiceTile({
   placeholder: string
 }) {
   return (
-    <label className="block rounded-2xl border border-white/10 bg-white/[0.03] p-4 hover:border-white/20 focus-within:border-fuchsia-400/50 focus-within:bg-fuchsia-500/[0.06] transition-all aspect-[1/0.85]">
+    <label className="block rounded-2xl border border-white/10 bg-white/[0.03] p-4 hover:border-white/20 focus-within:border-amber-400/50 focus-within:bg-amber-500/[0.06] transition-all aspect-[1/0.85]">
       <div className="flex items-center gap-2 mb-2">
-        <div className="w-9 h-9 rounded-lg bg-fuchsia-500/15 border border-fuchsia-500/30 text-fuchsia-400 flex items-center justify-center">
+        <div className="w-9 h-9 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center">
           {icon}
         </div>
-        <div className="text-[11px] font-semibold tracking-wide uppercase text-fuchsia-400/80">{label}</div>
+        <div className="text-[11px] font-semibold tracking-wide uppercase text-amber-400/80">{label}</div>
       </div>
       <input
         type="text"

@@ -13,7 +13,7 @@ export function DrumDesignPanel() {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <Drum className="w-4 h-4 text-rose-400" />
+        <Drum className="w-4 h-4 text-amber-400" />
         <h3 className="text-sm font-semibold text-foreground tracking-[-0.025em]">
           Drum Design
         </h3>
@@ -25,7 +25,7 @@ export function DrumDesignPanel() {
         items={DRUM_DESIGN_TAGS}
         selected={settings.drumDesign}
         onChange={(v) => updateSetting('drumDesign', v)}
-        color="rose"
+        color="amber"
         grouped
         compact
         artistPicks={artistPicks}

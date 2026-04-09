@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Search, X, ThumbsUp } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 
@@ -59,6 +60,10 @@ const COLOR_SCHEMES = {
 } as const
 
 export type ColorScheme = keyof typeof COLOR_SCHEMES
+
+// ─── Animation ───────────────────────────────────────────────────────────────
+
+const spring = { type: 'spring' as const, stiffness: 520, damping: 26, mass: 0.7 }
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -126,26 +131,58 @@ export function MultiSelectPills({
     return map
   }, [filtered, grouped])
 
+  const tagSizeClass = compact ? 'px-2 py-0.5 text-[11px]' : 'px-3 py-1.5 text-xs'
+
+  const renderTagButton = (item: TagItem, indexForDelay: number) => {
+    const isSelected = selected.includes(item.label)
+    const isArtistPick = artistPicks?.includes(item.label)
+    return (
+      <motion.button
+        key={item.id}
+        layout
+        onClick={() => toggle(item.label)}
+        initial={{ opacity: 0, y: 6, scale: 0.88 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.12 } }}
+        transition={{ ...spring, delay: Math.min(indexForDelay, 40) * 0.01 }}
+        whileTap={{ scale: 0.92 }}
+        className={`${tagSizeClass} rounded-full font-medium border inline-flex items-center gap-1 ${
+          isSelected ? scheme.tagActive : scheme.tag
+        }`}
+      >
+        {isArtistPick && <ThumbsUp className="w-2.5 h-2.5 text-emerald-400" />}
+        {item.label}
+      </motion.button>
+    )
+  }
+
   return (
     <div className="space-y-2.5">
       {/* Selected pills */}
       {selected.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {selected.map((label) => (
-            <span
-              key={label}
-              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border ${scheme.pill}`}
-            >
-              {label}
-              <button
-                onClick={() => remove(label)}
-                className={`p-0.5 rounded-full transition-colors ${scheme.pillHover}`}
+        <motion.div layout className="flex flex-wrap gap-1.5">
+          <AnimatePresence mode="popLayout">
+            {selected.map((label) => (
+              <motion.span
+                key={label}
+                layout
+                initial={{ opacity: 0, scale: 0.6, y: -4 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.6, transition: { duration: 0.15 } }}
+                transition={spring}
+                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border ${scheme.pill}`}
               >
-                <X className="w-3 h-3" />
-              </button>
-            </span>
-          ))}
-        </div>
+                {label}
+                <button
+                  onClick={() => remove(label)}
+                  className={`p-0.5 rounded-full transition-colors ${scheme.pillHover}`}
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </motion.span>
+            ))}
+          </AnimatePresence>
+        </motion.div>
       )}
 
       {/* Search */}
@@ -169,50 +206,24 @@ export function MultiSelectPills({
               <p className={`text-[10px] font-medium uppercase tracking-wider mb-1 ${scheme.groupLabel}`}>
                 {groupName}
               </p>
-              <div className="flex flex-wrap gap-1.5">
-                {groupItems.map((item) => {
-                  const isSelected = selected.includes(item.label)
-                  const isArtistPick = artistPicks?.includes(item.label)
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => toggle(item.label)}
-                      className={`${compact ? 'px-2 py-0.5 text-[11px]' : 'px-3 py-1.5 text-xs'} rounded-full font-medium transition-all border inline-flex items-center gap-1 ${
-                        isSelected ? scheme.tagActive : scheme.tag
-                      }`}
-                    >
-                      {isArtistPick && <ThumbsUp className="w-2.5 h-2.5 text-emerald-400" />}
-                      {item.label}
-                    </button>
-                  )
-                })}
-              </div>
+              <motion.div layout className="flex flex-wrap gap-1.5">
+                <AnimatePresence mode="popLayout" initial={false}>
+                  {groupItems.map((item, i) => renderTagButton(item, i))}
+                </AnimatePresence>
+              </motion.div>
             </div>
           ))}
         </div>
       ) : (
         /* Flat display */
-        <div className="flex flex-wrap gap-1.5">
-          {filtered.map((item) => {
-            const isSelected = selected.includes(item.label)
-            const isArtistPick = artistPicks?.includes(item.label)
-            return (
-              <button
-                key={item.id}
-                onClick={() => toggle(item.label)}
-                className={`${compact ? 'px-2 py-0.5 text-[11px]' : 'px-3 py-1.5 text-xs'} rounded-full font-medium transition-all border inline-flex items-center gap-1 ${
-                  isSelected ? scheme.tagActive : scheme.tag
-                }`}
-              >
-                {isArtistPick && <ThumbsUp className="w-2.5 h-2.5 text-emerald-400" />}
-                {item.label}
-              </button>
-            )
-          })}
+        <motion.div layout className="flex flex-wrap gap-1.5">
+          <AnimatePresence mode="popLayout" initial={false}>
+            {filtered.map((item, i) => renderTagButton(item, i))}
+          </AnimatePresence>
           {filtered.length === 0 && (
             <p className="text-xs text-muted-foreground/60 py-1">No matches.</p>
           )}
-        </div>
+        </motion.div>
       )}
     </div>
   )

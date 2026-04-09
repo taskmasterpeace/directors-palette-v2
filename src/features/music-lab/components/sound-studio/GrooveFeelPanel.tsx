@@ -13,7 +13,7 @@ export function GrooveFeelPanel() {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <Waves className="w-4 h-4 text-emerald-400" />
+        <Waves className="w-4 h-4 text-amber-400" />
         <h3 className="text-sm font-semibold text-foreground tracking-[-0.025em]">
           Groove Feel
         </h3>
@@ -25,7 +25,7 @@ export function GrooveFeelPanel() {
         items={GROOVE_FEEL_TAGS}
         selected={settings.grooveFeel}
         onChange={(v) => updateSetting('grooveFeel', v)}
-        color="emerald"
+        color="amber"
         compact
         artistPicks={artistPicks}
       />

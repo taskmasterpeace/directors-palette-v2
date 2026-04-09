@@ -13,7 +13,7 @@ export function EarCandyPanel() {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <Candy className="w-4 h-4 text-pink-400" />
+        <Candy className="w-4 h-4 text-amber-400" />
         <h3 className="text-sm font-semibold text-foreground tracking-[-0.025em]">
           Ear Candy
         </h3>
@@ -25,7 +25,7 @@ export function EarCandyPanel() {
         items={EAR_CANDY_TAGS}
         selected={settings.earCandy}
         onChange={(v) => updateSetting('earCandy', v)}
-        color="pink"
+        color="amber"
         compact
         artistPicks={artistPicks}
       />

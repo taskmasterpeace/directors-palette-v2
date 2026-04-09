@@ -74,8 +74,8 @@ export function Door2BuildIt() {
     return (
       <div className="w-full max-w-2xl mx-auto py-16 px-4 text-center">
         <div className="inline-flex flex-col items-center gap-4">
-          <div className="w-20 h-20 rounded-full bg-cyan-500/10 flex items-center justify-center">
-            <Loader2 className="w-10 h-10 text-cyan-400 animate-spin" />
+          <div className="w-20 h-20 rounded-full bg-amber-500/10 flex items-center justify-center">
+            <Loader2 className="w-10 h-10 text-amber-400 animate-spin" />
           </div>
           <p className="text-lg font-semibold">Building your artist...</p>
         </div>
@@ -97,7 +97,7 @@ export function Door2BuildIt() {
         <button
           onClick={handleGenerate}
           disabled={!canGenerate}
-          className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-500 px-5 py-4 text-base font-bold text-white hover:bg-cyan-400 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-[0_0_40px_-8px_rgba(34,211,238,0.6)]"
+          className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 px-5 py-4 text-base font-bold text-black hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-[0_0_40px_-8px_rgba(251,191,36,0.6)]"
         >
           <Wand2 className="w-5 h-5" />
           GENERATE
@@ -112,7 +112,7 @@ export function Door2BuildIt() {
           onChange={(e) => setDescription(e.target.value)}
           placeholder="e.g. Texas trap artist, knee-length colorful dreads, melodic but raw, somewhere between Travis Scott and Playboi Carti with a harder edge..."
           rows={5}
-          className="w-full rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm px-4 py-3 text-sm md:text-base text-white placeholder:text-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50 focus-visible:border-cyan-400/50 resize-none transition-all"
+          className="w-full rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm px-4 py-3 text-sm md:text-base text-white placeholder:text-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:border-amber-400/50 resize-none transition-all"
         />
 
         {/* Genre */}
@@ -196,8 +196,8 @@ function IconField({
   placeholder: string
 }) {
   return (
-    <label className="block rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 hover:border-white/20 focus-within:border-cyan-400/50 focus-within:bg-cyan-500/[0.04] transition-all">
-      <div className="flex items-center gap-1.5 text-[11px] font-semibold tracking-wide text-cyan-400/80 mb-1">
+    <label className="block rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 hover:border-white/20 focus-within:border-amber-400/50 focus-within:bg-amber-500/[0.04] transition-all">
+      <div className="flex items-center gap-1.5 text-[11px] font-semibold tracking-wide text-amber-400/80 mb-1">
         {icon}
         {label}
       </div>
