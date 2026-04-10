@@ -159,7 +159,12 @@ export function buildStagePrompt(
     // Try to find value by field ID first, then by name-based lookup
     let value = values[field.id] || '';
 
-    // Also check if any field with this name has a value set
+    // Also check by field name directly (API v2 sends values keyed by name)
+    if (!value) {
+      value = values[field.name] || '';
+    }
+
+    // Fallback: check if any key contains the field name (legacy compat)
     if (!value) {
       for (const [id, val] of Object.entries(values)) {
         if (id.toLowerCase().includes(field.name.toLowerCase()) && val) {
@@ -298,10 +303,10 @@ export function validateRecipe(
 
   for (const field of uniqueFields) {
     if (field.required) {
-      // Check by field ID first
-      let value = values[field.id];
+      // Check by field ID first, then by field name (API v2)
+      let value = values[field.id] || values[field.name];
 
-      // Also check by field name pattern
+      // Fallback: check by field name pattern
       if (!value) {
         for (const [id, val] of Object.entries(values)) {
           if (id.includes(field.name.toLowerCase()) && val) {

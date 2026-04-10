@@ -5,7 +5,7 @@
  * Used by both shot-creator and storybook features.
  */
 
-import { getClient, TypedSupabaseClient } from '@/lib/db/client'
+import { getClient, getAPIClient, TypedSupabaseClient } from '@/lib/db/client'
 import { safeJsonParse } from '@/features/shared/utils/safe-fetch'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import {
@@ -15,6 +15,7 @@ import {
   RECIPE_TOOLS,
   RECIPE_ANALYSIS,
   buildRecipePrompts,
+  parseStageTemplate,
 } from '@/features/shot-creator/types/recipe.types'
 import { imageGenerationService } from '@/features/shot-creator/services/image-generation.service'
 import { uploadImageToStorage } from '@/features/shot-creator/helpers/image-resize.helper'
@@ -36,6 +37,9 @@ export interface RecipeExecutionOptions {
   extraMetadata?: Record<string, unknown>
   // Server-side execution (API v2): provide userId to bypass HTTP endpoint
   userId?: string
+  // Reference tagging: auto-tag final image with a reference name
+  referenceTag?: string
+  referenceCategory?: string
 }
 
 export interface RecipeExecutionResult {
@@ -96,6 +100,13 @@ async function waitForImageCompletion(
           .single()
 
         if (error) {
+          // Row not found — may have been deleted by webhook on failure
+          if (error.code === 'PGRST116') {
+            cleanup()
+            reject(new Error('Generation failed: gallery entry was removed (prediction likely failed)'))
+            return
+          }
+
           const isNetworkError = error.message?.toLowerCase().includes('failed to fetch') ||
             error.message?.toLowerCase().includes('network') ||
             error.code === ''
@@ -205,7 +216,7 @@ async function prepareReferenceImagesForAPI(referenceImages: string[]): Promise<
     // These need to be fetched and uploaded to Supabase since external APIs can't access localhost
     if (imageUrl.startsWith('/')) {
       try {
-        const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'
+        const baseUrl = typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_APP_URL || process.env.WEBHOOK_URL || 'http://localhost:3002')
         const fullUrl = `${baseUrl}${imageUrl}`
         log.info('Fetching local asset', { url: fullUrl })
 
@@ -275,8 +286,11 @@ async function executeToolStage(
   onProgress?.(`Running ${tool.name}...`)
   log.info('Executing tool', { tool: tool.name, inputImageUrl })
 
-  // Call the tool API
-  const response = await fetch(tool.endpoint, {
+  // Call the tool API — resolve relative URLs for server-side execution
+  const endpoint = tool.endpoint.startsWith('/') && typeof window === 'undefined'
+    ? `${process.env.NEXT_PUBLIC_APP_URL || process.env.WEBHOOK_URL || 'http://localhost:3002'}${tool.endpoint}`
+    : tool.endpoint
+  const response = await fetch(endpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ imageUrl: inputImageUrl }),
@@ -319,7 +333,10 @@ async function pollToolCompletion(predictionId: string, maxWaitTime: number = 60
   const startTime = Date.now()
 
   while (Date.now() - startTime < maxWaitTime) {
-    const response = await fetch(`/api/tools/status/${predictionId}`)
+    const statusBase = typeof window === 'undefined'
+      ? (process.env.NEXT_PUBLIC_APP_URL || process.env.WEBHOOK_URL || 'http://localhost:3002')
+      : ''
+    const response = await fetch(`${statusBase}/api/tools/status/${predictionId}`)
 
     if (!response.ok) {
       // If status endpoint doesn't exist, try direct Replicate API
@@ -406,8 +423,11 @@ async function executeAnalysisStage(
     }
   }
 
-  // Call the analysis API
-  const response = await fetch(analysis.endpoint, {
+  // Call the analysis API — resolve relative URLs for server-side execution
+  const analysisEndpoint = analysis.endpoint.startsWith('/') && typeof window === 'undefined'
+    ? `${process.env.NEXT_PUBLIC_APP_URL || process.env.WEBHOOK_URL || 'http://localhost:3002'}${analysis.endpoint}`
+    : analysis.endpoint
+  const response = await fetch(analysisEndpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ image: imageData }),
@@ -471,11 +491,20 @@ export async function executeRecipe(options: RecipeExecutionOptions): Promise<Re
     folderId,
     extraMetadata,
     userId,
+    referenceTag,
+    referenceCategory = 'people',
   } = options
 
   try {
-    // Initialize Supabase client
-    const supabase = await getClient()
+    // Initialize Supabase client — use service role for API v2 (no user cookies)
+    const supabase = userId ? await getAPIClient() : await getClient()
+
+    // Ensure stage fields are populated (DB may store empty fields array)
+    for (const stage of recipe.stages) {
+      if (!stage.fields || stage.fields.length === 0) {
+        stage.fields = parseStageTemplate(stage.template, stage.order ?? 0)
+      }
+    }
 
     // Build prompts for all stages
     const promptResult = buildRecipePrompts(recipe.stages, fieldValues)
@@ -649,31 +678,134 @@ export async function executeRecipe(options: RecipeExecutionOptions): Promise<Re
           extraMetadata,
         }
 
-        // Generate image — use server-side path for API v2 (no HTTP roundtrip)
-        const { ImageGenerationService: ImgGenSvc } = await import('@/features/shot-creator/services/image-generation.service')
-        const response = userId
-          ? await ImgGenSvc.generateImageServerSide({
-              userId,
+        // Generate image
+        let galleryId: string
+        if (userId) {
+          // Server-side path for API v2: call Replicate directly, manage gallery with shared supabase client
+          const { ImageGenerationService: ImgGenSvc } = await import('@/features/shot-creator/services/image-generation.service')
+          const Replicate = (await import('replicate')).default
+          const { creditsService: creditsSvc } = await import('@/features/credits')
+          const replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN })
+
+          // Deduct credits
+          await creditsSvc.deductCredits(userId, model, {
+            generationType: 'image',
+            useServiceRole: true,
+          })
+
+          // Build Replicate input
+          const replicateInput = ImgGenSvc.buildReplicateInput({
+            model,
+            prompt: stagePrompt,
+            modelSettings,
+            referenceImages: inputImages || [],
+            userId,
+          })
+
+          // Get model routing
+          const replicateModelId = ImgGenSvc.getReplicateModelId(model)
+          const versionHash = ImgGenSvc.getVersionForModel(model)
+
+          // Build prediction
+          const webhookUrl = process.env.WEBHOOK_URL
+            ? `${process.env.WEBHOOK_URL}/api/webhooks/replicate`
+            : null
+
+          const predictionOptions: Record<string, unknown> = versionHash
+            ? { version: versionHash, input: replicateInput }
+            : { model: replicateModelId, input: replicateInput }
+
+          if (webhookUrl) {
+            predictionOptions.webhook = webhookUrl
+            predictionOptions.webhook_events_filter = ['start', 'completed']
+          }
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const prediction = await replicate.predictions.create(predictionOptions as any)
+          log.info('Prediction created', { predictionId: prediction.id, status: prediction.status })
+
+          // Build metadata
+          const metadata: Record<string, unknown> = {
+            ...ImgGenSvc.buildMetadata({
               model,
               prompt: stagePrompt,
-              referenceImages: inputImages,
               modelSettings,
+              referenceImages: inputImages || [],
+              userId,
               recipeId: recipe.id,
               recipeName: recipe.name,
-              folderId,
-              extraMetadata,
-            })
-          : await imageGenerationService.generateImage(request)
+            }),
+            ...(extraMetadata || {}),
+          }
 
-        if (!response.galleryId) {
-          throw new Error(`Stage ${i + 1} failed: No gallery ID returned`)
+          // Create gallery entry using the shared service-role supabase client
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const galleryInsert: any = {
+            user_id: userId,
+            prediction_id: prediction.id,
+            generation_type: 'image',
+            status: 'pending',
+            metadata,
+            ...(folderId ? { folder_id: folderId } : {}),
+          }
+          const { data: gallery, error: galleryErr } = await supabase
+            .from('gallery')
+            .insert(galleryInsert)
+            .select()
+            .single()
+
+          if (galleryErr || !gallery) {
+            log.error('Gallery insert failed', { error: galleryErr?.message, code: galleryErr?.code })
+            throw new Error(`Stage ${i + 1} failed: Gallery insert error — ${galleryErr?.message}`)
+          }
+
+          galleryId = gallery.id
+          log.info('Gallery entry created', { galleryId, predictionId: prediction.id })
+
+          // If no webhook, poll Replicate directly and upload result
+          if (!webhookUrl) {
+            const { StorageService } = await import('@/features/generation/services/storage.service')
+            let result = prediction
+            const maxWait = 90_000
+            const start = Date.now()
+            while (result.status !== 'succeeded' && result.status !== 'failed' && Date.now() - start < maxWait) {
+              await new Promise(r => setTimeout(r, 2000))
+              result = await replicate.predictions.get(result.id)
+            }
+            if (result.status === 'succeeded' && result.output) {
+              const outputUrl = Array.isArray(result.output) ? result.output[0] : result.output
+              if (typeof outputUrl === 'string') {
+                const { buffer } = await StorageService.downloadAsset(outputUrl)
+                const { ext, mimeType } = StorageService.getMimeType(outputUrl, 'png')
+                const { publicUrl, storagePath, fileSize } = await StorageService.uploadToStorage(
+                  buffer, userId, prediction.id, ext, mimeType
+                )
+                await supabase.from('gallery').update({
+                  status: 'completed',
+                  public_url: publicUrl,
+                  storage_path: storagePath,
+                  file_size: fileSize,
+                  mime_type: mimeType,
+                }).eq('id', galleryId)
+              }
+            } else if (result.status === 'failed') {
+              throw new Error(result.error?.toString() || 'Replicate prediction failed')
+            }
+          }
+        } else {
+          // Client-side path: use HTTP endpoint
+          const response = await imageGenerationService.generateImage(request)
+          if (!response.galleryId) {
+            throw new Error(`Stage ${i + 1} failed: No gallery ID returned`)
+          }
+          galleryId = response.galleryId
         }
 
         onProgress?.(i, totalStages, `Waiting for stage ${i + 1} to complete...`)
 
         // Wait for completion (get permanent Supabase URL)
         try {
-          const imageUrl = await waitForImageCompletion(supabase, response.galleryId)
+          const imageUrl = await waitForImageCompletion(supabase, galleryId)
           imageUrls.push(imageUrl)
           previousImageUrl = imageUrl
           previousImageUrls = undefined // Reset multi-output (generation stages produce single output)
@@ -691,6 +823,49 @@ export async function executeRecipe(options: RecipeExecutionOptions): Promise<Re
     // If last stage was multi-output, include finalImageUrls
     const finalImageUrl = previousImageUrls ? previousImageUrls[0] : previousImageUrl
     const finalImageUrls = previousImageUrls
+
+    // Auto-tag final image with reference tag if requested (API v2)
+    if (referenceTag && finalImageUrl && userId) {
+      try {
+        const tagSupabase = userId ? await getAPIClient() : supabase
+        const normalizedTag = referenceTag.startsWith('@') ? referenceTag : `@${referenceTag}`
+        const tagName = normalizedTag.replace(/^@/, '')
+
+        // Find the gallery entry for the final image
+        const { data: galleryEntry } = await tagSupabase
+          .from('gallery')
+          .select('id, metadata')
+          .eq('user_id', userId)
+          .eq('public_url', finalImageUrl)
+          .single()
+
+        if (galleryEntry) {
+          // Update gallery metadata with reference tag
+          const existingMeta = (galleryEntry.metadata || {}) as Record<string, unknown>
+          await tagSupabase
+            .from('gallery')
+            .update({ metadata: { ...existingMeta, reference: normalizedTag } })
+            .eq('id', galleryEntry.id)
+
+          // Insert into reference table
+          await tagSupabase
+            .from('reference')
+            .insert({
+              id: crypto.randomUUID(),
+              gallery_id: galleryEntry.id,
+              category: referenceCategory,
+              tags: [tagName],
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            })
+
+          log.info('Reference tag inserted for recipe output', { tag: normalizedTag, galleryId: galleryEntry.id })
+        }
+      } catch (tagError) {
+        log.error('Failed to insert reference tag', { error: tagError instanceof Error ? tagError.message : String(tagError) })
+        // Don't fail the recipe for a tagging issue
+      }
+    }
 
     return {
       success: true,

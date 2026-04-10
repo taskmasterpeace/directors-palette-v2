@@ -402,20 +402,21 @@ export class WebhookService {
   }
 
   /**
-   * Handle failed gallery entry: delete the record instead of keeping it.
-   * Failed entries have no image and clutter the gallery. The generation_events
-   * table still records the failure for auditing purposes.
+   * Handle failed gallery entry: mark as failed so recipe execution and
+   * API v2 jobs can detect the failure. The gallery list filters out failed
+   * entries in the UI query.
    */
   private static async updateGalleryWithError(
     predictionId: string,
     _galleryEntry: GalleryRow,
     errorMessage: string
   ): Promise<void> {
-    // Delete the gallery record — failed entries have no image and no value to keep.
-    // Users were seeing deleted failed items reappear on gallery refresh.
     await getSupabase()
       .from('gallery')
-      .delete()
+      .update({
+        status: 'failed',
+        error_message: errorMessage,
+      })
       .eq('prediction_id', predictionId);
 
     // Update generation event status (this is the audit trail)

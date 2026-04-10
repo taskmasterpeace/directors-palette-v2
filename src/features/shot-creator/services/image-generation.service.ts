@@ -432,7 +432,7 @@ export class ImageGenerationService {
     }
 
     // Create gallery entry
-    const { data: gallery } = await supabase
+    const { data: gallery, error: galleryError } = await supabase
       .from('gallery')
       .insert({
         user_id: userId,
@@ -444,6 +444,10 @@ export class ImageGenerationService {
       })
       .select()
       .single()
+
+    if (galleryError) {
+      logger.shotCreator.error('Server-side gallery insert failed', { error: galleryError.message, code: galleryError.code })
+    }
 
     const galleryId = gallery?.id
 

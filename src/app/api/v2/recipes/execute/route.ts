@@ -7,6 +7,7 @@ import { apiKeyService } from '@/features/api-keys/services/api-key.service'
 import { creditsService } from '@/features/credits'
 import { getModelCost, type ModelId } from '@/config'
 import type { RecipeFieldValues } from '@/features/shot-creator/types/recipe.types'
+import { parseStageTemplate } from '@/features/shot-creator/types/recipe.types'
 import type { RecipeField } from '@/features/shot-creator/types/recipe-field.types'
 import { createLogger } from '@/lib/logger'
 
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
     if (!isAuthContext(auth)) return auth
 
     const body = await request.json()
-    const { recipe_id, fields, model, aspect_ratio, reference_images, reference_image, webhook_url } = body
+    const { recipe_id, fields, model, aspect_ratio, reference_images, reference_image, reference_tag, reference_category, webhook_url } = body
 
     if (!recipe_id || !fields) {
       return errors.validation('recipe_id and fields are required')
@@ -51,9 +52,18 @@ export async function POST(request: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dbRow = recipeData as Record<string, any>
 
-    // Validate all required fields are present
-    const recipeFields: RecipeField[] = dbRow.fields || []
-    const requiredFields = recipeFields.filter((f) => f.required !== false)
+    // Parse fields from stage templates (DB doesn't store fields column)
+    const stages = Array.isArray(dbRow.stages) ? dbRow.stages : []
+    const recipeFields: RecipeField[] = stages.flatMap(
+      (s: { template?: string }, i: number) => s.template ? parseStageTemplate(s.template, i) : []
+    )
+    // Deduplicate by name
+    const uniqueFieldMap = new Map<string, RecipeField>()
+    for (const f of recipeFields) {
+      if (!uniqueFieldMap.has(f.name)) uniqueFieldMap.set(f.name, f)
+      else if (f.required) uniqueFieldMap.set(f.name, f)
+    }
+    const requiredFields = [...uniqueFieldMap.values()].filter((f) => f.required)
     const missingFields = requiredFields.filter((f) => !(f.name in fields))
     if (missingFields.length > 0) {
       return errors.validation(`Missing required fields: ${missingFields.map((f) => f.name).join(', ')}`)
@@ -61,7 +71,6 @@ export async function POST(request: NextRequest) {
 
     // Estimate cost: count generation stages × model cost
     const modelId = (model || dbRow.suggested_model || 'nano-banana-2') as ModelId
-    const stages = Array.isArray(dbRow.stages) ? dbRow.stages : []
     const generationStages = stages.filter((s: { type: string }) => s.type === 'generation' || s.type === 'img2img').length || 1
     const cost = Math.round(getModelCost(modelId) * 100) * generationStages
 
@@ -97,6 +106,8 @@ export async function POST(request: NextRequest) {
           aspectRatio: aspect_ratio || dbRow.suggested_aspect_ratio || dbRow.suggestedAspectRatio,
           extraMetadata: { source: 'api_v2', api_job_id: job.id },
           userId: auth.userId,
+          referenceTag: reference_tag,
+          referenceCategory: reference_category,
         })
 
         if (result.success) {
