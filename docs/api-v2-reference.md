@@ -809,6 +809,9 @@ Execute a recipe by filling in its fields. Runs asynchronously.
 | `model` | string | No | Override model. Defaults to recipe's `suggested_model` |
 | `aspect_ratio` | string | No | Override aspect ratio. Defaults to recipe's `suggested_aspect_ratio` |
 | `reference_images` | array | No | Array of reference image URLs for stages that use img2img |
+| `reference_image` | string | No | Single reference image URL (shorthand — applied to all stages) |
+| `reference_tag` | string | No | Tag name to save the result as a reusable reference (e.g. `"marcus"`) |
+| `reference_category` | string | No | Category for the reference tag (e.g. `"character"`, `"style"`) |
 | `webhook_url` | string | No | URL to receive a POST when execution completes |
 
 **Response (202):**
