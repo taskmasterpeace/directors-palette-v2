@@ -28,6 +28,7 @@ import { logger } from '@/lib/logger'
 import { useRecipeStore } from '../store/recipe.store'
 import { RecipeCatalogModal } from './recipe/RecipeCatalogModal'
 import { RecipeEditorModal } from './recipe/RecipeEditorModal'
+import { RecipeManagement } from './recipe/RecipeManagement'
 
 const ShotCreator = () => {
     const { setActiveTab } = useLayoutStore()
@@ -60,6 +61,7 @@ const ShotCreator = () => {
     const [isCatalogOpen, setIsCatalogOpen] = useState(false)
     const [isEditorOpen, setIsEditorOpen] = useState(false)
     const [editingRecipeId, setEditingRecipeId] = useState<string | null>(null)
+    const [isManagementOpen, setIsManagementOpen] = useState(false)
     const modelConfig = getModelConfig((shotCreatorSettings.model || 'nano-banana-2') as ModelId)
 
     // Fix resolution mismatch on initial render
@@ -473,6 +475,17 @@ const ShotCreator = () => {
                         setIsEditorOpen(false)
                         setEditingRecipeId(null)
                         setActiveRecipe(recipeId)
+                    }}
+                />
+
+                {/* Recipe Management Modal */}
+                <RecipeManagement
+                    isOpen={isManagementOpen}
+                    onClose={() => setIsManagementOpen(false)}
+                    onEditRecipe={(id) => {
+                        setIsManagementOpen(false)
+                        setEditingRecipeId(id)
+                        setIsEditorOpen(true)
                     }}
                 />
             </div>
