@@ -22,6 +22,8 @@ export interface Recipe {
   requiresImage?: boolean;       // Whether recipe requires reference images (default: true)
   isSystem?: boolean;            // System recipes are read-only, must be duplicated to edit
   isSystemOnly?: boolean;        // If true, only visible to admin users (hidden from regular users)
+  source?: 'created' | 'catalog' | 'imported' | 'system';  // Track where recipe came from
+  sourceCatalogId?: string;  // Points to community_items.id if added from catalog
   createdAt: number;
   updatedAt: number;
 }
@@ -33,4 +35,34 @@ export interface QuickAccessItem {
   label: string;                 // 1-word display label
   recipeId: string;              // Recipe ID
   order: number;                 // Display order (0-8)
+}
+
+// A recipe as it appears in the catalog (from community_items table)
+export interface CatalogRecipe {
+  id: string;                    // community_items.id
+  name: string;
+  description?: string;
+  category: string;
+  tags: string[];
+  content: {                     // The actual recipe data stored as JSONB
+    stages: RecipeStage[];
+    recipeNote?: string;
+    suggestedModel?: string;
+    suggestedAspectRatio?: string;
+    suggestedResolution?: string;
+    requiresImage?: boolean;
+    categoryId?: string;
+  };
+  submittedByName: string;
+  isOfficial: boolean;
+  isFeatured: boolean;
+  addCount: number;
+  bundledWildcards: Array<{
+    name: string;
+    category: string;
+    content: string[];
+    description?: string;
+  }>;
+  previewImageUrl?: string;      // From content JSONB or separate field
+  isAdded?: boolean;             // Client-side: whether user already has this recipe
 }
