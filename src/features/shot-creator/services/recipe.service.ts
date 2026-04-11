@@ -518,65 +518,12 @@ class RecipeService {
   // ============================================================================
 
   /**
-   * Initialize system recipes (called once per system, not per user)
-   * These are the built-in recipes that all users can access
+   * Seed starter recipes for new users
+   * @deprecated No longer seeds recipes — users add from catalog instead
    */
   async initializeSystemRecipes(): Promise<void> {
-    const supabase = await getRecipeClient()
-
-    // Check if user already has any recipes (system or user-owned)
-    const { data: existing } = await supabase
-      .from('user_recipes')
-      .select('id')
-      .limit(1)
-
-    if (existing && existing.length > 0) {
-      logger.shotCreator.info('User already has recipes, skipping starter seed')
-      return
-    }
-
-    logger.shotCreator.info('Seeding 3 starter recipes for new user...')
-
-    // Only seed the 3 starter recipes from SAMPLE_RECIPES
-    const STARTER_NAMES = ['Battle Rap', 'Character Sheet', 'Product Photography']
-    const starters = SAMPLE_RECIPES.filter(r => STARTER_NAMES.includes(r.name))
-
-    for (const sample of starters) {
-      const dbRecipe = {
-        user_id: null,
-        name: sample.name,
-        description: sample.description || null,
-        recipe_note: sample.recipeNote || null,
-        stages: sample.stages.map(stage => ({
-          id: stage.id,
-          order: stage.order,
-          template: stage.template,
-          type: stage.type || 'generation',
-          toolId: stage.toolId,
-          fields: [],
-          referenceImages: stage.referenceImages,
-        })),
-        suggested_aspect_ratio: sample.suggestedAspectRatio || null,
-        suggested_resolution: sample.suggestedResolution || null,
-        quick_access_label: sample.quickAccessLabel || null,
-        is_quick_access: sample.isQuickAccess,
-        category_id: sample.categoryId || null,
-        is_system: true,
-        is_system_only: sample.isSystemOnly || false,
-      }
-
-      const { error } = await supabase
-        .from('user_recipes')
-        .insert(dbRecipe)
-
-      if (error) {
-        logger.shotCreator.error('Error inserting starter recipe', { name: sample.name, error })
-      } else {
-        logger.shotCreator.info('Inserted starter recipe', { name: sample.name })
-      }
-    }
-
-    logger.shotCreator.info('Starter recipes initialization complete')
+    // No-op: users now start with zero recipes and add from catalog
+    return
   }
 }
 
