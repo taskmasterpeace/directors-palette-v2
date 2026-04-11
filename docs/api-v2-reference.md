@@ -295,6 +295,53 @@ Returns all LoRAs available to the authenticated user (personal + community).
 
 ---
 
+### GET /api/v2/styles
+
+Returns all premade style sheets (e.g., Muppet, Anime, Watercolor). Use the `style_prompt` field to apply a consistent visual style to your image generations — prepend or append it to your prompt.
+
+**Request:** No body required.
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "styles": [
+      {
+        "id": "uuid-here",
+        "name": "Muppet Style",
+        "description": "Jim Henson-inspired felt puppet aesthetic",
+        "style_prompt": "in the style of Jim Henson muppets, felt texture, puppet-like characters...",
+        "preview_image": "https://storage.example.com/styles/muppet.webp",
+        "created_at": "2026-01-15T10:00:00Z"
+      }
+    ],
+    "total": 5
+  }
+}
+```
+
+**Using a style with image generation:**
+
+```bash
+# 1. List available styles
+curl https://directorspalette.com/api/v2/styles \
+  -H "Authorization: Bearer dp_your_key_here"
+
+# 2. Copy the style_prompt from the style you want, then use it in generation
+curl -X POST https://directorspalette.com/api/v2/images/generate \
+  -H "Authorization: Bearer dp_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "nano-banana-2",
+    "prompt": "A dragon sitting on a mountain. in the style of Jim Henson muppets, felt texture, puppet-like characters",
+    "aspect_ratio": "16:9"
+  }'
+```
+
+---
+
 ### POST /api/v2/images/generate
 
 Generate one or more images asynchronously.
