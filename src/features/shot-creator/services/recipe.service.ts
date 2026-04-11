@@ -32,6 +32,8 @@ export interface DbRecipe {
   requires_image: boolean | null
   is_system: boolean
   is_system_only: boolean
+  source: string | null
+  source_catalog_id: string | null
   created_at: string
   updated_at: string
 }
@@ -69,6 +71,8 @@ function dbRecipeToRecipe(dbRecipe: DbRecipe): Recipe {
     categoryId: dbRecipe.category_id || undefined,
     isSystem: dbRecipe.is_system,
     isSystemOnly: dbRecipe.is_system_only,
+    source: (dbRecipe.source as Recipe['source']) || undefined,
+    sourceCatalogId: dbRecipe.source_catalog_id || undefined,
     createdAt: new Date(dbRecipe.created_at).getTime(),
     updatedAt: new Date(dbRecipe.updated_at).getTime(),
   }
@@ -102,6 +106,8 @@ function recipeToDbRecipe(
     category_id: recipe.categoryId || null,
     is_system: recipe.isSystem || false,
     is_system_only: recipe.isSystemOnly || false,
+    source: recipe.source || 'created',
+    source_catalog_id: recipe.sourceCatalogId || null,
   }
 }
 
