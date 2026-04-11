@@ -246,6 +246,7 @@ export function useImageGeneration() {
 
         let subscription: { unsubscribe: () => void } | null = null
         let timeoutId: NodeJS.Timeout | null = null
+        let hardTimeoutId: NodeJS.Timeout | null = null
         let pollIntervalId: NodeJS.Timeout | null = null
         let resolved = false // Prevent double-handling from subscription + poll racing
 
@@ -254,6 +255,7 @@ export function useImageGeneration() {
             resolved = true
 
             if (timeoutId) clearTimeout(timeoutId)
+            if (hardTimeoutId) clearTimeout(hardTimeoutId)
             if (pollIntervalId) clearInterval(pollIntervalId)
 
             setProgress({ status: 'succeeded' })
@@ -281,6 +283,7 @@ export function useImageGeneration() {
             resolved = true
 
             if (timeoutId) clearTimeout(timeoutId)
+            if (hardTimeoutId) clearTimeout(hardTimeoutId)
             if (pollIntervalId) clearInterval(pollIntervalId)
 
             setProgress({ status: 'failed', error: errorMsg })
@@ -365,7 +368,6 @@ export function useImageGeneration() {
             }
 
             // After initial fast polling (3s), slow down to 5s polling
-            // No hard timeout — keep polling until Replicate returns a terminal status
             if (!resolved) {
                 timeoutId = setTimeout(() => {
                     if (resolved || !pollIntervalId) return
@@ -373,6 +375,17 @@ export function useImageGeneration() {
                     clearInterval(pollIntervalId)
                     pollIntervalId = setInterval(pollCheck, 5000)
                 }, 60000)
+            }
+
+            // Hard timeout: if Replicate never returns a terminal status after 20 minutes,
+            // surface a clear error so the user isn't stuck waiting indefinitely.
+            // Replicate's own infrastructure typically times out within this window.
+            if (!resolved) {
+                hardTimeoutId = setTimeout(() => {
+                    handleError(
+                        'Generation timed out after 20 minutes. Replicate may be experiencing high load — please try again.'
+                    )
+                }, 20 * 60 * 1000)
             }
         }
 
@@ -382,6 +395,7 @@ export function useImageGeneration() {
             resolved = true
             if (subscription) subscription.unsubscribe()
             if (timeoutId) clearTimeout(timeoutId)
+            if (hardTimeoutId) clearTimeout(hardTimeoutId)
             if (pollIntervalId) clearInterval(pollIntervalId)
         }
     }, [activeGalleryId, setShotCreatorProcessing, toast])

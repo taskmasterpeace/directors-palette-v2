@@ -6,7 +6,7 @@
 
 import { getClient, getAPIClient } from '@/lib/db/client'
 import type { Recipe, RecipeStage, RecipeReferenceImage } from '../types/recipe.types'
-import { parseStageTemplate, SAMPLE_RECIPES } from '../types/recipe.types'
+import { parseStageTemplate } from '../types/recipe.types'
 import { logger } from '@/lib/logger'
 
 // Helper to get an untyped client for recipe tables (not in main DB types yet)
