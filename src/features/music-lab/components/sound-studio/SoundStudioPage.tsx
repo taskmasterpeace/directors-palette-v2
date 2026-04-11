@@ -269,10 +269,10 @@ export function SoundStudioPage({ userId }: SoundStudioPageProps) {
       </div>
 
       {/* Full-screen 2-column layout */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-hidden">
         <div className="h-full xl:grid xl:grid-cols-[1fr_380px]">
           {/* LEFT COLUMN — scrollable controls */}
-          <div className="h-full overflow-y-auto p-4 space-y-3">
+          <div className="h-full min-h-0 overflow-y-auto p-4 space-y-3 pb-24">
             {/* Genre — amber (brand anchor) */}
             <PanelCard theme="amber" emoji="🎧" index={0}>
               <GenrePicker />
@@ -369,8 +369,8 @@ export function SoundStudioPage({ userId }: SoundStudioPageProps) {
               </PanelCard>
             </div>
 
-            {/* Bottom spacer */}
-            <div className="h-4" />
+            {/* Bottom spacer for scroll clearance */}
+            <div className="h-8" />
           </div>
 
           {/* RIGHT COLUMN — sticky prompt preview + assistant */}
