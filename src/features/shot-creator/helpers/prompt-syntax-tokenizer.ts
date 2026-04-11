@@ -171,8 +171,8 @@ function tokenizeBracketContent(content: string, tokens: SyntaxToken[]) {
         if (index > 0) {
             tokens.push({ type: 'bracketDelimiter', content: ',' })
         }
-        if (part) {
-            tokens.push({ type: 'bracket', content: part })
-        }
+        // Always push a token even for empty parts so backdrop char count
+        // stays in sync with the textarea, preventing transparent-text bleed-through
+        tokens.push({ type: 'bracket', content: part })
     })
 }
