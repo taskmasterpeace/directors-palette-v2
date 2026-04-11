@@ -5,15 +5,15 @@ import { Button } from '@/components/ui/button'
 import { X, FlaskConical } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import { useState } from 'react'
-import { useLayoutStore } from '@/store/layout.store'
-
 interface QuickAccessBarProps {
   onSelectRecipe: (recipeId: string) => void
+  onOpenCatalog: () => void
   className?: string
 }
 
 export function QuickAccessBar({
   onSelectRecipe,
+  onOpenCatalog,
   className,
 }: QuickAccessBarProps) {
   const {
@@ -21,7 +21,6 @@ export function QuickAccessBar({
     removeFromQuickAccess,
     setActiveRecipe,
   } = useRecipeStore()
-  const { setActiveTab } = useLayoutStore()
 
   const [isManaging, setIsManaging] = useState(false)
 
@@ -36,9 +35,9 @@ export function QuickAccessBar({
     .filter((item) => item.type === 'recipe' && item.recipeId)
     .sort((a, b) => a.order - b.order)
 
-  // Navigate to Prompt Tools to add recipes
+  // Navigate to catalog to add recipes
   const handleAddRecipe = () => {
-    setActiveTab('prompt-tools')
+    onOpenCatalog()
   }
 
   return (
@@ -55,7 +54,7 @@ export function QuickAccessBar({
           onClick={handleAddRecipe}
           className="h-7 px-3 text-xs text-muted-foreground hover:text-white"
         >
-          + Add recipes in Prompt Tools
+          + Add recipes from catalog
         </Button>
       ) : (
         <>
@@ -94,7 +93,7 @@ export function QuickAccessBar({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => isManaging ? setIsManaging(false) : handleAddRecipe()}
+            onClick={() => isManaging ? setIsManaging(false) : onOpenCatalog()}
             className="h-7 px-2 text-xs text-muted-foreground hover:text-white"
           >
             {isManaging ? 'Done' : '+'}
