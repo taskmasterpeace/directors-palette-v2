@@ -26,6 +26,8 @@ import {
 } from '@/components/ui/resizable'
 import { logger } from '@/lib/logger'
 import { useRecipeStore } from '../store/recipe.store'
+import { RecipeCatalogModal } from './recipe/RecipeCatalogModal'
+import { RecipeEditorModal } from './recipe/RecipeEditorModal'
 
 const ShotCreator = () => {
     const { setActiveTab } = useLayoutStore()
@@ -55,6 +57,9 @@ const ShotCreator = () => {
     }, [loadLibraryItems])
 
     const { activeRecipeId, setActiveRecipe } = useRecipeStore()
+    const [isCatalogOpen, setIsCatalogOpen] = useState(false)
+    const [isEditorOpen, setIsEditorOpen] = useState(false)
+    const [editingRecipeId, setEditingRecipeId] = useState<string | null>(null)
     const modelConfig = getModelConfig((shotCreatorSettings.model || 'nano-banana-2') as ModelId)
 
     // Fix resolution mismatch on initial render
@@ -448,6 +453,27 @@ const ShotCreator = () => {
                     onRemoveBackground={handleRemoveBackgroundFromFullscreen}
                     onSaveToGallery={handleSaveToGalleryFromFullscreen}
                     onDelete={handleDeleteFromFullscreen}
+                />
+
+                {/* Recipe Catalog Modal */}
+                <RecipeCatalogModal
+                    isOpen={isCatalogOpen}
+                    onClose={() => setIsCatalogOpen(false)}
+                />
+
+                {/* Recipe Editor Modal */}
+                <RecipeEditorModal
+                    isOpen={isEditorOpen}
+                    recipeId={editingRecipeId}
+                    onClose={() => {
+                        setIsEditorOpen(false)
+                        setEditingRecipeId(null)
+                    }}
+                    onTestRecipe={(recipeId) => {
+                        setIsEditorOpen(false)
+                        setEditingRecipeId(null)
+                        setActiveRecipe(recipeId)
+                    }}
                 />
             </div>
         </div>

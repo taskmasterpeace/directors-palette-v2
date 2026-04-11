@@ -11,7 +11,7 @@ interface RecipeLivePreviewProps {
   recipeName: string
 }
 
-export function RecipeLivePreview({ stages, recipeName }: RecipeLivePreviewProps) {
+export function RecipeLivePreview({ stages, recipeName: _recipeName }: RecipeLivePreviewProps) {
   const [testValues, setTestValues] = useState<RecipeFieldValues>({})
 
   // Parse and deduplicate fields from all stage templates
