@@ -49,7 +49,8 @@ export async function GET(request: NextRequest) {
     }
 
     if (referenceFilter) {
-      query = query.eq('metadata->>reference', referenceFilter)
+      const normalizedRef = referenceFilter.startsWith('@') ? referenceFilter : `@${referenceFilter}`
+      query = query.eq('metadata->>reference', normalizedRef)
     } else if (hasReference) {
       query = query.not('metadata->>reference', 'is', null)
         .neq('metadata->>reference', '')

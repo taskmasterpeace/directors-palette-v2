@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
     name: row.name,
     type: row.lora_type || 'style',
     trigger_word: row.trigger_word,
+    weights_url: row.weights_url || null,
     compatible_models: row.compatible_models || ['flux-2-klein-9b'],
     thumbnail_url: row.thumbnail_url,
   }))
