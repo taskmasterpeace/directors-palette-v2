@@ -25,13 +25,22 @@ export async function GET(request: NextRequest) {
     const { searchParams } = request.nextUrl
     const limit = Math.min(Number(searchParams.get('limit')) || 50, 100)
     const offset = Number(searchParams.get('offset')) || 0
+    const includePublic = searchParams.get('include_public') === 'true'
 
     const supabase = getSupabase()
 
-    const { data, error, count } = await supabase
+    let query = supabase
       .from('user_recipes')
       .select('*', { count: 'exact' })
-      .eq('user_id', auth.userId)
+
+    if (includePublic) {
+      // Return user's own recipes + all system recipes
+      query = query.or(`user_id.eq.${auth.userId},is_system.eq.true`)
+    } else {
+      query = query.eq('user_id', auth.userId)
+    }
+
+    const { data, error, count } = await query
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1)
 
@@ -69,10 +78,13 @@ export async function GET(request: NextRequest) {
         id: r.id,
         name: r.name,
         description: r.description,
+        category: r.category_id || null,
+        source: r.source || (r.is_system ? 'system' : 'created'),
         stages: stages.length,
         fields: parsedFields,
         suggested_model: r.suggested_model || 'nano-banana-2',
         suggested_aspect_ratio: r.suggested_aspect_ratio || '16:9',
+        recipe_note: r.recipe_note || null,
       }
     })
 

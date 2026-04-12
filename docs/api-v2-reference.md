@@ -805,7 +805,7 @@ Generate a proposed timeline from a storyboard's shot list with timestamps.
 
 ### GET /api/v2/recipes
 
-List available recipes (your own + shared community recipes).
+List recipes. By default returns only your own recipes. Add `include_public=true` to also get all system/premade recipes (character sheets, style guides, turnarounds, etc.).
 
 **Query Parameters:**
 
@@ -813,6 +813,7 @@ List available recipes (your own + shared community recipes).
 |-------|------|---------|-------------|
 | `limit` | integer | 50 | Results per page (max 100) |
 | `offset` | integer | 0 | Pagination offset |
+| `include_public` | string | `"false"` | Set to `"true"` to include all system recipes |
 
 **Response:**
 
@@ -823,22 +824,33 @@ List available recipes (your own + shared community recipes).
     "recipes": [
       {
         "id": "recipe-uuid",
-        "name": "Cyberpunk Portrait",
-        "description": "Generate a cyberpunk-styled character portrait",
-        "stages": 3,
+        "name": "Character Sheet (Turnaround)",
+        "description": "Generate a multi-angle character turnaround sheet",
+        "category": "characters",
+        "source": "system",
+        "stages": 1,
         "fields": [
-          { "name": "character_name", "type": "text", "required": true },
-          { "name": "mood", "type": "select", "required": false }
+          { "name": "CHARACTER_NAME", "type": "name", "required": true },
+          { "name": "STYLE", "type": "select", "required": true, "options": ["anime", "3D", "comic"] },
+          { "name": "DESCRIPTION", "type": "text", "required": true }
         ],
         "suggested_model": "nano-banana-2",
-        "suggested_aspect_ratio": "16:9"
+        "suggested_aspect_ratio": "16:9",
+        "recipe_note": "Attach a style reference image for best results."
       }
     ],
-    "total": 12,
+    "total": 25,
     "limit": 50,
     "offset": 0
   }
 }
+```
+
+**Example -- list all available system recipes:**
+
+```bash
+curl "$BASE/recipes?include_public=true" \
+  -H "Authorization: Bearer $DP_KEY" | jq '.data.recipes[] | {id, name, source, category}'
 ```
 
 ---
@@ -1255,4 +1267,127 @@ def generate_image(prompt):
 # Usage
 url = generate_image("A dragon flying over a medieval castle at dawn")
 print("Image URL:", url)
+```
+
+---
+
+## Workflows
+
+### Using Premade Styles
+
+Fetch the style's prompt text, then append it to any generation prompt.
+
+```bash
+# Get Muppet style prompt
+STYLE=$(curl -s "$BASE/styles" \
+  -H "Authorization: Bearer $DP_KEY" \
+  | jq -r '.data.styles[] | select(.name | test("muppet"; "i")) | .style_prompt')
+
+# Use it
+curl -X POST "$BASE/images/generate" \
+  -H "Authorization: Bearer $DP_KEY" \
+  -H "Content-Type: application/json" \
+  -d "{\"model\":\"nano-banana-2\",\"prompt\":\"A wizard casting a spell. $STYLE\",\"aspect_ratio\":\"16:9\"}"
+```
+
+### Character References (@tags)
+
+Character references let you tag generated images so the same character stays consistent across shots. The workflow:
+
+1. **Generate a character sheet** to establish the look:
+
+```bash
+curl -X POST "$BASE/characters/generate" \
+  -H "Authorization: Bearer $DP_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Luna",
+    "description": "A young witch with silver hair and violet eyes, wearing a dark cloak",
+    "style": "anime"
+  }'
+```
+
+2. **Use the character image as a reference** for future shots:
+
+```bash
+# Generate a new image using the character sheet as reference
+curl -X POST "$BASE/images/generate" \
+  -H "Authorization: Bearer $DP_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "nano-banana-2",
+    "prompt": "Luna the witch standing in a moonlit forest, holding a glowing wand",
+    "reference_image": "https://url-of-character-sheet.webp",
+    "reference_tag": "luna",
+    "reference_category": "people",
+    "aspect_ratio": "16:9"
+  }'
+```
+
+3. **Browse tagged images** in the gallery:
+
+```bash
+# Find all images tagged with @luna
+curl "$BASE/gallery?reference=luna" \
+  -H "Authorization: Bearer $DP_KEY" | jq '.data.images[] | {id, url: .public_url}'
+```
+
+You can also use `reference_tag` and `reference_category` in recipe execution to tag recipe outputs.
+
+### Running System Recipes
+
+System recipes are premade templates (character sheets, style guides, turnarounds, etc.) that anyone can use.
+
+```bash
+# 1. List all system recipes
+curl "$BASE/recipes?include_public=true" \
+  -H "Authorization: Bearer $DP_KEY" \
+  | jq '.data.recipes[] | select(.source == "system") | {id, name, fields}'
+
+# 2. Pick a recipe and check its fields
+curl "$BASE/recipes?include_public=true" \
+  -H "Authorization: Bearer $DP_KEY" \
+  | jq '.data.recipes[] | select(.name | test("turnaround"; "i"))'
+
+# 3. Execute it with your field values
+curl -X POST "$BASE/recipes/execute" \
+  -H "Authorization: Bearer $DP_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "recipe_id": "recipe-uuid-from-step-2",
+    "fields": {
+      "CHARACTER_NAME": "Luna",
+      "STYLE": "anime",
+      "DESCRIPTION": "A young witch with silver hair and violet eyes"
+    },
+    "reference_tag": "luna",
+    "reference_category": "people"
+  }'
+
+# 4. Poll the job
+curl "$BASE/jobs/JOB_ID" -H "Authorization: Bearer $DP_KEY" | jq
+```
+
+### Combining Styles + Recipes + Characters
+
+Full pipeline: apply a premade style to a recipe, tag the output as a character reference.
+
+```bash
+# Get a style
+STYLE=$(curl -s "$BASE/styles" -H "Authorization: Bearer $DP_KEY" \
+  | jq -r '.data.styles[0].style_prompt')
+
+# Execute a recipe with style override
+curl -X POST "$BASE/recipes/execute" \
+  -H "Authorization: Bearer $DP_KEY" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"recipe_id\": \"CHARACTER_SHEET_RECIPE_ID\",
+    \"fields\": {
+      \"CHARACTER_NAME\": \"Marcus\",
+      \"DESCRIPTION\": \"A tall knight with a scarred face and iron gauntlet. $STYLE\"
+    },
+    \"reference_tag\": \"marcus\",
+    \"reference_category\": \"people\"
+  }"
 ```
