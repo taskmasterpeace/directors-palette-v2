@@ -207,25 +207,46 @@ function getImageDimensions(buffer: Buffer, mimeType: string): { width: number; 
     }
 
     if (mimeType === 'image/jpeg' && buffer.length >= 2) {
-      // JPEG: scan for SOF markers
+      // JPEG: scan markers by reading segment lengths to skip payloads
       let offset = 2
-      while (offset < buffer.length - 9) {
-        if (buffer[offset] !== 0xFF) break
-        const marker = buffer[offset + 1]
-        // SOF0-SOF3, SOF5-SOF7, SOF9-SOF11, SOF13-SOF15
+      while (offset + 1 < buffer.length) {
+        // Skip any padding 0xFF bytes
+        while (offset < buffer.length && buffer[offset] === 0xFF) offset++
+        if (offset >= buffer.length) break
+
+        const marker = buffer[offset]
+        offset++ // move past marker byte
+
+        // SOF markers: C0-C3, C5-C7, C9-CB, CD-CF (excludes C4=DHT, C8=JPG, CC=DAC)
         if (
           (marker >= 0xC0 && marker <= 0xC3) ||
           (marker >= 0xC5 && marker <= 0xC7) ||
           (marker >= 0xC9 && marker <= 0xCB) ||
           (marker >= 0xCD && marker <= 0xCF)
         ) {
-          return {
-            height: buffer.readUInt16BE(offset + 5),
-            width: buffer.readUInt16BE(offset + 7),
+          if (offset + 7 < buffer.length) {
+            const h = buffer.readUInt16BE(offset + 3)
+            const w = buffer.readUInt16BE(offset + 5)
+            // Sanity check: real images are within reasonable bounds
+            if (w > 0 && w <= 65535 && h > 0 && h <= 65535) {
+              return { width: w, height: h }
+            }
           }
+          break
         }
-        const segLen = buffer.readUInt16BE(offset + 2)
-        offset += 2 + segLen
+
+        // SOS (0xDA) — start of scan, no more structured markers
+        if (marker === 0xDA) break
+        // Standalone markers (no payload): RST0-RST7, SOI, EOI, TEM
+        if ((marker >= 0xD0 && marker <= 0xD9) || marker === 0x01) continue
+
+        // All other markers have a 2-byte length field — skip the segment
+        if (offset + 1 < buffer.length) {
+          const segLen = buffer.readUInt16BE(offset)
+          offset += segLen
+        } else {
+          break
+        }
       }
     }
   } catch {
