@@ -3,6 +3,9 @@
  * Single model (Nano Banana Pro) — returns { url, prompt }
  */
 
+// Nano Banana 2 takes ~60s to generate + persist. Extend Vercel timeout to prevent 504.
+export const maxDuration = 300
+
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import Replicate from 'replicate'
@@ -161,7 +164,7 @@ export async function POST(request: NextRequest) {
         output_format: 'jpg',
       },
     })
-    const completed = await replicate.wait(prediction, { interval: 1000 })
+    const completed = await replicate.wait(prediction, { interval: 2000 })
 
     if (completed.status === 'succeeded' && completed.output) {
       const replicateUrl = Array.isArray(completed.output)
