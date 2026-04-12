@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+import { NextRequest, after } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { validateV2ApiKey, isAuthContext } from '../../_lib/middleware'
 import { successResponse, errors } from '../../_lib/response'
@@ -11,7 +11,7 @@ import { parseStageTemplate } from '@/features/shot-creator/types/recipe.types'
 import type { RecipeField } from '@/features/shot-creator/types/recipe-field.types'
 import { createLogger } from '@/lib/logger'
 
-export const maxDuration = 120
+export const maxDuration = 300
 
 const log = createLogger('ApiV2')
 
@@ -94,8 +94,8 @@ export async function POST(request: NextRequest) {
       return errors.internal('Failed to create job')
     }
 
-    // Execute recipe async (fire-and-forget within serverless timeout)
-    const executeAsync = async () => {
+    // Execute recipe in background using Next.js after() to keep the function alive
+    after(async () => {
       try {
         const { executeRecipe } = await import('@/features/shared/services/recipe-execution.service')
         const result = await executeRecipe({
@@ -128,9 +128,7 @@ export async function POST(request: NextRequest) {
           errorMessage: err instanceof Error ? err.message : 'Unknown error',
         })
       }
-    }
-
-    executeAsync()
+    })
 
     await apiKeyService.logUsage({
       apiKeyId: auth.apiKeyId,
