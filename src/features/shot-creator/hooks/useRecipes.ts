@@ -8,6 +8,7 @@
 
 import { useEffect } from 'react'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { useRecipeStore } from '../store/recipe.store'
 
 /**
@@ -16,15 +17,24 @@ import { useRecipeStore } from '../store/recipe.store'
  */
 export function useRecipes() {
   const { user, isLoading: authLoading } = useAuth()
+  const isAdmin = useIsAdmin()
   const store = useRecipeStore()
 
   // Initialize recipes when user is available
   useEffect(() => {
     if (!authLoading && user?.id && !store.isInitialized) {
-      store.initialize(user.id)
+      store.initialize(user.id, isAdmin)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps -- Zustand store properties are stable
   }, [authLoading, user?.id, store.isInitialized, store.initialize])
+
+  // Update admin status when it resolves (async check)
+  useEffect(() => {
+    if (store.isInitialized && isAdmin !== store.isAdmin) {
+      store.setIsAdmin(isAdmin)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin, store.isInitialized])
 
   // Re-initialize if user changes
   useEffect(() => {

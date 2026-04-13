@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { Save, Play, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import RecipeTemplateEditor from './RecipeTemplateEditor'
@@ -9,6 +9,19 @@ import { useRecipeStore } from '../../store/recipe.store'
 import type { RecipeStage } from '../../types/recipe-stage.types'
 import type { RecipeToolId } from '../../types/recipe-tools.types'
 import { generateStageId } from '../../types/recipe-utils'
+
+const DEFAULT_STAGE: RecipeStage = {
+  id: '',
+  order: 0,
+  type: 'generation',
+  template: '',
+  fields: [],
+  referenceImages: [],
+}
+
+function makeDefaultStage(): RecipeStage {
+  return { ...DEFAULT_STAGE, id: generateStageId() }
+}
 
 interface RecipeEditorModalProps {
   isOpen: boolean
@@ -23,26 +36,48 @@ export function RecipeEditorModal({ isOpen, recipeId, onClose, onTestRecipe }: R
   const existingRecipe = recipeId ? getRecipe(recipeId) : null
 
   // Local editor state
-  const [name, setName] = useState(existingRecipe?.name || '')
-  const [description, setDescription] = useState(existingRecipe?.description || '')
-  const [recipeNote, setRecipeNote] = useState(existingRecipe?.recipeNote || '')
-  const [suggestedModel, setSuggestedModel] = useState(existingRecipe?.suggestedModel || '')
-  const [suggestedAspectRatio, setSuggestedAspectRatio] = useState(existingRecipe?.suggestedAspectRatio || '')
-  const [suggestedResolution, setSuggestedResolution] = useState(existingRecipe?.suggestedResolution || '')
-  const [categoryId, setCategoryId] = useState(existingRecipe?.categoryId || '')
-  const [requiresImage, setRequiresImage] = useState(existingRecipe?.requiresImage ?? true)
-  const [stages, setStages] = useState<RecipeStage[]>(
-    existingRecipe?.stages || [{
-      id: generateStageId(),
-      order: 0,
-      type: 'generation',
-      template: '',
-      fields: [],
-      referenceImages: [],
-    }]
-  )
+  const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
+  const [recipeNote, setRecipeNote] = useState('')
+  const [suggestedModel, setSuggestedModel] = useState('')
+  const [suggestedAspectRatio, setSuggestedAspectRatio] = useState('')
+  const [suggestedResolution, setSuggestedResolution] = useState('')
+  const [categoryId, setCategoryId] = useState('')
+  const [requiresImage, setRequiresImage] = useState(true)
+  const [stages, setStages] = useState<RecipeStage[]>([makeDefaultStage()])
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+
+  // Sync state when modal opens or recipe changes
+  useEffect(() => {
+    if (!isOpen) return
+
+    if (existingRecipe) {
+      setName(existingRecipe.name)
+      setDescription(existingRecipe.description || '')
+      setRecipeNote(existingRecipe.recipeNote || '')
+      setSuggestedModel(existingRecipe.suggestedModel || '')
+      setSuggestedAspectRatio(existingRecipe.suggestedAspectRatio || '')
+      setSuggestedResolution(existingRecipe.suggestedResolution || '')
+      setCategoryId(existingRecipe.categoryId || '')
+      setRequiresImage(existingRecipe.requiresImage ?? true)
+      setStages(existingRecipe.stages.length > 0 ? existingRecipe.stages : [makeDefaultStage()])
+    } else {
+      // Create mode — reset everything
+      setName('')
+      setDescription('')
+      setRecipeNote('')
+      setSuggestedModel('')
+      setSuggestedAspectRatio('')
+      setSuggestedResolution('')
+      setCategoryId('')
+      setRequiresImage(true)
+      setStages([makeDefaultStage()])
+    }
+    setIsSaving(false)
+    setIsDeleting(false)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, recipeId])
 
   const handleMetadataChange = useCallback((field: string, value: string | boolean) => {
     switch (field) {
@@ -71,12 +106,8 @@ export function RecipeEditorModal({ isOpen, recipeId, onClose, onTestRecipe }: R
 
   const handleAddStage = useCallback(() => {
     setStages(prev => [...prev, {
-      id: generateStageId(),
+      ...makeDefaultStage(),
       order: prev.length,
-      type: 'generation' as const,
-      template: '',
-      fields: [],
-      referenceImages: [],
     }])
   }, [])
 
@@ -97,7 +128,7 @@ export function RecipeEditorModal({ isOpen, recipeId, onClose, onTestRecipe }: R
   }, [])
 
   const handleSave = async () => {
-    if (!name.trim()) return
+    if (!name.trim() || stages.length === 0) return
     setIsSaving(true)
 
     const recipeData = {
@@ -118,8 +149,8 @@ export function RecipeEditorModal({ isOpen, recipeId, onClose, onTestRecipe }: R
       suggestedResolution: suggestedResolution || undefined,
       categoryId: categoryId || undefined,
       requiresImage,
-      isQuickAccess: false,
-      source: 'created' as const,
+      isQuickAccess: existingRecipe?.isQuickAccess || false,
+      source: existingRecipe?.source || 'created' as const,
     }
 
     if (existingRecipe) {
@@ -174,7 +205,7 @@ export function RecipeEditorModal({ isOpen, recipeId, onClose, onTestRecipe }: R
           <Button
             size="sm"
             onClick={handleSave}
-            disabled={!name.trim() || isSaving}
+            disabled={!name.trim() || stages.length === 0 || isSaving}
             className="bg-cyan-600 hover:bg-cyan-500 text-white"
           >
             <Save className="w-3.5 h-3.5 mr-1.5" />
