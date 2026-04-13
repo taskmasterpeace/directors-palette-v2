@@ -681,22 +681,41 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
                         </TooltipProvider>
 
                         {recipe.isSystem ? (
-                          // System recipes: Show duplicate button instead of edit/delete
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleDuplicate(recipe)}
-                                  className="h-7 w-7 p-0 text-blue-400 hover:text-blue-300"
-                                >
-                                  <Copy className="w-4 h-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Duplicate to My Recipes</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                          // System recipes: Show duplicate button (and edit for admins)
+                          <>
+                            {isAdmin && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => openEdit(recipe)}
+                                      className="h-7 w-7 p-0 text-cyan-400 hover:text-cyan-300"
+                                    >
+                                      <Edit3 className="w-4 h-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Edit System Recipe</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleDuplicate(recipe)}
+                                    className="h-7 w-7 p-0 text-blue-400 hover:text-blue-300"
+                                  >
+                                    <Copy className="w-4 h-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Duplicate to My Recipes</TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </>
                         ) : (
                           // User recipes: Show edit and delete buttons
                           <>
