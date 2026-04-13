@@ -8,6 +8,7 @@ import { ReferenceAutocomplete } from '@/shared/components/ReferenceAutocomplete
 import { useShotCreatorStore } from '../../store/shot-creator.store'
 import { useUnifiedGalleryStore } from '../../store/unified-gallery-store'
 import { useRecipeStore } from '../../store/recipe.store'
+import type { ShotCreatorReferenceImage } from '../../types/shot-creator.types'
 
 interface RecipeTextFieldProps {
   value: string
@@ -24,27 +25,29 @@ export function RecipeTextField({
 }: RecipeTextFieldProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const { setRecipeReferenceImage } = useRecipeStore()
-  const { shotCreatorReferenceImages } = useShotCreatorStore()
+  const { shotCreatorReferenceImages, setShotCreatorReferenceImages } = useShotCreatorStore()
   const galleryGetAllRefs = useUnifiedGalleryStore(s => s.getAllReferences)
   const galleryGetByRefs = useUnifiedGalleryStore(s => s.getImagesByReferences)
 
   // Merge both sources: uploaded reference images + gallery references
+  // Normalize all to bare names (no @ prefix) — the hook adds @ consistently
   const getAllReferences = useCallback(() => {
     const uploadedTags = shotCreatorReferenceImages
       .flatMap(img => [...img.tags, ...(img.persistentTag ? [img.persistentTag] : [])])
       .filter(Boolean)
-    const galleryRefs = galleryGetAllRefs()
+    const galleryRefs = galleryGetAllRefs().map(r => r.replace(/^@/, ''))
     return [...new Set([...uploadedTags, ...galleryRefs])]
   }, [shotCreatorReferenceImages, galleryGetAllRefs])
 
   const getImageUrl = useCallback((ref: string) => {
+    const bareRef = ref.replace(/^@/, '')
     // Check uploaded images first
     const uploaded = shotCreatorReferenceImages.find(
-      i => i.tags.includes(ref) || i.persistentTag === ref
+      i => i.tags.includes(bareRef) || i.persistentTag === bareRef
     )
     if (uploaded) return uploaded.preview || uploaded.url
-    // Fall back to gallery images
-    const galleryMatches = galleryGetByRefs([ref])
+    // Fall back to gallery images — try both with and without @
+    const galleryMatches = galleryGetByRefs([`@${bareRef}`, bareRef])
     return galleryMatches[0]?.url
   }, [shotCreatorReferenceImages, galleryGetByRefs])
 
@@ -65,9 +68,25 @@ export function RecipeTextField({
     onChange(newText)
     autocomplete.close()
 
-    // Store reference image URL for @tags
+    // Store reference image URL for @tags in recipe store
     if (item.type === 'reference' && item.imageUrl) {
       setRecipeReferenceImage(item.value, item.imageUrl)
+
+      // Also add to shot creator reference images (same as main prompt behavior)
+      const bareTag = item.value.replace(/^@/, '')
+      const isAlreadyAdded = shotCreatorReferenceImages.some(
+        refImg => refImg.url === item.imageUrl || refImg.persistentTag?.toLowerCase() === bareTag.toLowerCase()
+      )
+      if (!isAlreadyAdded) {
+        const newRef: ShotCreatorReferenceImage = {
+          id: `ref_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          preview: item.imageUrl,
+          url: item.imageUrl,
+          tags: [bareTag],
+          persistentTag: bareTag,
+        }
+        setShotCreatorReferenceImages((prev: ShotCreatorReferenceImage[]) => [...prev, newRef])
+      }
     }
 
     // Restore cursor position

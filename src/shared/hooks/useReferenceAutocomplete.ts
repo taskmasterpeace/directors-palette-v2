@@ -84,15 +84,17 @@ export function useReferenceAutocomplete({
       }
     }
 
-    // Specific references
+    // Specific references — normalize to always have @ prefix
     const allRefs = getAllReferences()
     for (const ref of allRefs) {
-      if (ref.toLowerCase().includes(query)) {
-        const imageUrl = getImageUrl(ref)
+      const bareRef = ref.replace(/^@/, '')
+      const atRef = `@${bareRef}`
+      if (bareRef.toLowerCase().includes(query)) {
+        const imageUrl = getImageUrl(bareRef)
         options.push({
           type: 'reference',
-          value: ref,
-          label: ref,
+          value: atRef,
+          label: bareRef,
           imageUrl,
         })
       }

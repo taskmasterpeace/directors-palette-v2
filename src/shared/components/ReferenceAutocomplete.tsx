@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { User, Hash } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import type { ReferenceAutocompleteOption } from '../hooks/useReferenceAutocomplete'
 
@@ -71,8 +72,12 @@ export function ReferenceAutocomplete({
               className="w-6 h-6 rounded object-cover shrink-0"
             />
           ) : (
-            <span className="w-6 h-6 rounded bg-cyan-500/20 flex items-center justify-center text-xs text-cyan-400 shrink-0">
-              {item.type === 'category' ? '#' : '@'}
+            <span className="w-6 h-6 rounded bg-cyan-500/20 flex items-center justify-center shrink-0">
+              {item.type === 'category' ? (
+                <Hash className="w-3.5 h-3.5 text-cyan-400" />
+              ) : (
+                <User className="w-3.5 h-3.5 text-cyan-400" />
+              )}
             </span>
           )}
           <span className="truncate">{item.label}</span>
