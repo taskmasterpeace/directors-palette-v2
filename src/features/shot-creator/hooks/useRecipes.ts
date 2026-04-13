@@ -43,6 +43,7 @@ export function useRecipes() {
     activeFieldValues: store.activeFieldValues,
     isLoading: store.isLoading || authLoading,
     isInitialized: store.isInitialized,
+    isAdmin: store.isAdmin,
 
     // Filtered getters
     getVisibleRecipes: store.getVisibleRecipes,

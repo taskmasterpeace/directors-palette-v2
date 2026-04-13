@@ -16,6 +16,7 @@ export function RecipeManagement({ isOpen, onEditRecipe, onClose }: RecipeManage
   const {
     recipes,
     quickAccessItems,
+    isAdmin,
     deleteRecipe,
     duplicateRecipe,
     addToQuickAccess,
@@ -120,7 +121,7 @@ export function RecipeManagement({ isOpen, onEditRecipe, onClose }: RecipeManage
                   >
                     <Copy className="w-3.5 h-3.5" />
                   </button>
-                  {!recipe.isSystem && (
+                  {(!recipe.isSystem || isAdmin) && (
                     <button
                       onClick={() => onEditRecipe(recipe.id)}
                       className="p-1.5 rounded hover:bg-muted/50 text-muted-foreground"

@@ -18,7 +18,7 @@ interface RecipeEditorModalProps {
 }
 
 export function RecipeEditorModal({ isOpen, recipeId, onClose, onTestRecipe }: RecipeEditorModalProps) {
-  const { getRecipe, addRecipe, updateRecipe, deleteRecipe } = useRecipeStore()
+  const { getRecipe, addRecipe, updateRecipe, deleteRecipe, isAdmin } = useRecipeStore()
 
   const existingRecipe = recipeId ? getRecipe(recipeId) : null
 
@@ -123,7 +123,7 @@ export function RecipeEditorModal({ isOpen, recipeId, onClose, onTestRecipe }: R
     }
 
     if (existingRecipe) {
-      await updateRecipe(existingRecipe.id, recipeData)
+      await updateRecipe(existingRecipe.id, recipeData, existingRecipe.isSystem && isAdmin)
     } else {
       await addRecipe(recipeData)
     }

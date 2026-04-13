@@ -80,6 +80,7 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
     updateCategory,
     deleteCategory,
     isLoading: _isLoading,
+    isAdmin,
   } = useRecipes()
 
   const { exportRecipes, importRecipes } = useRecipeImportExport()
@@ -222,7 +223,7 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
       categoryId: formCategory || undefined,
       quickAccessLabel: formIsQuickAccess ? formQuickLabel.trim() : undefined,
       isQuickAccess: formIsQuickAccess && !!formQuickLabel.trim(),
-    })
+    }, editingRecipe.isSystem && isAdmin)
 
     toast({
       title: 'Recipe Updated',
@@ -755,25 +756,26 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
                                 </>
                               )}
                             </DropdownMenuItem>
-                            {recipe.isSystem ? (
+                            {recipe.isSystem && (
                               <DropdownMenuItem onClick={() => handleDuplicate(recipe)}>
                                 <Copy className="w-4 h-4 mr-2" />
                                 Duplicate to My Recipes
                               </DropdownMenuItem>
-                            ) : (
-                              <>
-                                <DropdownMenuItem onClick={() => openEdit(recipe)}>
-                                  <Edit3 className="w-4 h-4 mr-2" />
-                                  Edit Recipe
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => handleDelete(recipe)}
-                                  className="text-destructive focus:text-destructive"
-                                >
-                                  <Trash2 className="w-4 h-4 mr-2" />
-                                  Delete Recipe
-                                </DropdownMenuItem>
-                              </>
+                            )}
+                            {(!recipe.isSystem || isAdmin) && (
+                              <DropdownMenuItem onClick={() => openEdit(recipe)}>
+                                <Edit3 className="w-4 h-4 mr-2" />
+                                Edit Recipe
+                              </DropdownMenuItem>
+                            )}
+                            {!recipe.isSystem && (
+                              <DropdownMenuItem
+                                onClick={() => handleDelete(recipe)}
+                                className="text-destructive focus:text-destructive"
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete Recipe
+                              </DropdownMenuItem>
                             )}
                           </DropdownMenuContent>
                         </DropdownMenu>
