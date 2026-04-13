@@ -46,8 +46,8 @@ export function RecipeEditorModal({ isOpen, recipeId, onClose, onTestRecipe }: R
 
   const handleMetadataChange = useCallback((field: string, value: string | boolean) => {
     switch (field) {
-      case 'name': setName(value as string); break
-      case 'description': setDescription(value as string); break
+      case 'name': case 'recipeName': setName(value as string); break
+      case 'description': case 'recipeDescription': setDescription(value as string); break
       case 'recipeNote': setRecipeNote(value as string); break
       case 'suggestedModel': setSuggestedModel(value as string); break
       case 'suggestedAspectRatio': setSuggestedAspectRatio(value as string); break
