@@ -89,6 +89,7 @@ export function HighlightedPromptEditor({
                         "overflow-hidden whitespace-pre-wrap break-words pointer-events-none z-0",
                         className,
                     )}
+                    style={{ backgroundColor: 'var(--background)' }}
                     aria-hidden="true"
                 >
                     {tokens.map((token, i) => {
@@ -141,7 +142,7 @@ export function HighlightedPromptEditor({
                 style={hasSyntax ? {
                     color: 'transparent',
                     caretColor: DEFAULT_TEXT_COLOR,
-                    backgroundColor: 'var(--background)',
+                    backgroundColor: 'transparent',
                 } : {
                     backgroundColor: 'var(--background)',
                 }}
