@@ -246,6 +246,7 @@ export function useImageGeneration() {
 
         let subscription: { unsubscribe: () => void } | null = null
         let timeoutId: NodeJS.Timeout | null = null
+        let hardTimeoutId: NodeJS.Timeout | null = null
         let pollIntervalId: NodeJS.Timeout | null = null
         let resolved = false // Prevent double-handling from subscription + poll racing
 
@@ -254,6 +255,7 @@ export function useImageGeneration() {
             resolved = true
 
             if (timeoutId) clearTimeout(timeoutId)
+            if (hardTimeoutId) clearTimeout(hardTimeoutId)
             if (pollIntervalId) clearInterval(pollIntervalId)
 
             setProgress({ status: 'succeeded' })
@@ -281,6 +283,7 @@ export function useImageGeneration() {
             resolved = true
 
             if (timeoutId) clearTimeout(timeoutId)
+            if (hardTimeoutId) clearTimeout(hardTimeoutId)
             if (pollIntervalId) clearInterval(pollIntervalId)
 
             setProgress({ status: 'failed', error: errorMsg })
@@ -322,6 +325,11 @@ export function useImageGeneration() {
                         const updatedRecord = payload.new
                         if (updatedRecord.public_url) {
                             handleCompletion()
+                        } else if (updatedRecord.status === 'failed' || updatedRecord.status === 'canceled') {
+                            const errorMsg = updatedRecord.error_message
+                                || updatedRecord.metadata?.error
+                                || (updatedRecord.status === 'canceled' ? 'Generation was canceled' : 'Generation failed')
+                            handleError(errorMsg)
                         } else if (updatedRecord.metadata?.error) {
                             handleError(updatedRecord.metadata.error)
                         }
@@ -344,11 +352,11 @@ export function useImageGeneration() {
                     if (data.public_url) {
                         logger.shotCreator.info('Poll detected completed image', { galleryId: activeGalleryId })
                         handleCompletion()
-                    } else if (data.status === 'failed') {
+                    } else if (data.status === 'failed' || data.status === 'canceled') {
                         const errorMsg = data.error_message
                             || (data.metadata as { error?: string })?.error
-                            || 'Generation failed'
-                        logger.shotCreator.info('Poll detected failed image', { galleryId: activeGalleryId, errorMsg })
+                            || (data.status === 'canceled' ? 'Generation was canceled' : 'Generation failed')
+                        logger.shotCreator.info('Poll detected failed/canceled image', { galleryId: activeGalleryId, status: data.status, errorMsg })
                         handleError(errorMsg)
                     }
                 } catch {
@@ -365,7 +373,6 @@ export function useImageGeneration() {
             }
 
             // After initial fast polling (3s), slow down to 5s polling
-            // No hard timeout — keep polling until Replicate returns a terminal status
             if (!resolved) {
                 timeoutId = setTimeout(() => {
                     if (resolved || !pollIntervalId) return
@@ -373,6 +380,15 @@ export function useImageGeneration() {
                     clearInterval(pollIntervalId)
                     pollIntervalId = setInterval(pollCheck, 5000)
                 }, 60000)
+            }
+
+            // Hard timeout: surface error after 5 minutes so users aren't stuck
+            if (!resolved) {
+                hardTimeoutId = setTimeout(() => {
+                    if (!resolved) {
+                        handleError('Generation timed out. The image service may be under heavy load — please try again.')
+                    }
+                }, 5 * 60 * 1000)
             }
         }
 
@@ -382,6 +398,7 @@ export function useImageGeneration() {
             resolved = true
             if (subscription) subscription.unsubscribe()
             if (timeoutId) clearTimeout(timeoutId)
+            if (hardTimeoutId) clearTimeout(hardTimeoutId)
             if (pollIntervalId) clearInterval(pollIntervalId)
         }
     }, [activeGalleryId, setShotCreatorProcessing, toast])
