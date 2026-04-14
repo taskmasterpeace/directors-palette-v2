@@ -105,7 +105,7 @@ const TIER_STYLES = [
 ]
 
 export function CreditsDisplay() {
-    const { balance, loading, fetchBalance, showPurchaseDialog, openPurchaseDialog, closePurchaseDialog } = useCreditsStore()
+    const { balance, loading, error: creditsError, fetchBalance, showPurchaseDialog, openPurchaseDialog, closePurchaseDialog } = useCreditsStore()
     const [packages, setPackages] = useState<CreditPackage[]>([])
     const [loadingPackages, setLoadingPackages] = useState(false)
     const [purchasingId, setPurchasingId] = useState<string | null>(null)
@@ -113,6 +113,13 @@ export function CreditsDisplay() {
     useEffect(() => {
         fetchBalance()
     }, [fetchBalance])
+
+    // Surface credits fetch errors so users know why balance shows 0
+    useEffect(() => {
+        if (creditsError) {
+            console.warn('[Credits] Failed to load balance:', creditsError)
+        }
+    }, [creditsError])
 
     useEffect(() => {
         if (showPurchaseDialog) {
@@ -196,9 +203,11 @@ export function CreditsDisplay() {
                                     }}
                                 >
                                     <Sparkles className="w-4 h-4 flex-shrink-0" style={{ color: 'oklch(0.7 0.18 200)' }} />
-                                    <span className="font-mono font-bold text-sm" style={{ color: 'oklch(0.8 0.12 200)' }}>
+                                    <span className="font-mono font-bold text-sm" style={{ color: creditsError ? 'oklch(0.7 0.2 25)' : 'oklch(0.8 0.12 200)' }}>
                                         {loading ? (
                                             <LoadingSpinner size="xs" color="current" />
+                                        ) : creditsError ? (
+                                            '-- pts'
                                         ) : (
                                             `${formatTokens(tokens)} pts`
                                         )}
@@ -208,7 +217,9 @@ export function CreditsDisplay() {
                             </DialogTrigger>
                         </TooltipTrigger>
                         <TooltipContent side="right" style={{ background: 'oklch(0.15 0.02 200)', border: '1px solid oklch(0.3 0.04 200)', color: 'oklch(0.9 0.02 200)' }}>
-                            <p className="font-mono text-xs">{tokens.toLocaleString()} pts</p>
+                            <p className="font-mono text-xs">
+                                {creditsError ? 'Failed to load balance — try refreshing' : `${tokens.toLocaleString()} pts`}
+                            </p>
                         </TooltipContent>
                     </Tooltip>
                 </TooltipProvider>

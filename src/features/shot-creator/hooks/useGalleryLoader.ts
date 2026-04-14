@@ -7,6 +7,7 @@ import { ImageGalleryService as GalleryService } from '@/lib/services/gallery.se
 import { useUnifiedGalleryStore } from '../store/unified-gallery-store'
 import { getClient } from '@/lib/db/client'
 import { logger } from '@/lib/logger'
+import { useToast } from '@/hooks/use-toast'
 
 /**
  * Retry a function with exponential backoff
@@ -52,6 +53,7 @@ let activeSubscriptionId: string | null = null
 export function useGalleryLoader() {
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const { toast } = useToast()
 
     // Ref to prevent concurrent loads (React Strict Mode calls useEffect twice)
     const isLoadingRef = useRef(false)
@@ -183,6 +185,11 @@ export function useGalleryLoader() {
                 const errorMessage = err instanceof Error ? err.message : 'Failed to load gallery'
                 setError(errorMessage)
                 logger.shotCreator.error('Gallery loading error', { error: err instanceof Error ? err.message : String(err) })
+                toast({
+                    title: 'Gallery failed to load',
+                    description: 'Your images may not be visible. Try refreshing the page.',
+                    variant: 'destructive',
+                })
             } finally {
                 isLoadingRef.current = false
                 if (mounted) {
