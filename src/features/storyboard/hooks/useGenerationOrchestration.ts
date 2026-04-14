@@ -179,8 +179,31 @@ export function useGenerationOrchestration({
 
             setResults(generationResults)
 
+            // Show generation summary
+            const succeeded = generationResults.filter(r => r.imageUrl && !r.error).length
+            const failed = generationResults.filter(r => r.error).length
+            const totalShots = generationResults.length
+            const ptsUsed = succeeded * costPerImagePts
+
+            if (failed > 0 && succeeded > 0) {
+                toast.warning(
+                    `${succeeded} of ${totalShots} shots completed (${ptsUsed} pts). ${failed} shot${failed > 1 ? 's' : ''} failed — scroll down to retry.`,
+                    { duration: 8000 }
+                )
+            } else if (failed > 0 && succeeded === 0) {
+                toast.error(
+                    `All ${totalShots} shots failed. No pts were charged. Check your settings and try again.`,
+                    { duration: 8000 }
+                )
+            } else {
+                toast.success(
+                    `All ${totalShots} shots completed! (${ptsUsed} pts used)`,
+                    { duration: 5000 }
+                )
+            }
+
             // Auto-navigate to gallery on completion (if any succeeded)
-            const anySucceeded = generationResults.some(r => r.imageUrl && !r.error)
+            const anySucceeded = succeeded > 0
             if (anySucceeded) {
                 setTimeout(() => setInternalTab('gallery'), 500)
             }

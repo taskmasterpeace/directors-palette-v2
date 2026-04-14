@@ -357,6 +357,7 @@ const PERSISTED_FIELDS = [
     'selectedModel',
     'selectedDirectorId',
     'internalTab',
+    'generatedImages', // Persist so users don't lose images on page refresh
     // New persisted fields
     'generationSettings',
     'globalPromptPrefix',
