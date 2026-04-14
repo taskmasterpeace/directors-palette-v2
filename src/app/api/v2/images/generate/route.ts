@@ -97,6 +97,7 @@ export async function POST(request: NextRequest) {
       aspect_ratio = '16:9',
       loras,
       reference_image,
+      reference_images,
       reference_strength,
       reference_tag,
       reference_category = 'people',
@@ -104,6 +105,14 @@ export async function POST(request: NextRequest) {
       seed,
       webhook_url,
     } = body
+
+    // Build reference images array from both singular and plural fields
+    const allReferenceImages: string[] = []
+    if (reference_images && Array.isArray(reference_images)) {
+      allReferenceImages.push(...reference_images.filter((r: unknown) => typeof r === 'string'))
+    } else if (reference_image) {
+      allReferenceImages.push(reference_image)
+    }
 
     // Validate required fields
     if (!model) return errors.validation('model is required')
@@ -114,7 +123,7 @@ export async function POST(request: NextRequest) {
     const modelConfig = MODEL_CONFIGS[model as ModelId]
 
     // Editing models require a reference image
-    if (modelConfig.requiresInputImage && !reference_image) {
+    if (modelConfig.requiresInputImage && allReferenceImages.length === 0) {
       return errors.validation(`${model} requires a reference_image`)
     }
 
@@ -155,7 +164,7 @@ export async function POST(request: NextRequest) {
     )
 
     const loraActive = !!(loras && loras.length > 0)
-    const hasRef = !!reference_image
+    const hasRef = allReferenceImages.length > 0
     const jobs = []
 
     // ── Klein 9B + LoRA: route through fal.ai (synchronous) ──
@@ -219,7 +228,7 @@ export async function POST(request: NextRequest) {
           const falResult = await callFalAiKleinLora({
             prompt,
             loras: falLoras,
-            imageUrls: reference_image ? [reference_image] : undefined,
+            imageUrls: allReferenceImages.length > 0 ? allReferenceImages : undefined,
             imageSize: FAL_SIZE_MAP[aspect_ratio] || 'landscape_16_9',
             outputFormat: 'png',
           })
@@ -329,7 +338,7 @@ export async function POST(request: NextRequest) {
         model: model as ImageModel,
         prompt,
         modelSettings,
-        referenceImages: reference_image ? [reference_image] : [],
+        referenceImages: allReferenceImages,
         userId: auth.userId,
       })
 
@@ -361,7 +370,7 @@ export async function POST(request: NextRequest) {
           model: model as ImageModel,
           prompt,
           modelSettings,
-          referenceImages: reference_image ? [reference_image] : [],
+          referenceImages: allReferenceImages,
           userId: auth.userId,
         }),
         source: 'api_v2',
