@@ -114,6 +114,37 @@ export async function POST(request: NextRequest) {
       allReferenceImages.push(reference_image)
     }
 
+    // Auto-resolve @tags in prompt to gallery reference images
+    if (prompt) {
+      const tagMatches = prompt.match(/@[\w-]+/g)
+      if (tagMatches) {
+        const supabaseAdmin = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!
+        )
+        const uniqueTags = [...new Set(tagMatches.map((t: string) => t.startsWith('@') ? t : `@${t}`))]
+        for (const tag of uniqueTags) {
+          // Skip if we already have this ref URL (avoid duplicates from explicit reference_image)
+          const { data } = await supabaseAdmin
+            .from('gallery')
+            .select('public_url')
+            .eq('user_id', auth.userId)
+            .eq('status', 'completed')
+            .eq('metadata->>reference', tag)
+            .not('public_url', 'is', null)
+            .order('created_at', { ascending: false })
+            .limit(1)
+
+          if (data?.[0]?.public_url) {
+            const url = data[0].public_url
+            if (!allReferenceImages.includes(url)) {
+              allReferenceImages.push(url)
+            }
+          }
+        }
+      }
+    }
+
     // Validate required fields
     if (!model) return errors.validation('model is required')
     if (!prompt) return errors.validation('prompt is required')
