@@ -102,9 +102,14 @@ export function CharacterSheetSubTab() {
             aspectRatio: '1:1',
           })
         }
+      } else {
+        const errData = await portraitRes.json().catch(() => ({ error: 'Unknown error' }))
+        setError(`Portrait generation failed: ${errData.error || portraitRes.statusText}`)
       }
     } catch (err) {
-      logger.musicLab.error('Failed to generate portrait', { error: err instanceof Error ? err.message : String(err) })
+      const msg = err instanceof Error ? err.message : String(err)
+      logger.musicLab.error('Failed to generate portrait', { error: msg })
+      setError(`Portrait generation failed: ${msg}`)
     } finally {
       setGeneratingPortrait(false)
     }

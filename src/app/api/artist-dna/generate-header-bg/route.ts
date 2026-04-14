@@ -3,6 +3,8 @@
  * Generates an atmospheric environment image via nano-banana-2 based on artist DNA
  */
 
+export const maxDuration = 300
+
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import Replicate from 'replicate'
@@ -133,7 +135,7 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    const completed = await replicate.wait(prediction, { interval: 1000 })
+    const completed = await replicate.wait(prediction, { interval: 2000 })
 
     if (completed.status === 'succeeded' && completed.output) {
       const replicateUrl = Array.isArray(completed.output)

@@ -1,3 +1,5 @@
+export const maxDuration = 300
+
 import { NextRequest, NextResponse } from 'next/server';
 import Replicate from 'replicate';
 import { ImageGenerationService } from '@/features/shot-creator/services/image-generation.service';
