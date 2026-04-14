@@ -229,23 +229,16 @@ export function usePromptGeneration() {
         if (isStyleTransferMode && shotCreatorReferenceImages.length > 0) {
             const promptText = shotCreatorPrompt.trim()
             const styleNameMatch = promptText.match(/^([^:]+):/i)
-            const styleName = styleNameMatch ? styleNameMatch[1].trim() : 'Extracted Style'
             const additionalNotes = styleNameMatch
                 ? promptText.slice(styleNameMatch[0].length).trim()
                 : promptText
 
-            const styleSheetPrompt = `Create a visual style guide as a 9-image grid (3 rows × 3 columns).
+            const styleSheetPrompt = `Create a 9-image grid (3 rows × 3 columns) demonstrating a single visual style applied to different subjects.
 
-TITLE BANNER (CRITICAL - DO NOT CUT OFF):
-- Reserve a dedicated horizontal banner area at the TOP of the image
-- Display the COMPLETE text "${styleName}" in large, readable font
-- The title must be FULLY VISIBLE - no cropping, no cutting off letters
-- Center the title text horizontally in the banner
-- Use a clean background behind the title for legibility
+ABSOLUTELY NO TEXT ANYWHERE IN THE IMAGE. No labels, no titles, no captions, no words, no letters, no watermarks. Every pixel must be visual content only.
 
 GRID LAYOUT:
-Below the title banner, arrange 9 cells in a 3×3 grid.
-Separate each cell with SOLID BLACK LINES (4-6 pixels wide) for clean extraction.
+Arrange 9 cells in a 3×3 grid. Separate each cell with SOLID BLACK LINES (4-6 pixels wide) for clean extraction.
 
 CRITICAL STYLE EXTRACTION (match the reference image(s) EXACTLY):
 Analyze ALL provided reference images collectively to extract the unified visual style:
@@ -258,28 +251,18 @@ Analyze ALL provided reference images collectively to extract the unified visual
 
 CRITICAL: Generate ALL NEW characters and subjects. DO NOT replicate, copy, or reference any specific people, characters, or subjects from the reference images. This style guide demonstrates the STYLE can be applied to entirely different subjects.
 
-THE 9 TILES (3×3 grid):
+THE 9 CELLS (3×3 grid):
 
-ROW 1 – PEOPLE & FACES:
-1. PORTRAIT CLOSE-UP: Dramatic headshot of a NEW person (not from reference), demonstrating how this style renders skin texture, facial features, emotion, and portrait lighting
-2. MEDIUM SHOT: Different person in relaxed 3/4 pose, showing body proportions, clothing materials, and natural posture in this style
-3. GROUP INTERACTION: 2-3 diverse people (different ethnicities, ages) in conversation or activity, showing how style handles multiple figures and interpersonal dynamics
+Row 1: A dramatic headshot of a new person showing skin and facial detail | A different person in relaxed 3/4 pose showing body and clothing | 2-3 diverse people in conversation or activity together
 
-ROW 2 – ACTION & DETAIL:
-4. DYNAMIC ACTION: Figure in energetic motion (running, dancing, fighting), showing movement, energy, and how the style handles blur and dynamism
-5. EMOTIONAL MOMENT: Expressive close-up capturing strong emotion (joy, grief, determination, wonder), testing emotional range
-6. HANDS & FINE DETAIL: Close-up of hands interacting with an object (holding cup, turning page, crafting), showing fine detail rendering
+Row 2: A figure in energetic motion (running, dancing, fighting) | An expressive close-up capturing strong emotion | A close-up of hands interacting with an object
 
-ROW 3 – WORLD & MATERIALS:
-7. INTERIOR SCENE: Atmospheric indoor environment with props, furniture, and lighting (cozy room, dramatic hall, cluttered workshop)
-8. EXTERIOR WIDE: Landscape or cityscape establishing shot showing depth, atmosphere, scale, and environmental mood
-9. MATERIAL STUDY: Still life of varied materials (metal, glass, fabric, wood, liquid, organic) demonstrating how the style renders different surfaces
+Row 3: An atmospheric indoor environment with props and lighting | A landscape or cityscape establishing shot with depth | A still life of varied materials (metal, glass, fabric, wood)
 
 ${additionalNotes ? `\nADDITIONAL STYLE NOTES: ${additionalNotes}` : ''}
 
-Every tile must feel like it belongs to the SAME visual world. Consistent style language across all 9 cells.
-NO style drift between tiles. NO text labels inside the 9 image cells. Black grid lines between all cells.
-REMINDER: Title "${styleName}" must be COMPLETE and FULLY READABLE at the top - never cropped or cut off.`
+Every cell must feel like it belongs to the SAME visual world. Consistent style language across all 9 cells.
+NO style drift between cells. ABSOLUTELY NO TEXT OR LABELS ANYWHERE — pure visual content only.`
 
             const model = shotCreatorSettings.model || 'nano-banana-2'
             const referenceUrls = shotCreatorReferenceImages
@@ -288,8 +271,7 @@ REMINDER: Title "${styleName}" must be COMPLETE and FULLY READABLE at the top - 
             const modelSettings = buildModelSettings()
 
             const styleSheetSettings = {
-                ...modelSettings,
-                aspectRatio: '1:1'
+                ...modelSettings
             }
 
             await generateImage(

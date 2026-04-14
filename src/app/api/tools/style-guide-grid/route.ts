@@ -24,16 +24,12 @@ const STYLE_GUIDE_GRID_COST_POINTS = 20
  *   TOP: Title banner with @stylename
  *   BELOW: 3x3 grid of 9 panels showing diverse subjects
  */
-function buildStyleGuidePrompt(styleName: string, styleDescription?: string): string {
+function buildStyleGuidePrompt(_styleName: string, styleDescription?: string): string {
   const styleDetails = styleDescription
     ? `\n\nSTYLE CHARACTERISTICS TO CAPTURE:\n${styleDescription}`
     : ''
 
-  return `Professional visual style guide sheet with this EXACT layout:
-
-TOP SECTION: A dark gray horizontal banner spanning the full width containing centered white text "@${styleName}" as the title. This title banner is ABOVE and SEPARATE from the image grid.
-
-BELOW THE BANNER: A 3x3 grid of 9 image panels, each showing DIFFERENT unique characters and scenes in identical artistic style matching the reference image. Each panel has a white label bar at the bottom with black text describing the shot type.
+  return `A 3x3 grid of 9 image panels showing DIFFERENT unique characters and scenes, all in identical artistic style matching the reference image. ABSOLUTELY NO TEXT ANYWHERE — no labels, no titles, no captions, no words.
 
 ANALYZE THE REFERENCE IMAGE and replicate its style EXACTLY in all 9 panels:
 - Art style, rendering technique, and visual aesthetic
@@ -42,22 +38,15 @@ ANALYZE THE REFERENCE IMAGE and replicate its style EXACTLY in all 9 panels:
 - Level of detail and stylization${styleDetails}
 
 THE 9 PANELS (left to right, top to bottom):
-1. CHARACTER CLOSE-UP - Face portrait with expressive features
-2. EVERYDAY SCENE - Character in a casual daily activity
-3. ENVIRONMENT DETAIL - Interior or exterior setting with atmosphere
-4. ANIMAL/CREATURE - A stylized animal or fantastical creature in this style
-5. DYNAMIC POSE - Character mid-action with energy and movement
-6. SET DESIGN - Wide establishing shot of a location
-7. CHARACTER INTERACTION - Two characters together
-8. VEHICLE/OBJECT - A vehicle, machine, or detailed prop
-9. GROUP SHOT - Three or more diverse characters together
+A face portrait with expressive features | A character in a casual daily activity | An interior or exterior setting with atmosphere
+A stylized animal or creature | A character mid-action with energy and movement | A wide establishing shot of a location
+Two characters interacting together | A vehicle, machine, or detailed prop | Three or more diverse characters together
 
 CRITICAL REQUIREMENTS:
-- Title banner at TOP shows "@${styleName}" in large white text on dark gray
 - Each panel shows DIFFERENT unique characters (not the same person repeated)
 - Black border lines separating all 9 panels
-- White label bars with shot type text at bottom of each panel
 - ALL panels match the reference image style EXACTLY
+- ABSOLUTELY NO TEXT, LABELS, OR CAPTIONS ANYWHERE IN THE IMAGE — pure visual content only
 - 16:9 aspect ratio overall`
 }
 
