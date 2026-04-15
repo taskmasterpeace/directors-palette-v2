@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Label } from '@/components/ui/label'
-import { Users, DollarSign, TrendingUp, Gift, Search, RefreshCw, Shield, Sparkles, Ticket, FileText, UsersRound, Key, Banknote, Palette } from 'lucide-react'
+import { Users, DollarSign, TrendingUp, Gift, Search, RefreshCw, Shield, Sparkles, Ticket, FileText, UsersRound, Key, Banknote, Palette, Megaphone } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { GenerationsTable } from './GenerationsTable'
 import { GenerationStats } from './GenerationStats'
@@ -19,6 +19,7 @@ import { ApiUsageTab } from './ApiUsageTab'
 import { FinancialsTab } from './FinancialsTab'
 import { RecipesTab } from './RecipesTab'
 import { StyleSheetsTab } from './StyleSheetsTab'
+import { AnnouncementsTab } from './AnnouncementsTab'
 import { PromptTemplateEditor } from '@/features/prompt-templates'
 
 // Cost per image generation in cents (matches FALLBACK_PRICING.image.price_cents)
@@ -198,6 +199,10 @@ export function AdminDashboard({ currentUserEmail }: AdminDashboardProps) {
                     <TabsTrigger value="styles" className="data-[state=active]:bg-amber-500 data-[state=active]:text-black">
                         <Palette className="w-4 h-4 mr-2" />
                         Styles
+                    </TabsTrigger>
+                    <TabsTrigger value="announcements" className="data-[state=active]:bg-amber-500 data-[state=active]:text-black">
+                        <Megaphone className="w-4 h-4 mr-2" />
+                        Announcements
                     </TabsTrigger>
                 </TabsList>
 
@@ -396,6 +401,11 @@ export function AdminDashboard({ currentUserEmail }: AdminDashboardProps) {
                 {/* Styles Tab */}
                 <TabsContent value="styles" className="space-y-6">
                     <StyleSheetsTab />
+                </TabsContent>
+
+                {/* Announcements Tab */}
+                <TabsContent value="announcements" className="space-y-6">
+                    <AnnouncementsTab />
                 </TabsContent>
             </Tabs>
 

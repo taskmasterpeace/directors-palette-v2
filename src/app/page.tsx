@@ -21,6 +21,7 @@ import { BrandStudioLayout } from "@/features/brand-studio"
 import { FigurineStudio } from "@/features/figurine-studio"
 import { MerchLab } from "@/features/merch-lab"
 import { useAuth } from "@/features/auth/hooks/useAuth"
+import { AnnouncementBanner } from "@/features/announcements/components/AnnouncementBanner"
 
 export default function Home() {
   const { activeTab, setActiveTab } = useLayoutStore();
@@ -35,6 +36,7 @@ export default function Home() {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+        <AnnouncementBanner />
         <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val)} className="flex-1 h-full">
           <AnimatePresence mode="wait">
             {activeTab === 'shot-creator' && (
