@@ -43,6 +43,7 @@ export function StyleSheetsTab() {
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState<string | null>(null)
   const [seeding, setSeeding] = useState(false)
+  const [analyzing, setAnalyzing] = useState(false)
 
   // Form state
   const [name, setName] = useState('')
@@ -198,6 +199,34 @@ export function StyleSheetsTab() {
   const copyId = (id: string) => {
     navigator.clipboard.writeText(id)
     toast({ title: 'ID copied', description: id })
+  }
+
+  const handleAiAnalyze = async () => {
+    if (!imageUrl) {
+      toast({ title: 'Image required', description: 'Upload or paste an image first', variant: 'destructive' })
+      return
+    }
+    setAnalyzing(true)
+    try {
+      const res = await fetch('/api/styles/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: imageUrl })
+      })
+      const data = await safeJsonParse<{ name?: string; description?: string; stylePrompt?: string; error?: string }>(res)
+      if (!res.ok) throw new Error(data.error || `Analysis failed (${res.status})`)
+
+      if (data.name) setName(data.name)
+      if (data.description) setDescription(data.description)
+      if (data.stylePrompt) setStylePrompt(data.stylePrompt)
+
+      toast({ title: 'AI Analysis Complete', description: 'Fields auto-filled — edit before saving.' })
+    } catch (error) {
+      log.error('AI analyze failed', { error: error instanceof Error ? error.message : String(error) })
+      toast({ title: 'Analysis failed', description: error instanceof Error ? error.message : 'Unknown', variant: 'destructive' })
+    } finally {
+      setAnalyzing(false)
+    }
   }
 
   const handleSeedPresets = async () => {
@@ -460,6 +489,17 @@ export function StyleSheetsTab() {
                   <Button variant="ghost" size="sm" onClick={() => setImageUrl('')}>Clear</Button>
                 )}
               </div>
+              {imageUrl && (
+                <Button
+                  type="button"
+                  onClick={handleAiAnalyze}
+                  disabled={analyzing}
+                  className="w-full bg-gradient-to-r from-cyan-500 to-pink-500 hover:from-cyan-600 hover:to-pink-600 text-white"
+                >
+                  <Sparkles className={`w-4 h-4 mr-2 ${analyzing ? 'animate-spin' : ''}`} />
+                  {analyzing ? 'Analyzing with AI…' : 'AI Analyze Style'}
+                </Button>
+              )}
             </div>
 
             <div className="space-y-2">

@@ -18,15 +18,19 @@ export async function POST(request: NextRequest) {
 
         if (!image || typeof image !== 'string') {
             return NextResponse.json(
-                { error: 'Image data URL is required' },
+                { error: 'Image URL is required' },
                 { status: 400 }
             )
         }
 
-        // Validate base64 image format
-        if (!image.startsWith('data:image/')) {
+        // Accept either a base64 data URL (from the user-side style picker, which
+        // analyzes before upload) or a public http(s) URL (from the admin Style
+        // Sheets tab, which uploads first and then analyzes the hosted file).
+        const isDataUrl = image.startsWith('data:image/')
+        const isHttpUrl = image.startsWith('http://') || image.startsWith('https://')
+        if (!isDataUrl && !isHttpUrl) {
             return NextResponse.json(
-                { error: 'Invalid image format. Must be a data URL' },
+                { error: 'Image must be a data URL or http(s) URL' },
                 { status: 400 }
             )
         }
