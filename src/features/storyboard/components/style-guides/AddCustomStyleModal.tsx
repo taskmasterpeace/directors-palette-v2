@@ -5,11 +5,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Upload, ImageIcon, AlertCircle, ChevronDown } from 'lucide-react'
+import { Upload, ImageIcon, AlertCircle, ChevronDown, Globe } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useCustomStylesStore } from '@/features/shot-creator/store/custom-styles.store'
 import { safeJsonParse } from '@/features/shared/utils/safe-fetch'
 import { logger } from '@/lib/logger'
+import { useIsAdmin } from '@/hooks/useIsAdmin'
+import { createBrowserClient } from '@supabase/ssr'
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB client-side limit
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
@@ -34,9 +36,11 @@ export function AddCustomStyleModal({ open, onOpenChange, onStyleAdded }: AddCus
     const [techColor, setTechColor] = useState('')
     const [techTexture, setTechTexture] = useState('')
     const [techMedium, setTechMedium] = useState('live-action')
+    const [publishAsSystem, setPublishAsSystem] = useState(true)
     const fileInputRef = useRef<HTMLInputElement>(null)
 
     const { addCustomStyle } = useCustomStylesStore()
+    const isAdmin = useIsAdmin()
 
     const handleFileSelect = (file: File) => {
         setError(null)
@@ -107,14 +111,42 @@ export function AddCustomStyleModal({ open, onOpenChange, onStyleAdded }: AddCus
             }
 
             const { url } = data
+            const stylePrompt = `in the ${name.trim()} style of the reference image`
 
             // Save style with Supabase URL (not data URL)
             const styleId = addCustomStyle({
                 name: name.trim(),
                 description: `Custom style: ${name.trim()}`,
                 imagePath: url, // Supabase storage URL
-                stylePrompt: `in the ${name.trim()} style of the reference image`
+                stylePrompt
             })
+
+            // Admin: also publish to system style_guides so it's available in the API + to everyone
+            if (isAdmin && publishAsSystem) {
+                try {
+                    const supabase = createBrowserClient(
+                        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+                    )
+                    const { data: { session } } = await supabase.auth.getSession()
+                    await fetch('/api/admin/style-sheets', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${session?.access_token}`
+                        },
+                        body: JSON.stringify({
+                            name: name.trim(),
+                            description: `Custom style: ${name.trim()}`,
+                            style_prompt: stylePrompt,
+                            image_url: url,
+                        })
+                    })
+                } catch (publishErr) {
+                    logger.storyboard.error('Failed to publish style to system', { error: publishErr instanceof Error ? publishErr.message : String(publishErr) })
+                    // Don't block — the local custom style still saved
+                }
+            }
 
             // Reset and close
             resetForm()
@@ -226,6 +258,27 @@ export function AddCustomStyleModal({ open, onOpenChange, onStyleAdded }: AddCus
                             </p>
                         )}
                     </div>
+
+                    {/* Admin-only: Publish to system styles */}
+                    {isAdmin && (
+                        <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                            <input
+                                type="checkbox"
+                                checked={publishAsSystem}
+                                onChange={(e) => setPublishAsSystem(e.target.checked)}
+                                className="mt-0.5"
+                            />
+                            <div className="flex-1">
+                                <div className="flex items-center gap-2 text-sm font-medium">
+                                    <Globe className="w-4 h-4 text-primary" />
+                                    Publish as system style
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                    Available to all users and the public API (admin only). Leave off to keep it in your browser only.
+                                </p>
+                            </div>
+                        </label>
+                    )}
 
                     {/* Technical Attributes (collapsible, optional) */}
                     <div className="border rounded-lg">
