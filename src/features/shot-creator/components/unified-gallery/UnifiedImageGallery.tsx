@@ -670,25 +670,33 @@ CRITICAL RULES:
         toast({ title: 'Prompt Saved', description: `"${name}" added to your prompt library` })
     }, [toast])
 
-    // Handle re-generate: load image settings back into shot creator
-    const handleRegenerate = useCallback((image: GeneratedImage) => {
-        const { setShotCreatorPrompt, setSettings } = useShotCreatorStore.getState()
+    // Handle re-generate: load image prompt + settings + references back into Shot Creator.
+    // Powers both the fullscreen modal button and the recycle icon on each gallery tile.
+    const handleRegenerate = useCallback(async (image: GeneratedImage) => {
+        const {
+            setShotCreatorPrompt,
+            setSettings,
+            setShotCreatorReferenceImages,
+            onUseAsReference,
+        } = useShotCreatorStore.getState()
         const { loras, toggleActiveLora, activeLoraIds } = useLoraStore.getState()
 
-        // Set prompt
+        // Prompt
         if (image.prompt) {
             setShotCreatorPrompt(image.prompt)
         }
 
-        // Set model and aspect ratio
+        // Settings — restore model, aspect ratio, resolution, seed, lora scale
         setSettings((prev) => ({
             ...prev,
             model: (image.model as ModelId) || prev.model,
             aspectRatio: image.settings?.aspectRatio || image.settings?.aspect_ratio || prev.aspectRatio,
+            resolution: image.settings?.resolution || prev.resolution,
+            seed: image.settings?.seed ?? prev.seed,
             loraScale: image.settings?.loraScale ?? prev.loraScale,
         }))
 
-        // Deactivate all current LoRAs, then activate the one from the image
+        // Deactivate current LoRAs, then activate the one from the image (if it still exists in the library)
         for (const id of activeLoraIds) {
             toggleActiveLora(id)
         }
@@ -699,12 +707,35 @@ CRITICAL RULES:
             }
         }
 
-        // Close fullscreen modal
+        // Reference images — replace current refs with the ones from this generation
+        const refUrls = image.referenceImageUrls || []
+        let restoredRefsCount = 0
+        if (refUrls.length > 0) {
+            // Clear existing refs first so the restore is a replacement, not a stack
+            setShotCreatorReferenceImages([])
+            // onUseAsReference fetches each URL, builds a ShotCreatorReferenceImage, and appends
+            for (const url of refUrls) {
+                try {
+                    await onUseAsReference(url)
+                    restoredRefsCount++
+                } catch (err) {
+                    logger.shotCreator.warn('Failed to restore reference image', {
+                        url,
+                        error: err instanceof Error ? err.message : String(err),
+                    })
+                }
+            }
+        }
+
+        // Close fullscreen modal (if open)
         setFullscreenImage(null)
 
         toast({
-            title: 'Settings Loaded',
-            description: 'Settings loaded from previous generation',
+            title: 'Settings Restored',
+            description:
+                restoredRefsCount > 0
+                    ? `Prompt, settings, and ${restoredRefsCount} reference image${restoredRefsCount > 1 ? 's' : ''} restored`
+                    : 'Prompt and settings restored',
         })
     }, [setFullscreenImage, toast])
 
@@ -877,6 +908,7 @@ CRITICAL RULES:
         onRetry: (image: GeneratedImage) => handleRetryGeneration(image),
         onShare: (image: GeneratedImage) => handleShare(image),
         onMakeFigurine: (currentTab === 'gallery' || currentTab === 'shot-creator') ? (image: GeneratedImage) => handleMakeFigurine(image) : undefined,
+        onRestore: currentTab === 'shot-creator' ? (image: GeneratedImage) => handleRegenerate(image) : undefined,
         isGridImage,
         removingBackgroundId,
         upscalingId,
@@ -885,7 +917,7 @@ CRITICAL RULES:
         setFullscreenImage, handleCopyImage, handleDownloadImage, handleDeleteImage,
         handleSendTo, currentTab, showReferenceNamePrompt, updateImageReference, toast,
         onSendToLibrary, handleMoveToFolder, handleExtractFrames, handleExtractFramesToGallery,
-        handleRemoveBackground, handleUpscale, handleRetryGeneration, handleShare, handleMakeFigurine, isGridImage, removingBackgroundId, upscalingId,
+        handleRemoveBackground, handleUpscale, handleRetryGeneration, handleShare, handleMakeFigurine, handleRegenerate, isGridImage, removingBackgroundId, upscalingId,
     ])
 
     // Filter for favorites view

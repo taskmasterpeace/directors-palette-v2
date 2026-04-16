@@ -248,7 +248,7 @@ export class ImageGenerationService {
    * Normalize reference images to URL strings
    * Handles both string[] and {url, weight}[] formats
    */
-  private static normalizeReferenceImages(refs: unknown[]): string[] {
+  static normalizeReferenceImages(refs: unknown[]): string[] {
     return refs.map(ref => {
       if (typeof ref === 'string') {
         return ref
@@ -285,13 +285,20 @@ export class ImageGenerationService {
    * Build metadata for database storage
    */
   static buildMetadata(input: ImageGenerationInput): Record<string, unknown> {
+    const refUrls =
+      input.referenceImages && input.referenceImages.length > 0
+        ? this.normalizeReferenceImages(input.referenceImages)
+        : []
+
     return {
       prompt: input.prompt,
       model: input.model,
       replicateModel: this.getReplicateModelId(input.model),
       modelSettings: JSON.parse(JSON.stringify(input.modelSettings)), // Ensure JSON serializable
-      has_reference_images: input.referenceImages && input.referenceImages.length > 0,
-      reference_images_count: input.referenceImages?.length || 0,
+      has_reference_images: refUrls.length > 0,
+      reference_images_count: refUrls.length,
+      // Actual URLs (not just count) so the recycle/restore feature can rehydrate reference slots
+      reference_image_urls: refUrls,
       // Recipe tracking
       recipeId: input.recipeId || null,
       recipeName: input.recipeName || null,

@@ -26,6 +26,7 @@ interface ImageCardCallbacks {
   onRetry: (image: GeneratedImage) => void
   onShare?: (image: GeneratedImage) => void
   onMakeFigurine?: (image: GeneratedImage) => void
+  onRestore?: (image: GeneratedImage) => void
   isGridImage: (image: GeneratedImage) => boolean
   removingBackgroundId: string | null
   upscalingId?: string | null
@@ -144,6 +145,7 @@ function renderImageCard(
       onShare={includeShare && callbacks.onShare ? () => callbacks.onShare!(image) : undefined}
       onMakeFigurine={callbacks.onMakeFigurine ? () => callbacks.onMakeFigurine!(image) : undefined}
       onToggleFavorite={() => onToggleFavorite(image.id)}
+      onRestore={callbacks.onRestore ? () => callbacks.onRestore!(image) : undefined}
     />
   )
 }

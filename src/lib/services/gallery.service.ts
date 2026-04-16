@@ -667,6 +667,12 @@ export class ImageGalleryService {
     // Extract img2img strength
     const img2imgStrength = (modelSettings.img2imgStrength as number) || undefined
 
+    // Extract reference image URLs for recycle/restore feature
+    const referenceImageUrls = (metadata as { reference_image_urls?: string[] }).reference_image_urls
+    const referenceImageUrlsNormalized = Array.isArray(referenceImageUrls) && referenceImageUrls.length > 0
+      ? referenceImageUrls.filter((u): u is string => typeof u === 'string' && u.length > 0)
+      : undefined
+
     return {
       id: item.id,
       url: item.public_url || '',
@@ -677,6 +683,7 @@ export class ImageGalleryService {
       folderId,
       folderName,
       isFavorite,
+      referenceImageUrls: referenceImageUrlsNormalized,
       settings: {
         aspectRatio,
         resolution,

@@ -13,7 +13,7 @@ import { MetadataBar } from "./MetadataBar"
 import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/utils/utils"
 import type { GridSize } from "../../store/unified-gallery-store"
-import { AlertCircle, RefreshCw, Trash2, Star } from "lucide-react"
+import { AlertCircle, RefreshCw, Trash2, Star, RotateCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ClapperboardSpinner } from "./ClapperboardSpinner"
 
@@ -48,6 +48,8 @@ interface ImageCardProps {
   gridSize?: GridSize
   onRetry?: () => void
   onToggleFavorite?: () => void
+  /** Restore this generation's prompt, settings, and reference images into Shot Creator */
+  onRestore?: () => void
 }
 
 /**
@@ -83,7 +85,8 @@ const ImageCardComponent = ({
   showPrompt = true,
   gridSize = 'medium',
   onRetry,
-  onToggleFavorite
+  onToggleFavorite,
+  onRestore
 }: ImageCardProps) => {
   const { handleCopyPrompt, handleCopyImage } = useImageActions()
   const [dropdownOpen, setDropdownOpen] = useState(false)
@@ -228,6 +231,23 @@ const ImageCardComponent = ({
         </button>
       )}
 
+      {/* Restore button — reuses prompt, settings, and reference images for a new generation */}
+      {onRestore && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onRestore() }}
+          className={cn(
+            "absolute bottom-2 right-2 z-10 p-1 rounded-full transition-all",
+            "bg-background/60 backdrop-blur-sm text-white/80",
+            "hover:text-cyan-400 hover:bg-background/80",
+            "opacity-100 md:opacity-0 md:group-hover:opacity-100"
+          )}
+          title="Restore prompt, settings, and references"
+          aria-label="Restore this generation's prompt, settings, and reference images"
+        >
+          <RotateCcw className="w-4 h-4" />
+        </button>
+      )}
+
       {/* Action menu button - always visible on mobile, hover on desktop */}
       {showActions && (
         <div className="absolute top-2 right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
@@ -296,6 +316,7 @@ export const ImageCard = memo(ImageCardComponent, (prevProps, nextProps) => {
     prevProps.showActions === nextProps.showActions &&
     prevProps.useNativeAspectRatio === nextProps.useNativeAspectRatio &&
     prevProps.showPrompt === nextProps.showPrompt &&
-    prevProps.gridSize === nextProps.gridSize
+    prevProps.gridSize === nextProps.gridSize &&
+    prevProps.onRestore === nextProps.onRestore
   )
 })

@@ -19,6 +19,7 @@ export interface GeneratedImage {
   folderName?: string // NEW: Folder name for display
   recipeId?: string // Recipe used to generate this image
   recipeName?: string // Recipe name for display
+  referenceImageUrls?: string[] // Reference images used to generate this image (for recycle/restore)
   settings: {
     aspectRatio: string
     resolution: string
