@@ -537,8 +537,10 @@ export function useImageGeneration() {
                 // Use custom styles store to find both preset and custom styles
                 const selectedStyle = useCustomStylesStore.getState().getStyleById(selectedStyleId)
                 if (selectedStyle) {
-                    // Inject style prompt at the end of user's prompt
-                    promptWithStyle = `${prompt}, ${selectedStyle.stylePrompt}`
+                    // Inject style prompt at the end of user's prompt. Append a "no text"
+                    // instruction so models don't render the style name as a title on the image.
+                    const noTextGuard = 'Do not render any text, titles, captions, watermarks, or labels in the image.'
+                    promptWithStyle = `${prompt}, ${selectedStyle.stylePrompt}. ${noTextGuard}`
 
                     // Auto-attach style reference image (if one exists)
                     const styleImageUrl = selectedStyle.imagePath
@@ -548,6 +550,14 @@ export function useImageGeneration() {
                             : `${window.location.origin}${styleImageUrl}`
                         uniqueReferenceImages = [fullStyleUrl, ...uniqueReferenceImages]
                     }
+
+                    // Fire-and-forget usage tracking — matches by name against system styles
+                    // in the DB. If no match (e.g., user's custom style), silently no-ops.
+                    fetch('/api/styles/track-usage', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ styleName: selectedStyle.name, styleId: selectedStyleId }),
+                    }).catch(() => { /* ignore */ })
 
                     logger.shotCreator.info('Style applied', { style: selectedStyle.name, prompt: selectedStyle.stylePrompt, reference: !styleImageUrl ? '[none]' : styleImageUrl.startsWith('data:') ? '[data URL]' : styleImageUrl })
                 }

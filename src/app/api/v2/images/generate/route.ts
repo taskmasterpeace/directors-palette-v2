@@ -139,7 +139,8 @@ export async function POST(request: NextRequest) {
         return errors.validation(`Style not found: ${styleRef}. List available styles via GET /api/v2/styles`)
       }
       if (matched.style_prompt) {
-        prompt = prompt ? `${prompt}, ${matched.style_prompt}` : matched.style_prompt
+        const styleText = `${matched.style_prompt}. Do not render any text, titles, captions, watermarks, or labels in the image.`
+        prompt = prompt ? `${prompt}, ${styleText}` : styleText
       }
       if (matched.image_url) {
         // Convert relative paths (e.g. /storyboard-assets/...) to absolute URLs
@@ -152,11 +153,6 @@ export async function POST(request: NextRequest) {
           allReferenceImages.unshift(absoluteImageUrl)
         }
       }
-
-      // Track usage (fire-and-forget — don't block generation if it fails)
-      supabaseAdmin.rpc('increment_style_usage', { p_style_id: matched.id }).then(({ error: rpcErr }) => {
-        if (rpcErr) lognog.error('style usage increment failed', { styleId: matched.id, error: rpcErr.message })
-      })
     }
 
     // Auto-resolve @tags in prompt to gallery reference images

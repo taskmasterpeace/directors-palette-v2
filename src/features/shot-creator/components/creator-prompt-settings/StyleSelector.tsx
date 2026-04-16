@@ -505,6 +505,18 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                                 Reset
                             </Button>
                         )}
+                        {/* Delete button - only for user's custom styles */}
+                        {currentStyle && 'isCustom' in currentStyle && currentStyle.isCustom && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => openDeleteDialog(currentStyle, e)}
+                                className="h-6 px-2 text-xs text-muted-foreground hover:text-red-500 flex-shrink-0"
+                            >
+                                <Trash2 className="w-3 h-3 mr-1" />
+                                Delete
+                            </Button>
+                        )}
                         <Button
                             variant="ghost"
                             size="sm"
