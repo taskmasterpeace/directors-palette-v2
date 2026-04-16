@@ -21,6 +21,7 @@ export interface StyleSheet {
   description: string | null
   style_prompt: string | null
   image_url: string | null
+  usage_count: number
   is_system: boolean
   created_at: string
   updated_at: string
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest) {
     if (publicOnly) {
       const { data, error } = await supabase
         .from('style_guides')
-        .select('id, name, description, style_prompt, image_url, is_system, created_at, updated_at')
+        .select('id, name, description, style_prompt, image_url, usage_count, is_system, created_at, updated_at')
         .eq("is_system", true)
         .order('name')
 
@@ -51,7 +52,7 @@ export async function GET(request: NextRequest) {
 
     const { data, error } = await supabase
       .from('style_guides')
-      .select('id, user_id, name, description, style_prompt, image_url, is_system, created_at, updated_at')
+      .select('id, user_id, name, description, style_prompt, image_url, usage_count, is_system, created_at, updated_at')
       .eq("is_system", true)
       .order('created_at', { ascending: false })
 

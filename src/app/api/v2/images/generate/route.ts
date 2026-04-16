@@ -152,6 +152,11 @@ export async function POST(request: NextRequest) {
           allReferenceImages.unshift(absoluteImageUrl)
         }
       }
+
+      // Track usage (fire-and-forget — don't block generation if it fails)
+      supabaseAdmin.rpc('increment_style_usage', { p_style_id: matched.id }).then(({ error: rpcErr }) => {
+        if (rpcErr) lognog.error('style usage increment failed', { styleId: matched.id, error: rpcErr.message })
+      })
     }
 
     // Auto-resolve @tags in prompt to gallery reference images

@@ -1133,6 +1133,138 @@ List your recent jobs with optional filters.
 
 ---
 
+### GET /api/v2/admin/styles
+
+**Admin only.** List all system styles with full details including usage counts. Requires an API key whose owner is an admin.
+
+**Query Parameters:**
+
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `sort` | string | `"name"` | Sort order: `"name"` (A–Z), `"usage"` (most used first), `"recent"` (newest first) |
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "styles": [
+      {
+        "id": "uuid-here",
+        "name": "Muppet Style",
+        "description": "Jim Henson-inspired felt puppet aesthetic",
+        "style_prompt": "in the style of Jim Henson muppets, felt texture...",
+        "image_url": "https://...",
+        "usage_count": 42,
+        "is_system": true,
+        "created_at": "2026-01-15T10:00:00Z",
+        "updated_at": "2026-04-16T12:00:00Z"
+      }
+    ],
+    "total": 9
+  }
+}
+```
+
+**Errors:**
+- `403` — Not an admin key
+
+---
+
+### POST /api/v2/admin/styles
+
+**Admin only.** Create a new system style. Immediately usable by all users via `style` or `style_id` on `/images/generate`.
+
+**Request Body:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | Yes | Style name (shown in UI and usable as `style` param) |
+| `description` | string | No | Short description |
+| `style_prompt` | string | No | Prompt text appended to user prompts when style is used |
+| `image_url` | string | No | Absolute URL of the style thumbnail/reference image |
+
+**Response (201):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "style": {
+      "id": "new-uuid",
+      "name": "Claymation",
+      "description": null,
+      "style_prompt": "in the style of stop-motion claymation...",
+      "image_url": null,
+      "usage_count": 0,
+      "is_system": true,
+      "created_at": "2026-04-16T12:00:00Z",
+      "updated_at": "2026-04-16T12:00:00Z"
+    }
+  }
+}
+```
+
+**Errors:**
+- `403` — Not an admin key
+- `422` — Missing `name`
+
+---
+
+### GET /api/v2/admin/styles/{id}
+
+**Admin only.** Fetch a single system style by id.
+
+**Response:** Same shape as one entry in the list endpoint (wrapped in `{ style: ... }`).
+
+**Errors:**
+- `403` — Not an admin key
+- `404` — Style not found
+
+---
+
+### PATCH /api/v2/admin/styles/{id}
+
+**Admin only.** Partially update a system style. Only provided fields are changed.
+
+**Request Body (all optional):**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | string | New name (non-empty if provided) |
+| `description` | string \| null | New description |
+| `style_prompt` | string \| null | New prompt text |
+| `image_url` | string \| null | New thumbnail URL |
+
+**Response:** Updated style in `{ style: ... }`.
+
+**Errors:**
+- `403` — Not an admin key
+- `404` — Style not found
+- `422` — `name` provided but empty
+
+---
+
+### DELETE /api/v2/admin/styles/{id}
+
+**Admin only.** Delete a system style. This affects all users immediately.
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": { "deleted": true, "id": "uuid-here" }
+}
+```
+
+**Errors:**
+- `403` — Not an admin key
+- `500` — Delete failed
+
+---
+
 ### GET /api/v2/jobs/{jobId}
 
 Get details of a single job.
