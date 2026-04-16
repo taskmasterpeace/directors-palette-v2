@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const {
       model,
-      prompt,
+      prompt: rawPrompt,
       aspect_ratio = '16:9',
       loras,
       reference_image,
@@ -104,7 +104,11 @@ export async function POST(request: NextRequest) {
       num_images = 1,
       seed,
       webhook_url,
+      style_id,
+      style,
     } = body
+
+    let prompt = rawPrompt
 
     // Build reference images array from both singular and plural fields
     const allReferenceImages: string[] = []
@@ -112,6 +116,34 @@ export async function POST(request: NextRequest) {
       allReferenceImages.push(...reference_images.filter((r: unknown) => typeof r === 'string'))
     } else if (reference_image) {
       allReferenceImages.push(reference_image)
+    }
+
+    // Apply style if requested (by UUID or name — system styles only)
+    const styleRef = style_id || style
+    if (styleRef) {
+      const supabaseAdmin = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      )
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(styleRef)
+      const query = supabaseAdmin
+        .from('style_guides')
+        .select('id, name, style_prompt, image_url')
+        .eq('is_system', true)
+        .limit(1)
+      const { data: styles } = isUuid
+        ? await query.eq('id', styleRef)
+        : await query.ilike('name', styleRef)
+      const matched = styles?.[0]
+      if (!matched) {
+        return errors.validation(`Style not found: ${styleRef}. List available styles via GET /api/v2/styles`)
+      }
+      if (matched.style_prompt) {
+        prompt = prompt ? `${prompt}, ${matched.style_prompt}` : matched.style_prompt
+      }
+      if (matched.image_url && !allReferenceImages.includes(matched.image_url)) {
+        allReferenceImages.unshift(matched.image_url)
+      }
     }
 
     // Auto-resolve @tags in prompt to gallery reference images

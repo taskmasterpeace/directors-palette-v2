@@ -324,21 +324,47 @@ Returns all premade style sheets (e.g., Muppet, Anime, Watercolor). Use the `sty
 
 **Using a style with image generation:**
 
+The easiest way is to pass `style_id` (the style's UUID) or `style` (the style's name) directly to the generate endpoint. The API will automatically append the `style_prompt` to your prompt and attach the style's preview image as a reference.
+
 ```bash
-# 1. List available styles
+# 1. List available styles to get an id or name
 curl https://directorspalette.com/api/v2/styles \
   -H "Authorization: Bearer dp_your_key_here"
 
-# 2. Copy the style_prompt from the style you want, then use it in generation
+# 2a. By style name (easiest)
 curl -X POST https://directorspalette.com/api/v2/images/generate \
   -H "Authorization: Bearer dp_your_key_here" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "nano-banana-2",
-    "prompt": "A dragon sitting on a mountain. in the style of Jim Henson muppets, felt texture, puppet-like characters",
+    "prompt": "A dragon sitting on a mountain",
+    "style": "Muppet Style",
+    "aspect_ratio": "16:9"
+  }'
+
+# 2b. By style id (UUID)
+curl -X POST https://directorspalette.com/api/v2/images/generate \
+  -H "Authorization: Bearer dp_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "nano-banana-2",
+    "prompt": "A dragon sitting on a mountain",
+    "style_id": "uuid-here",
+    "aspect_ratio": "16:9"
+  }'
+
+# 2c. Manual (if you prefer control — copy style_prompt into your prompt yourself)
+curl -X POST https://directorspalette.com/api/v2/images/generate \
+  -H "Authorization: Bearer dp_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "nano-banana-2",
+    "prompt": "A dragon sitting on a mountain, in the style of Jim Henson muppets, felt texture, puppet-like characters",
     "aspect_ratio": "16:9"
   }'
 ```
+
+**Note:** Only system styles (added by admins) are available via the API. When you add a style through the admin dashboard, it's automatically marked as a system style and becomes usable immediately.
 
 ---
 
@@ -359,6 +385,8 @@ Generate one or more images asynchronously.
 | `reference_strength` | number | No | Strength of reference image influence (overrides model default) |
 | `reference_tag` | string | No | Auto-tag the generated image with this @reference (e.g., `"@sasha-foxworth"`) |
 | `reference_category` | string | No | Category for the reference tag: `people`, `places`, `props`, `layouts`, `styles`. Default: `"people"` |
+| `style_id` | string | No | UUID of a system style (from `/api/v2/styles`). Auto-appends `style_prompt` and attaches the style image as a reference. |
+| `style` | string | No | Name of a system style (e.g., `"Muppet Style"`). Alternative to `style_id`. Case-insensitive. |
 | `seed` | integer | No | Random seed for reproducibility |
 | `webhook_url` | string | No | URL to receive a POST when generation completes |
 
