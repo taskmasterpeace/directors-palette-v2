@@ -32,13 +32,26 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    // 1) Delete expired videos (>7 days)
     const deletedCount = await StorageLimitsService.deleteExpiredContent()
 
-    logger.api.info('Cron: Cleanup completed', { deletedCount: deletedCount })
+    // 2) Delete orphaned reference upload files
+    //    (kept for 7 days, floored at the user's last 10 generations)
+    const referenceResult = await StorageLimitsService.deleteOrphanedReferenceFiles()
+
+    logger.api.info('Cron: Cleanup completed', {
+      deletedCount,
+      referenceFilesDeleted: referenceResult.deletedCount,
+      usersProcessed: referenceResult.usersProcessed,
+      usersFailed: referenceResult.usersFailed,
+    })
 
     return NextResponse.json({
       success: true,
       deletedCount,
+      referenceFilesDeleted: referenceResult.deletedCount,
+      usersProcessed: referenceResult.usersProcessed,
+      usersFailed: referenceResult.usersFailed,
       timestamp: new Date().toISOString(),
     })
   } catch (error) {

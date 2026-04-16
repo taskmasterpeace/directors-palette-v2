@@ -12,6 +12,12 @@ const IMAGE_LIMIT = 500
 const IMAGE_WARNING_THRESHOLD = 400
 const VIDEO_EXPIRATION_DAYS = 7
 const STORAGE_BUCKET = 'directors-palette'
+// Reference files (used by the "restore/recycle" feature) are kept for 7 days
+// OR as long as they are pointed at by one of the user's last 10 generations,
+// whichever protects more. Files older than this AND not referenced by a
+// protected generation get garbage-collected.
+const REFERENCE_RETENTION_DAYS = 7
+const REFERENCE_RETENTION_FLOOR_GENERATIONS = 10
 
 // Lazy-load Supabase client
 let _supabase: ReturnType<typeof createClient> | null = null
@@ -132,6 +138,140 @@ export class StorageLimitsService {
     }
 
     return data || expiredItems.length
+  }
+
+  /**
+   * Delete orphaned reference upload files.
+   *
+   * Files live at generations/{userId}/upload_*.{ext}. Each is kept while either:
+   *   (a) it is referenced by a generation newer than REFERENCE_RETENTION_DAYS, OR
+   *   (b) it is referenced by one of the user's last REFERENCE_RETENTION_FLOOR_GENERATIONS.
+   *
+   * Anything failing both checks AND older than the retention window gets deleted.
+   * We never delete a file younger than the retention window, even if orphaned —
+   * a user might have just uploaded it and not yet kicked off a generation.
+   *
+   * Safe to re-run: idempotent, per-user failures are isolated.
+   */
+  static async deleteOrphanedReferenceFiles(): Promise<{
+    deletedCount: number
+    usersProcessed: number
+    usersFailed: number
+  }> {
+    const supabase = getSupabase()
+    const retentionCutoffMs = Date.now() - REFERENCE_RETENTION_DAYS * 24 * 60 * 60 * 1000
+    const retentionCutoffIso = new Date(retentionCutoffMs).toISOString()
+
+    // Enumerate users by listing top-level folders under `generations/`.
+    // Each folder name is a userId.
+    const { data: topLevel, error: listError } = await supabase.storage
+      .from(STORAGE_BUCKET)
+      .list('generations', { limit: 1000 })
+
+    if (listError) {
+      log.error('Reference cleanup: failed to list users', { error: listError })
+      return { deletedCount: 0, usersProcessed: 0, usersFailed: 0 }
+    }
+
+    if (!topLevel || topLevel.length === 0) {
+      return { deletedCount: 0, usersProcessed: 0, usersFailed: 0 }
+    }
+
+    // Folders have id === null in Supabase Storage; files have a UUID id.
+    const userIds = topLevel
+      .filter(item => item.id === null && !!item.name)
+      .map(item => item.name)
+
+    let totalDeleted = 0
+    let usersProcessed = 0
+    let usersFailed = 0
+
+    for (const userId of userIds) {
+      try {
+        // Build the set of URLs that are currently "protected" for this user.
+        // Union of: generations in last 7 days + user's last 10 generations.
+        const protectedUrls = new Set<string>()
+
+        const { data: recentByTime } = await supabase
+          .from('gallery')
+          .select('metadata')
+          .eq('user_id', userId)
+          .gte('created_at', retentionCutoffIso)
+
+        const { data: last10 } = await supabase
+          .from('gallery')
+          .select('metadata')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(REFERENCE_RETENTION_FLOOR_GENERATIONS)
+
+        const collectUrls = (rows: { metadata: unknown }[] | null) => {
+          if (!rows) return
+          for (const row of rows) {
+            const urls = (row.metadata as { reference_image_urls?: unknown })?.reference_image_urls
+            if (!Array.isArray(urls)) continue
+            for (const url of urls) {
+              if (typeof url === 'string' && url.length > 0) {
+                protectedUrls.add(url)
+              }
+            }
+          }
+        }
+        collectUrls(recentByTime as { metadata: unknown }[] | null)
+        collectUrls(last10 as { metadata: unknown }[] | null)
+
+        // List this user's files and find orphaned upload_* entries past retention.
+        const { data: userFiles, error: userFilesError } = await supabase.storage
+          .from(STORAGE_BUCKET)
+          .list(`generations/${userId}`, { limit: 1000 })
+
+        if (userFilesError || !userFiles) {
+          log.error('Reference cleanup: failed to list user files', { userId, error: userFilesError })
+          usersFailed++
+          continue
+        }
+
+        const pathsToDelete: string[] = []
+
+        for (const file of userFiles) {
+          // Only target uploaded reference files.
+          if (!file.name.startsWith('upload_')) continue
+
+          // Respect retention window — never delete files younger than cutoff.
+          const createdAt = file.created_at ? new Date(file.created_at).getTime() : Date.now()
+          if (createdAt > retentionCutoffMs) continue
+
+          const fullPath = `generations/${userId}/${file.name}`
+          const { data: urlData } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(fullPath)
+          if (protectedUrls.has(urlData.publicUrl)) continue
+
+          pathsToDelete.push(fullPath)
+        }
+
+        if (pathsToDelete.length > 0) {
+          const { error: removeError } = await supabase.storage
+            .from(STORAGE_BUCKET)
+            .remove(pathsToDelete)
+
+          if (removeError) {
+            log.error('Reference cleanup: batch remove failed', { userId, count: pathsToDelete.length, error: removeError })
+            usersFailed++
+            continue
+          }
+
+          totalDeleted += pathsToDelete.length
+        }
+
+        usersProcessed++
+      } catch (error) {
+        log.error('Reference cleanup: unexpected error for user', { userId, error: error instanceof Error ? error.message : String(error) })
+        usersFailed++
+      }
+    }
+
+    log.info('Reference cleanup completed', { totalDeleted, usersProcessed, usersFailed, totalUsers: userIds.length })
+
+    return { deletedCount: totalDeleted, usersProcessed, usersFailed }
   }
 
   /**
