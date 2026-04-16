@@ -141,8 +141,16 @@ export async function POST(request: NextRequest) {
       if (matched.style_prompt) {
         prompt = prompt ? `${prompt}, ${matched.style_prompt}` : matched.style_prompt
       }
-      if (matched.image_url && !allReferenceImages.includes(matched.image_url)) {
-        allReferenceImages.unshift(matched.image_url)
+      if (matched.image_url) {
+        // Convert relative paths (e.g. /storyboard-assets/...) to absolute URLs
+        // so external generators (Replicate/fal.ai) can fetch them.
+        const base = process.env.NEXT_PUBLIC_SITE_URL || process.env.WEBHOOK_URL || 'https://directorspalette.com'
+        const absoluteImageUrl = matched.image_url.startsWith('http')
+          ? matched.image_url
+          : `${base.replace(/\/$/, '')}${matched.image_url.startsWith('/') ? '' : '/'}${matched.image_url}`
+        if (!allReferenceImages.includes(absoluteImageUrl)) {
+          allReferenceImages.unshift(absoluteImageUrl)
+        }
       }
     }
 
