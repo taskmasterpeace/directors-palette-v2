@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
-import { Palette, Plus, Pencil, Trash2, RefreshCw, Image as ImageIcon, Upload, Copy, TrendingUp, AlignLeft, Clock } from 'lucide-react'
+import { Palette, Plus, Pencil, Trash2, RefreshCw, Image as ImageIcon, Upload, Copy, TrendingUp, AlignLeft, Clock, Sparkles } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { createBrowserClient } from '@supabase/ssr'
 import { createLogger } from '@/lib/logger'
@@ -42,6 +42,7 @@ export function StyleSheetsTab() {
   const [editingStyle, setEditingStyle] = useState<StyleSheet | null>(null)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [seeding, setSeeding] = useState(false)
 
   // Form state
   const [name, setName] = useState('')
@@ -199,6 +200,32 @@ export function StyleSheetsTab() {
     toast({ title: 'ID copied', description: id })
   }
 
+  const handleSeedPresets = async () => {
+    setSeeding(true)
+    try {
+      const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      )
+      const { data: { session } } = await supabase.auth.getSession()
+
+      const res = await fetch('/api/admin/seed-styles', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${session?.access_token}` }
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) throw new Error(data.message || 'Seed failed')
+
+      toast({ title: 'Presets seeded', description: data.message })
+      fetchStyles()
+    } catch (error) {
+      log.error('Seed failed', { error: error instanceof Error ? error.message : String(error) })
+      toast({ title: 'Seed failed', description: error instanceof Error ? error.message : 'Unknown', variant: 'destructive' })
+    } finally {
+      setSeeding(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <Card>
@@ -246,6 +273,10 @@ export function StyleSheetsTab() {
               <Button variant="outline" size="sm" onClick={fetchStyles} disabled={loading}>
                 <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                 Refresh
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleSeedPresets} disabled={seeding} title="One-time migration: copy hardcoded preset styles into this table">
+                <Sparkles className={`w-4 h-4 mr-2 ${seeding ? 'animate-spin' : ''}`} />
+                Seed Presets
               </Button>
               <Button onClick={openCreateDialog}>
                 <Plus className="w-4 h-4 mr-2" />

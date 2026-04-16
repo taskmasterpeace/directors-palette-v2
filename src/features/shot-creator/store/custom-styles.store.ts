@@ -1,10 +1,17 @@
 /**
  * Custom Styles Store
- * Manages user-created styles and preset overrides with localStorage persistence.
  *
- * Also fetches system-wide styles (created by admins via the Style Sheets tab)
- * on demand. System styles are kept in-memory only — always re-fetched on load
- * so admin changes propagate without stale localStorage.
+ * Single source of truth for styles shown in Shot Creator, in priority order:
+ *   1. Admin-managed system styles from the DB (`style_guides` where is_system=true)
+ *      — fetched via /api/admin/style-sheets?public=true on mount. These win.
+ *   2. Hardcoded PRESET_STYLES — only shown when (a) not hidden by the user AND
+ *      (b) no DB row has "seeded" over them (metadata.preset_id match). These
+ *      are a fallback: if the admin wipes the DB, users still see built-ins.
+ *   3. User's own custom styles — local-only, persisted to localStorage.
+ *
+ * The admin can promote any hardcoded preset into the DB via the "Seed Presets"
+ * button on the Style Sheets tab. Once seeded, the DB row replaces the hardcoded
+ * one in the picker and becomes fully editable/deletable via the admin UI.
  */
 
 import { create } from 'zustand'
@@ -29,6 +36,8 @@ export interface SystemStyle {
     imagePath: string
     stylePrompt: string
     isSystem: true
+    /** If this DB row was seeded from a hardcoded PRESET_STYLES entry, this is the preset id (e.g. "claymation"). */
+    presetId?: string
 }
 
 export type AnyStyle = PresetStyle | CustomStyle | SystemStyle
@@ -149,7 +158,7 @@ export const useCustomStylesStore = create<CustomStylesStore>()(
                         headers: { 'Accept': 'application/json' },
                     })
                     if (!res.ok) throw new Error(`HTTP ${res.status}`)
-                    const data = await res.json() as { styles?: Array<{ id: string; name: string; description: string | null; style_prompt: string | null; image_url: string | null }> }
+                    const data = await res.json() as { styles?: Array<{ id: string; name: string; description: string | null; style_prompt: string | null; image_url: string | null; metadata?: { preset_id?: string } | null }> }
 
                     const systemStyles: SystemStyle[] = (data.styles || []).map((row) => ({
                         id: row.id,
@@ -158,6 +167,7 @@ export const useCustomStylesStore = create<CustomStylesStore>()(
                         imagePath: row.image_url || '',
                         stylePrompt: row.style_prompt || `in the ${row.name} style`,
                         isSystem: true,
+                        presetId: row.metadata?.preset_id,
                     }))
 
                     set({ systemStyles, systemStylesStatus: 'loaded' })
@@ -171,14 +181,21 @@ export const useCustomStylesStore = create<CustomStylesStore>()(
 
             getAllStyles: () => {
                 const { customStyles, systemStyles, hiddenPresetIds, presetOverrides } = get()
+                // DB system styles with a preset_id "shadow" the hardcoded preset of the same id —
+                // the admin's DB row wins (single source of truth). Hardcoded presets only surface
+                // when (a) not hidden by user AND (b) no DB row has seeded over them.
+                const seededPresetIds = new Set(
+                    systemStyles.map((s) => s.presetId).filter((id): id is string => !!id)
+                )
                 const visiblePresets = PRESET_STYLES
                     .filter((preset) => !hiddenPresetIds.includes(preset.id))
+                    .filter((preset) => !seededPresetIds.has(preset.id))
                     .map((preset) => {
                         const override = presetOverrides[preset.id]
                         return override ? { ...preset, ...override, id: preset.id } : preset
                     })
-                // Order: built-in presets → admin-published system styles → user's own custom styles
-                return [...visiblePresets, ...systemStyles, ...customStyles]
+                // Order: admin-managed system styles first (source of truth) → fallback presets → user's own customs
+                return [...systemStyles, ...visiblePresets, ...customStyles]
             },
 
             getStyleById: (id) => {
@@ -188,11 +205,16 @@ export const useCustomStylesStore = create<CustomStylesStore>()(
                 const customStyle = customStyles.find((s) => s.id === id)
                 if (customStyle) return customStyle
 
-                // Check system styles (admin-published)
-                const systemStyle = systemStyles.find((s) => s.id === id)
-                if (systemStyle) return systemStyle
+                // Check system styles (admin-published) by DB UUID
+                const systemStyleByUuid = systemStyles.find((s) => s.id === id)
+                if (systemStyleByUuid) return systemStyleByUuid
 
-                // Check preset styles (even hidden ones for lookup purposes)
+                // Legacy-compatible: if the stored setting still holds the hardcoded preset id
+                // (e.g. 'claymation'), resolve it to the seeded DB row — admin-managed row wins.
+                const systemStyleByPresetId = systemStyles.find((s) => s.presetId === id)
+                if (systemStyleByPresetId) return systemStyleByPresetId
+
+                // Fallback to hardcoded preset
                 const presetStyle = PRESET_STYLES.find((s) => s.id === id)
                 if (presetStyle && !hiddenPresetIds.includes(presetStyle.id)) {
                     const override = presetOverrides[presetStyle.id]

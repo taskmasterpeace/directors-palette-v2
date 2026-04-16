@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     if (publicOnly) {
       const { data, error } = await supabase
         .from('style_guides')
-        .select('id, name, description, style_prompt, image_url, usage_count, is_system, created_at, updated_at')
+        .select('id, name, description, style_prompt, image_url, usage_count, is_system, metadata, created_at, updated_at')
         .eq("is_system", true)
         .order('name')
 
