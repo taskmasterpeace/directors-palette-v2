@@ -1,16 +1,22 @@
 /**
- * Track style usage from the UI.
- * Called fire-and-forget after a user selects a style and generates an image.
- * Matches by style name (case-insensitive) against system styles in style_guides.
- * If no match (e.g., user's localStorage-only custom style), silently no-op.
+ * Track style usage from the UI. Called fire-and-forget after a generation.
+ * Auth required — prevents anonymous counter inflation.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { getClient } from '@/lib/db/client'
+import { isUuid } from '@/features/shared/constants/style-guards'
 import { logger } from '@/lib/logger'
 
 export async function POST(request: NextRequest) {
   try {
+    const sessionClient = await getClient()
+    const { data: { user } } = await sessionClient.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ tracked: false, reason: 'unauthenticated' }, { status: 401 })
+    }
+
     const { styleName, styleId } = await request.json().catch(() => ({}))
     if (!styleName && !styleId) {
       return NextResponse.json({ tracked: false, reason: 'missing_identifier' })
@@ -21,10 +27,8 @@ export async function POST(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    const isUuid = typeof styleId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(styleId)
-
     let matchedId: string | null = null
-    if (isUuid) {
+    if (isUuid(styleId)) {
       matchedId = styleId
     } else if (typeof styleName === 'string' && styleName.trim()) {
       const { data } = await supabase
@@ -32,6 +36,7 @@ export async function POST(request: NextRequest) {
         .select('id')
         .eq('is_system', true)
         .ilike('name', styleName.trim())
+        .order('id', { ascending: true })
         .limit(1)
       matchedId = data?.[0]?.id ?? null
     }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -77,13 +77,15 @@ export function StyleSheetsTab() {
 
   useEffect(() => { fetchStyles() }, [fetchStyles])
 
-  const sortedStyles = [...styles].sort((a, b) => {
-    if (sort === 'usage') return (b.usage_count ?? 0) - (a.usage_count ?? 0) || a.name.localeCompare(b.name)
-    if (sort === 'recent') return b.created_at.localeCompare(a.created_at)
-    return a.name.localeCompare(b.name)
-  })
+  const sortedStyles = useMemo(() => {
+    return [...styles].sort((a, b) => {
+      if (sort === 'usage') return b.usage_count - a.usage_count || a.name.localeCompare(b.name)
+      if (sort === 'recent') return b.created_at.localeCompare(a.created_at)
+      return a.name.localeCompare(b.name)
+    })
+  }, [styles, sort])
 
-  const totalUsage = styles.reduce((sum, s) => sum + (s.usage_count ?? 0), 0)
+  const totalUsage = useMemo(() => styles.reduce((sum, s) => sum + s.usage_count, 0), [styles])
 
   const resetForm = () => {
     setName('')
@@ -269,10 +271,8 @@ export function StyleSheetsTab() {
                   key={style.id}
                   className="group relative rounded-lg border bg-card overflow-hidden hover:border-primary/50 hover:shadow-md transition-all"
                 >
-                  {/* Thumbnail */}
                   <div className="relative aspect-video bg-muted overflow-hidden">
                     {style.image_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={style.image_url}
                         alt={style.name}
@@ -284,7 +284,6 @@ export function StyleSheetsTab() {
                       </div>
                     )}
 
-                    {/* Usage badge */}
                     <div className="absolute top-2 left-2">
                       <Badge variant={style.usage_count > 0 ? 'default' : 'secondary'} className="text-xs font-medium">
                         <TrendingUp className="w-3 h-3 mr-1" />
@@ -292,7 +291,6 @@ export function StyleSheetsTab() {
                       </Badge>
                     </div>
 
-                    {/* Action buttons (visible on hover) */}
                     <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button
                         variant="secondary"
@@ -329,7 +327,6 @@ export function StyleSheetsTab() {
                     </div>
                   </div>
 
-                  {/* Body */}
                   <div className="p-4 space-y-2">
                     <div>
                       <div className="font-semibold text-base">{style.name}</div>
@@ -355,7 +352,6 @@ export function StyleSheetsTab() {
         </CardContent>
       </Card>
 
-      {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-xl">
           <DialogHeader>
@@ -368,7 +364,6 @@ export function StyleSheetsTab() {
           </DialogHeader>
 
           <div className="space-y-4">
-            {/* Image upload / preview */}
             <div className="space-y-2">
               <Label>Thumbnail Image</Label>
               <div
@@ -382,13 +377,12 @@ export function StyleSheetsTab() {
                   const file = e.dataTransfer.files[0]
                   if (file) uploadFile(file)
                 }}
-                onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
+                onDragOver={(e) => { e.preventDefault(); if (!dragging) setDragging(true) }}
                 onDragLeave={() => setDragging(false)}
                 onClick={() => fileInputRef.current?.click()}
               >
                 {imageUrl ? (
                   <div className="relative aspect-video">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={imageUrl} alt="Preview" className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
                       <span className="text-white text-sm font-medium">

@@ -10,6 +10,7 @@ import { successResponse, errors } from '../../_lib/response'
 import { createJob, formatJobResponse, updateJobById } from '../../_lib/job-manager'
 import { StorageService } from '@/features/generation/services/storage.service'
 import { lognog } from '@/lib/lognog'
+import { STYLE_REFERENCE_NO_TEXT_GUARD, isUuid } from '@/features/shared/constants/style-guards'
 
 const replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN })
 
@@ -125,13 +126,12 @@ export async function POST(request: NextRequest) {
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY!
       )
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(styleRef)
       const query = supabaseAdmin
         .from('style_guides')
         .select('id, name, style_prompt, image_url')
         .eq('is_system', true)
         .limit(1)
-      const { data: styles } = isUuid
+      const { data: styles } = isUuid(styleRef)
         ? await query.eq('id', styleRef)
         : await query.ilike('name', styleRef)
       const matched = styles?.[0]
@@ -140,8 +140,7 @@ export async function POST(request: NextRequest) {
       }
       let styleText = matched.style_prompt || ''
       if (matched.image_url) {
-        // Convert relative paths (e.g. /storyboard-assets/...) to absolute URLs
-        // so external generators (Replicate/fal.ai) can fetch them.
+        // External generators need absolute URLs, not relative paths.
         const base = process.env.NEXT_PUBLIC_SITE_URL || process.env.WEBHOOK_URL || 'https://directorspalette.com'
         const absoluteImageUrl = matched.image_url.startsWith('http')
           ? matched.image_url
@@ -149,11 +148,7 @@ export async function POST(request: NextRequest) {
         if (!allReferenceImages.includes(absoluteImageUrl)) {
           allReferenceImages.unshift(absoluteImageUrl)
         }
-        // Scope: ignore text FROM the reference image, not from the user's prompt.
-        // Safe even for "text style" guides in the future because the user's own
-        // prompt remains the source of truth for any text they want rendered.
-        const refGuard = 'Apply only the visual style (colors, textures, medium, technique) from the style reference image — ignore any text, titles, captions, or labels that appear within the reference itself.'
-        styleText = styleText ? `${styleText}. ${refGuard}` : refGuard
+        styleText = styleText ? `${styleText}. ${STYLE_REFERENCE_NO_TEXT_GUARD}` : STYLE_REFERENCE_NO_TEXT_GUARD
       }
       if (styleText) {
         prompt = prompt ? `${prompt}, ${styleText}` : styleText

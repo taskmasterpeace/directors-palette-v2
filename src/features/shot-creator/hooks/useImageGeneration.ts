@@ -18,6 +18,7 @@ import { useCustomStylesStore } from '../store/custom-styles.store'
 import { useLoraStore } from '../store/lora.store'
 import { getModelConfig } from '@/config'
 import { logger } from '@/lib/logger'
+import { STYLE_REFERENCE_NO_TEXT_GUARD } from '@/features/shared/constants/style-guards'
 
 export interface GenerationProgress {
     status: 'idle' | 'starting' | 'processing' | 'waiting' | 'succeeded' | 'failed'
@@ -547,17 +548,16 @@ export function useImageGeneration() {
                         uniqueReferenceImages = [fullStyleUrl, ...uniqueReferenceImages]
                     }
 
-                    // When a reference image is attached, scope a guard so the model ignores
-                    // any text/titles painted IN the reference. The user's own prompt is
-                    // untouched, so they can still render text when they want to.
+                    // When a reference image is attached, tell the model to ignore any
+                    // text painted IN the reference. User's own prompt is untouched.
                     const styleParts = [selectedStyle.stylePrompt]
                     if (hasStyleRef) {
-                        styleParts.push('Apply only the visual style (colors, textures, medium, technique) from the style reference image — ignore any text, titles, captions, or labels that appear within the reference itself.')
+                        styleParts.push(STYLE_REFERENCE_NO_TEXT_GUARD)
                     }
                     promptWithStyle = `${prompt}, ${styleParts.join('. ')}`
 
-                    // Fire-and-forget usage tracking — matches by name against system styles
-                    // in the DB. If no match (e.g., user's custom style), silently no-ops.
+                    // Fire-and-forget usage tracking. Server resolves by name against
+                    // system styles; localStorage-only custom styles no-op silently.
                     fetch('/api/styles/track-usage', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
