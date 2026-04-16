@@ -537,19 +537,24 @@ export function useImageGeneration() {
                 // Use custom styles store to find both preset and custom styles
                 const selectedStyle = useCustomStylesStore.getState().getStyleById(selectedStyleId)
                 if (selectedStyle) {
-                    // Inject style prompt at the end of user's prompt. Append a "no text"
-                    // instruction so models don't render the style name as a title on the image.
-                    const noTextGuard = 'Do not render any text, titles, captions, watermarks, or labels in the image.'
-                    promptWithStyle = `${prompt}, ${selectedStyle.stylePrompt}. ${noTextGuard}`
-
                     // Auto-attach style reference image (if one exists)
                     const styleImageUrl = selectedStyle.imagePath
-                    if (styleImageUrl && typeof window !== 'undefined') {
+                    const hasStyleRef = Boolean(styleImageUrl) && typeof window !== 'undefined'
+                    if (hasStyleRef) {
                         const fullStyleUrl = styleImageUrl.startsWith('data:') || styleImageUrl.startsWith('http')
                             ? styleImageUrl
                             : `${window.location.origin}${styleImageUrl}`
                         uniqueReferenceImages = [fullStyleUrl, ...uniqueReferenceImages]
                     }
+
+                    // When a reference image is attached, scope a guard so the model ignores
+                    // any text/titles painted IN the reference. The user's own prompt is
+                    // untouched, so they can still render text when they want to.
+                    const styleParts = [selectedStyle.stylePrompt]
+                    if (hasStyleRef) {
+                        styleParts.push('Apply only the visual style (colors, textures, medium, technique) from the style reference image — ignore any text, titles, captions, or labels that appear within the reference itself.')
+                    }
+                    promptWithStyle = `${prompt}, ${styleParts.join('. ')}`
 
                     // Fire-and-forget usage tracking — matches by name against system styles
                     // in the DB. If no match (e.g., user's custom style), silently no-ops.

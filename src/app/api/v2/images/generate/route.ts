@@ -138,10 +138,7 @@ export async function POST(request: NextRequest) {
       if (!matched) {
         return errors.validation(`Style not found: ${styleRef}. List available styles via GET /api/v2/styles`)
       }
-      if (matched.style_prompt) {
-        const styleText = `${matched.style_prompt}. Do not render any text, titles, captions, watermarks, or labels in the image.`
-        prompt = prompt ? `${prompt}, ${styleText}` : styleText
-      }
+      let styleText = matched.style_prompt || ''
       if (matched.image_url) {
         // Convert relative paths (e.g. /storyboard-assets/...) to absolute URLs
         // so external generators (Replicate/fal.ai) can fetch them.
@@ -152,6 +149,14 @@ export async function POST(request: NextRequest) {
         if (!allReferenceImages.includes(absoluteImageUrl)) {
           allReferenceImages.unshift(absoluteImageUrl)
         }
+        // Scope: ignore text FROM the reference image, not from the user's prompt.
+        // Safe even for "text style" guides in the future because the user's own
+        // prompt remains the source of truth for any text they want rendered.
+        const refGuard = 'Apply only the visual style (colors, textures, medium, technique) from the style reference image — ignore any text, titles, captions, or labels that appear within the reference itself.'
+        styleText = styleText ? `${styleText}. ${refGuard}` : refGuard
+      }
+      if (styleText) {
+        prompt = prompt ? `${prompt}, ${styleText}` : styleText
       }
     }
 
