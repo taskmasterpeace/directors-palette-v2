@@ -1,11 +1,16 @@
 /**
  * Custom Styles Store
- * Manages user-created styles and preset overrides with localStorage persistence
+ * Manages user-created styles and preset overrides with localStorage persistence.
+ *
+ * Also fetches system-wide styles (created by admins via the Style Sheets tab)
+ * on demand. System styles are kept in-memory only — always re-fetched on load
+ * so admin changes propagate without stale localStorage.
  */
 
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import { PRESET_STYLES, PresetStyle, PresetStyleId } from '@/features/storyboard/types/storyboard.types'
+import { logger } from '@/lib/logger'
 
 export interface CustomStyle {
     id: string
@@ -17,13 +22,24 @@ export interface CustomStyle {
     createdAt: number
 }
 
-export type AnyStyle = PresetStyle | CustomStyle
+export interface SystemStyle {
+    id: string
+    name: string
+    description: string
+    imagePath: string
+    stylePrompt: string
+    isSystem: true
+}
+
+export type AnyStyle = PresetStyle | CustomStyle | SystemStyle
 
 interface CustomStylesStore {
     // State
     customStyles: CustomStyle[]
     hiddenPresetIds: PresetStyleId[] // Preset styles that user has "deleted" (hidden)
     presetOverrides: Record<string, Partial<PresetStyle>> // User overrides for preset styles
+    systemStyles: SystemStyle[] // Admin-published styles, fetched from the API (not persisted)
+    systemStylesStatus: 'idle' | 'loading' | 'loaded' | 'error'
 
     // Actions
     addCustomStyle: (style: Omit<CustomStyle, 'id' | 'isCustom' | 'createdAt'>) => string
@@ -35,6 +51,7 @@ interface CustomStylesStore {
     resetPresetOverride: (id: PresetStyleId) => void
     hasPresetOverride: (id: string) => boolean
     resetToDefaults: () => void
+    loadSystemStyles: () => Promise<void>
 
     // Computed helpers
     getAllStyles: () => AnyStyle[]
@@ -48,6 +65,8 @@ export const useCustomStylesStore = create<CustomStylesStore>()(
             customStyles: [],
             hiddenPresetIds: [],
             presetOverrides: {},
+            systemStyles: [],
+            systemStylesStatus: 'idle',
 
             addCustomStyle: (styleData) => {
                 const id = `custom-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
@@ -119,23 +138,59 @@ export const useCustomStylesStore = create<CustomStylesStore>()(
                 })
             },
 
+            loadSystemStyles: async () => {
+                // Single-flight: don't refetch if already loading or just loaded.
+                const current = get().systemStylesStatus
+                if (current === 'loading' || current === 'loaded') return
+                set({ systemStylesStatus: 'loading' })
+
+                try {
+                    const res = await fetch('/api/admin/style-sheets?public=true', {
+                        headers: { 'Accept': 'application/json' },
+                    })
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+                    const data = await res.json() as { styles?: Array<{ id: string; name: string; description: string | null; style_prompt: string | null; image_url: string | null }> }
+
+                    const systemStyles: SystemStyle[] = (data.styles || []).map((row) => ({
+                        id: row.id,
+                        name: row.name,
+                        description: row.description || '',
+                        imagePath: row.image_url || '',
+                        stylePrompt: row.style_prompt || `in the ${row.name} style`,
+                        isSystem: true,
+                    }))
+
+                    set({ systemStyles, systemStylesStatus: 'loaded' })
+                } catch (error) {
+                    logger.shotCreator.warn('Failed to load system styles', {
+                        error: error instanceof Error ? error.message : String(error),
+                    })
+                    set({ systemStylesStatus: 'error' })
+                }
+            },
+
             getAllStyles: () => {
-                const { customStyles, hiddenPresetIds, presetOverrides } = get()
+                const { customStyles, systemStyles, hiddenPresetIds, presetOverrides } = get()
                 const visiblePresets = PRESET_STYLES
                     .filter((preset) => !hiddenPresetIds.includes(preset.id))
                     .map((preset) => {
                         const override = presetOverrides[preset.id]
                         return override ? { ...preset, ...override, id: preset.id } : preset
                     })
-                return [...visiblePresets, ...customStyles]
+                // Order: built-in presets → admin-published system styles → user's own custom styles
+                return [...visiblePresets, ...systemStyles, ...customStyles]
             },
 
             getStyleById: (id) => {
-                const { customStyles, hiddenPresetIds, presetOverrides } = get()
+                const { customStyles, systemStyles, hiddenPresetIds, presetOverrides } = get()
 
                 // Check custom styles first
                 const customStyle = customStyles.find((s) => s.id === id)
                 if (customStyle) return customStyle
+
+                // Check system styles (admin-published)
+                const systemStyle = systemStyles.find((s) => s.id === id)
+                if (systemStyle) return systemStyle
 
                 // Check preset styles (even hidden ones for lookup purposes)
                 const presetStyle = PRESET_STYLES.find((s) => s.id === id)
@@ -155,13 +210,21 @@ export const useCustomStylesStore = create<CustomStylesStore>()(
         {
             name: 'directors-palette-custom-styles',
             version: 2,
+            storage: createJSONStorage(() => localStorage),
             migrate: (persistedState: unknown, version: number) => {
                 const state = persistedState as Record<string, unknown>
                 if (version < 2) {
                     return { ...state, presetOverrides: {} }
                 }
                 return state
-            }
+            },
+            // System styles come from the DB — never persist them. Always re-fetch
+            // so admin-side changes propagate on next load.
+            partialize: (state) => ({
+                customStyles: state.customStyles,
+                hiddenPresetIds: state.hiddenPresetIds,
+                presetOverrides: state.presetOverrides,
+            }),
         }
     )
 )

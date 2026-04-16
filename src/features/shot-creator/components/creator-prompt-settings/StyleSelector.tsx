@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useShotCreatorSettings } from "../../hooks"
 import { useCustomStylesStore, CustomStyle, AnyStyle } from "../../store/custom-styles.store"
 import type { PresetStyleId } from '@/features/storyboard/types/storyboard.types'
@@ -53,8 +53,15 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
         resetPresetOverride,
         hasPresetOverride,
         getAllStyles,
-        getStyleById
+        getStyleById,
+        loadSystemStyles
     } = useCustomStylesStore()
+
+    // Fetch admin-published system styles once on mount. The store self-guards
+    // against duplicate fetches, so this is safe even if multiple selectors mount.
+    useEffect(() => {
+        loadSystemStyles()
+    }, [loadSystemStyles])
 
     const selectedStyleId = settings.selectedStyle
     const [createDialogOpen, setCreateDialogOpen] = useState(false)
@@ -318,6 +325,10 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
         return 'isCustom' in style && style.isCustom === true
     }
 
+    const isSystemStyle = (style: AnyStyle): boolean => {
+        return 'isSystem' in style && style.isSystem === true
+    }
+
     // Compact mode: just the select, no label or clear button
     if (compact) {
         return (
@@ -475,8 +486,8 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                 </Label>
                 {selectedStyleId && (
                     <div className="flex items-center gap-1">
-                        {/* Edit button - works for all styles */}
-                        {currentStyle && (
+                        {/* Edit button — hidden for system styles (admin-managed) */}
+                        {currentStyle && !isSystemStyle(currentStyle) && (
                             <Button
                                 variant="ghost"
                                 size="sm"
@@ -621,7 +632,10 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                                             {isCustomStyle(style) && (
                                                 <span className="ml-1 text-xs text-amber-500">(custom)</span>
                                             )}
-                                            {!isCustomStyle(style) && hasPresetOverride(style.id) && (
+                                            {isSystemStyle(style) && (
+                                                <span className="ml-1 text-xs text-cyan-400">(system)</span>
+                                            )}
+                                            {!isCustomStyle(style) && !isSystemStyle(style) && hasPresetOverride(style.id) && (
                                                 <span className="ml-1 text-xs text-blue-400">(edited)</span>
                                             )}
                                         </span>
@@ -630,14 +644,17 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                                         </span>
                                     </div>
                                 </div>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-6 w-6 p-0 flex-shrink-0 text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
-                                    onClick={(e) => openDeleteDialog(style, e)}
-                                >
-                                    <Trash2 className="w-3 h-3" />
-                                </Button>
+                                {/* System styles are admin-managed — no per-row delete for users */}
+                                {!isSystemStyle(style) && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 w-6 p-0 flex-shrink-0 text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
+                                        onClick={(e) => openDeleteDialog(style, e)}
+                                    >
+                                        <Trash2 className="w-3 h-3" />
+                                    </Button>
+                                )}
                             </div>
                         </SelectItem>
                     ))}
