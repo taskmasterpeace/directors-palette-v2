@@ -10,7 +10,7 @@ import { successResponse, errors } from '../../_lib/response'
 import { createJob, formatJobResponse, updateJobById } from '../../_lib/job-manager'
 import { StorageService } from '@/features/generation/services/storage.service'
 import { lognog } from '@/lib/lognog'
-import { STYLE_REFERENCE_NO_TEXT_GUARD, isUuid } from '@/features/shared/constants/style-guards'
+import { STYLE_REFERENCE_DIRECTIVE, STYLE_PROMPT_DIRECTIVE, isUuid } from '@/features/shared/constants/style-guards'
 
 const replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN })
 
@@ -138,7 +138,8 @@ export async function POST(request: NextRequest) {
       if (!matched) {
         return errors.validation(`Style not found: ${styleRef}. List available styles via GET /api/v2/styles`)
       }
-      let styleText = matched.style_prompt || ''
+      const basePrompt = matched.style_prompt || ''
+      let hasStyleRef = false
       if (matched.image_url) {
         // External generators need absolute URLs, not relative paths.
         const base = process.env.NEXT_PUBLIC_SITE_URL || process.env.WEBHOOK_URL || 'https://directorspalette.com'
@@ -148,11 +149,14 @@ export async function POST(request: NextRequest) {
         if (!allReferenceImages.includes(absoluteImageUrl)) {
           allReferenceImages.unshift(absoluteImageUrl)
         }
-        styleText = styleText ? `${styleText}. ${STYLE_REFERENCE_NO_TEXT_GUARD}` : STYLE_REFERENCE_NO_TEXT_GUARD
+        hasStyleRef = true
       }
-      if (styleText) {
-        prompt = prompt ? `${prompt}, ${styleText}` : styleText
-      }
+      // Frame the style_prompt as an attribute manifest, then append the
+      // transfer directive telling the model to actually APPLY those attributes
+      // across the whole image (rather than merely mention them).
+      const directive = hasStyleRef ? STYLE_REFERENCE_DIRECTIVE : STYLE_PROMPT_DIRECTIVE
+      const styleText = basePrompt ? `${basePrompt}. ${directive}` : directive
+      prompt = prompt ? `${prompt}, ${styleText}` : styleText
     }
 
     // Auto-resolve @tags in prompt to gallery reference images

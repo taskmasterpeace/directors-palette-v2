@@ -59,25 +59,31 @@ export async function POST(request: NextRequest) {
                 messages: [
                     {
                         role: 'system',
-                        content: `You are a visual style analyzer for an AI image generation tool. Analyze the provided image and extract its artistic style characteristics.
+                        content: `You are a visual style analyzer for an AI image generation tool. Analyze the provided image and extract a DETAILED, ATTRIBUTE-RICH style manifest the model can use for strong style transfer.
 
 Your task:
 1. Identify the dominant visual style (e.g., "Anime", "Watercolor", "Comic Book", "Clay Animation", "Oil Painting", etc.)
-2. Provide a brief description of the style (1-2 sentences)
-3. Create a concise style prompt that captures the essence of this visual style for use in AI image generation
+2. Provide a brief description of the style (1-2 sentences, for humans browsing the catalog)
+3. Produce a RICH stylePrompt that names concrete, observable attributes of the style so a downstream generator can reproduce it faithfully.
 
-Be specific and focus on visual characteristics like:
-- Art medium (digital, traditional, 3D, photography, etc.)
-- Color palette and lighting
-- Line work and detail level
-- Texture and rendering style
-- Overall aesthetic (realistic, stylized, abstract, etc.)
+The stylePrompt is NOT a tagline — it is the attribute manifest that drives style transfer. It must explicitly describe EVERY axis below, in natural comma-separated prose, 80–160 words:
+- Art medium (digital illustration, oil on canvas, ink on Bristol board, stop-motion clay, felt puppetry, 35mm film, CGI, etc. — be specific)
+- Color palette (named hues, saturation, warmth/coolness, whether it is limited or full-spectrum, any signature color relationships)
+- Lighting and tonal range (soft/hard, directional, chiaroscuro, flat, rim-lit, studio vs practical, shadow quality, highlight behavior)
+- Line work and edge treatment (weight variation, hand-drawn vs clean vector, inked contours, halftones, no lines, etc.)
+- Texture and grain (visible brushstrokes, canvas weave, film grain, halftone dots, clay fingerprints, felt fibers, digital smooth, etc.)
+- Rendering technique (flat cel shading, painterly blending, photoreal, stylized, cross-hatching, etc.)
+- Compositional language if distinctive (dutch angles, foreshortening, symmetrical framing, etc.)
+
+Style this like the exemplars: "classic American comic book illustration, bold confident ink linework with varying line weight, dramatic chiaroscuro with deep solid black shadows and stark white highlights, flat cel-shaded color fills in saturated primaries, visible Ben-Day dot halftone patterns in midtones, printed on matte newsprint stock…"
+
+Avoid generic phrases like "vibrant colors" or "nice lighting." Every attribute should be something the generator can actually reproduce.
 
 Respond ONLY with valid JSON in this exact format:
 {
   "name": "Style Name (2-4 words max)",
-  "description": "Brief description of the style",
-  "stylePrompt": "Concise prompt for AI image generation (e.g., 'in the [style] style with [key characteristics]')"
+  "description": "Brief tagline for the catalog (1-2 sentences)",
+  "stylePrompt": "80–160 word attribute manifest covering every axis above, natural comma-separated prose"
 }
 
 Do not include any text outside the JSON object.`
@@ -98,8 +104,8 @@ Do not include any text outside the JSON object.`
                         ]
                     }
                 ],
-                max_tokens: 500,
-                temperature: 0.7
+                max_tokens: 900,
+                temperature: 0.6
             })
         })
 

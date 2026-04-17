@@ -18,7 +18,7 @@ import { useCustomStylesStore } from '../store/custom-styles.store'
 import { useLoraStore } from '../store/lora.store'
 import { getModelConfig } from '@/config'
 import { logger } from '@/lib/logger'
-import { STYLE_REFERENCE_NO_TEXT_GUARD } from '@/features/shared/constants/style-guards'
+import { STYLE_REFERENCE_DIRECTIVE, STYLE_PROMPT_DIRECTIVE } from '@/features/shared/constants/style-guards'
 
 export interface GenerationProgress {
     status: 'idle' | 'starting' | 'processing' | 'waiting' | 'succeeded' | 'failed'
@@ -548,12 +548,21 @@ export function useImageGeneration() {
                         uniqueReferenceImages = [fullStyleUrl, ...uniqueReferenceImages]
                     }
 
-                    // When a reference image is attached, tell the model to ignore any
-                    // text painted IN the reference. User's own prompt is untouched.
-                    const styleParts = [selectedStyle.stylePrompt]
-                    if (hasStyleRef) {
-                        styleParts.push(STYLE_REFERENCE_NO_TEXT_GUARD)
-                    }
+                    // Build the style block. The stylePrompt carries the attribute
+                    // manifest; the directive that follows tells the model to
+                    // TRANSFER those attributes (not just mention them). For preset
+                    // styles with structured technicalAttributes, append the color
+                    // palette and texture descriptors too — this mirrors what the
+                    // Storyboard pipeline already does and measurably strengthens
+                    // style transfer for short/generic stylePrompts like "Claymation".
+                    const styleParts: string[] = []
+                    if (selectedStyle.stylePrompt) styleParts.push(selectedStyle.stylePrompt)
+
+                    const presetAttrs = (selectedStyle as { technicalAttributes?: { colorPalette?: string; texture?: string } }).technicalAttributes
+                    if (presetAttrs?.colorPalette) styleParts.push(presetAttrs.colorPalette)
+                    if (presetAttrs?.texture) styleParts.push(presetAttrs.texture)
+
+                    styleParts.push(hasStyleRef ? STYLE_REFERENCE_DIRECTIVE : STYLE_PROMPT_DIRECTIVE)
                     promptWithStyle = `${prompt}, ${styleParts.join('. ')}`
 
                     // Fire-and-forget usage tracking. Server resolves by name against
