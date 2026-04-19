@@ -1,0 +1,21 @@
+{
+  "name": "video-clipper-spike",
+  "private": true,
+  "type": "module",
+  "description": "Throwaway test scripts to validate video clipper primitives before building the real feature.",
+  "scripts": {
+    "00": "node 00-download-videos.mjs",
+    "01": "node 01-whisperx-transcribe.mjs",
+    "02": "node 02-segment-picker.mjs",
+    "03": "node 03-face-detect-single-frame.mjs",
+    "04": "node 04-face-track-video.mjs",
+    "05": "node 05-ffmpeg-cut.mjs",
+    "06": "node 06-caption-burn.mjs",
+    "07": "node 07-gemini-narrator.mjs",
+    "08": "node 08-pipeline-a-manual.mjs",
+    "09": "node 09-pipeline-b-manual.mjs"
+  },
+  "dependencies": {
+    "youtube-dl-exec": "^3.0.22"
+  }
+}
