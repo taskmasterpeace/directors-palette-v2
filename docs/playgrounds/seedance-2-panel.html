@@ -210,8 +210,7 @@
             <label>Resolution</label>
             <select id="resSel">
               <option value="480p" selected>480p (default — lowest cost)</option>
-              <option value="720p">720p</option>
-              <option value="1080p">1080p</option>
+              <option value="720p">720p (max — Seedance 2.0 cap)</option>
             </select>
           </div>
           <div>
@@ -220,12 +219,21 @@
               <option value="16:9">16:9</option>
               <option value="9:16" selected>9:16</option>
               <option value="1:1">1:1</option>
+              <option value="4:3">4:3</option>
+              <option value="3:4">3:4</option>
+              <option value="21:9">21:9</option>
+              <option value="9:21">9:21</option>
+              <option value="adaptive">adaptive (auto)</option>
             </select>
           </div>
         </div>
         <div style="margin-top:8px">
           <label>Duration <span class="mono" id="durLabel">10s</span> <span class="chip-tiny warn">15s max</span></label>
           <input type="range" id="durRange" min="3" max="15" step="1" value="10" />
+          <div style="margin-top:4px;display:flex;gap:8px;align-items:center">
+            <input type="checkbox" id="intelligentDur" style="accent-color:var(--cyan)" />
+            <label for="intelligentDur" style="margin:0;font-size:11px">Intelligent duration (<span class="mono">-1</span>) — model picks length</label>
+          </div>
         </div>
         <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
           <input type="checkbox" id="genAudio" checked style="accent-color:var(--cyan)" />
@@ -438,11 +446,12 @@ const DEFAULTS = {
   duration: 10, resolution: '480p', aspect: '9:16', intent: 'performance',
   director: 'hype', artist: 'marcus', song: 'demo1',
   startS: 12, endS: 22, genAudio: true, timeCoded: false, continuity: false,
+  intelligentDuration: false,
 };
 
 const state = {
   ...DEFAULTS,
-  singlePrompt: 'Medium shot on [Image1] performing into the camera. Neon-lit alley from [Image3]. Handheld, rhythmic motion. [Audio1] drives the lip-sync.',
+  singlePrompt: 'Medium shot on [Image1] performing into the camera, neon-lit alley from [Image6], handheld rhythmic motion. Artist sings "started from the bottom now we runnin it back" with confident delivery.',
   shots: [
     { t0: 0, t1: 5, text: 'Wide establishing on [Image3]. Camera drifts in slowly.' },
     { t0: 5, t1: 10, text: 'Medium of [Image1] performing. Match motion of [Video1].' },
@@ -832,7 +841,7 @@ function renderLyricStrip() {
 function computeCost() {
   // Unverified placeholder table (pts/sec). User asked to flag as needs verification.
   // Deliberately errs higher to avoid undershooting.
-  const table = { '480p': 7, '720p': 12, '1080p': 20 };
+  const table = { '480p': 7, '720p': 12 };
   const perSec = table[state.resolution] ?? 12;
   const secs = state.duration;
   const total = perSec * secs;
@@ -924,6 +933,28 @@ function lint() {
     items.push({ type: 'err', text: `Prompt cites [Audio1] but no audio reference attached.` });
   }
 
+  // reference_audios requires at least 1 image OR video ref (Seedance 2.0 constraint)
+  if (state.refs.audio.some(r => r.filled)) {
+    const hasImage = [...state.refs.artist, ...state.refs.wardrobe, ...state.refs.location].some(r => r.filled);
+    const hasVideo = state.refs.motion.some(r => r.filled);
+    if (!hasImage && !hasVideo) {
+      items.push({ type: 'err', text: `reference_audios requires at least one image or video reference (Seedance 2.0 constraint).` });
+    }
+  }
+
+  // Continuity via last_frame is mutex with reference_images — warn
+  if (state.continuity) {
+    const hasRefImages = [...state.refs.artist, ...state.refs.wardrobe, ...state.refs.location].some(r => r.filled);
+    if (hasRefImages) {
+      items.push({ type: 'warn', text: `Continuity via last_frame_image cannot combine with reference_images. We'll inject the prior last frame as [Image1] instead so omnireference still works.` });
+    }
+  }
+
+  // Dialogue hint — performance without quoted lyrics in prompt
+  if (state.intent === 'performance' && state.genAudio && !/"[^"]+"/.test(prompt)) {
+    items.push({ type: 'warn', text: `Performance with audio gen on — put sung lyrics in "double quotes" inside the prompt so Seedance drives lip-sync natively.` });
+  }
+
   if (!items.length) items.push({ type: 'ok', text: 'All checks pass. Ready to generate.' });
   return items;
 }
@@ -982,17 +1013,23 @@ function buildApiPayload() {
   const image_refs = items.filter(r => r.tag.startsWith('Image')).map(r => `https://.../refs/${r.tag}.jpg`);
   const video_refs = items.filter(r => r.tag.startsWith('Video')).map(r => `https://.../refs/${r.tag}.mp4`);
   const audio_refs = items.filter(r => r.tag.startsWith('Audio')).map(r => `https://.../refs/${r.tag}.wav`);
+  const durationValue = state.intelligentDuration ? -1 : state.duration;
   return {
     model: 'bytedance/seedance-2.0',
     input: {
       prompt: buildFinalPrompt(),
-      duration: state.duration,
+      duration: durationValue,
       resolution: state.resolution,
       aspect_ratio: state.aspect,
       generate_audio: state.genAudio,
-      reference_images: image_refs,
+      ...(image_refs.length ? { reference_images: image_refs } : {}),
       ...(video_refs.length ? { reference_videos: video_refs } : {}),
       ...(audio_refs.length ? { reference_audios: audio_refs } : {}),
+    },
+    _notes: {
+      mutex: 'reference_images cannot be combined with image/last_frame_image',
+      audioRefRequiresImageOrVideo: true,
+      dialogueHint: 'Put lyrics in "double quotes" inside prompt for native lip-sync',
     }
   };
 }
@@ -1039,6 +1076,7 @@ durRange.oninput = e => {
 genAudio.onchange = e => { state.genAudio = e.target.checked; renderAll(); };
 tcToggle.onchange = e => { state.timeCoded = e.target.checked; renderAll(); };
 contToggle.onchange = e => { state.continuity = e.target.checked; renderAll(); };
+$('intelligentDur').onchange = e => { state.intelligentDuration = e.target.checked; renderAll(); };
 lyricsEl.oninput = e => { state.lyrics = e.target.value; renderLyricStrip(); renderRight(); };
 singlePrompt.oninput = e => { state.singlePrompt = e.target.value; renderRight(); };
 
