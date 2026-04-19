@@ -7,6 +7,7 @@ import RecipeTemplateEditor from './RecipeTemplateEditor'
 import { RecipeLivePreview } from './RecipeLivePreview'
 import { useRecipeStore } from '../../store/recipe.store'
 import type { RecipeStage } from '../../types/recipe-stage.types'
+import type { RecipeReferenceImage } from '../../types/recipe-reference-image.types'
 import type { RecipeToolId } from '../../types/recipe-tools.types'
 import { generateStageId } from '../../types/recipe-utils'
 
@@ -102,6 +103,22 @@ export function RecipeEditorModal({ isOpen, recipeId, onClose, onTestRecipe }: R
 
   const handleStageToolChange = useCallback((stageId: string, toolId: string) => {
     setStages(prev => prev.map(s => s.id === stageId ? { ...s, toolId: toolId as RecipeToolId } : s))
+  }, [])
+
+  const handleStageAddReferenceImage = useCallback((stageId: string, image: RecipeReferenceImage) => {
+    setStages(prev => prev.map(s =>
+      s.id === stageId
+        ? { ...s, referenceImages: [...s.referenceImages, image] }
+        : s
+    ))
+  }, [])
+
+  const handleStageRemoveReferenceImage = useCallback((stageId: string, imageId: string) => {
+    setStages(prev => prev.map(s =>
+      s.id === stageId
+        ? { ...s, referenceImages: s.referenceImages.filter(img => img.id !== imageId) }
+        : s
+    ))
   }, [])
 
   const handleAddStage = useCallback(() => {
@@ -232,6 +249,8 @@ export function RecipeEditorModal({ isOpen, recipeId, onClose, onTestRecipe }: R
               onStageTemplateChange={handleStageTemplateChange}
               onStageTypeChange={handleStageTypeChange}
               onStageToolChange={handleStageToolChange}
+              onStageAddReferenceImage={handleStageAddReferenceImage}
+              onStageRemoveReferenceImage={handleStageRemoveReferenceImage}
               onAddStage={handleAddStage}
               onRemoveStage={handleRemoveStage}
               onMoveStage={handleMoveStage}

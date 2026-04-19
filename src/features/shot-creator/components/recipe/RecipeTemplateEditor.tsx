@@ -2,10 +2,11 @@
 
 import { useMemo, useRef } from 'react';
 import type { RecipeStage } from '../../types/recipe-stage.types';
+import type { RecipeReferenceImage } from '../../types/recipe-reference-image.types';
 import { RECIPE_TOOLS } from '../../types/recipe-tools.types';
 import { RECIPE_ANALYSIS } from '../../types/recipe-analysis.types';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, ChevronUp, ChevronDown, GripVertical } from 'lucide-react';
+import { Plus, Trash2, ChevronUp, ChevronDown, GripVertical, X, ImagePlus } from 'lucide-react';
 
 // --- Syntax highlighting overlay ---
 
@@ -45,10 +46,16 @@ interface RecipeTemplateEditorProps {
   onStageTemplateChange: (stageId: string, template: string) => void;
   onStageTypeChange: (stageId: string, type: 'generation' | 'tool' | 'analysis') => void;
   onStageToolChange: (stageId: string, toolId: string) => void;
+  onStageAddReferenceImage: (stageId: string, image: RecipeReferenceImage) => void;
+  onStageRemoveReferenceImage: (stageId: string, imageId: string) => void;
   onAddStage: () => void;
   onRemoveStage: (stageId: string) => void;
   onMoveStage: (stageId: string, direction: 'up' | 'down') => void;
   onMetadataChange: (field: string, value: string | boolean) => void;
+}
+
+function generateImageId() {
+  return `img_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
 }
 
 // --- Field insertion helpers ---
@@ -93,6 +100,8 @@ function StageCard({
   onTemplateChange,
   onTypeChange,
   onToolChange,
+  onAddReferenceImage,
+  onRemoveReferenceImage,
   onRemove,
   onMove,
 }: {
@@ -102,11 +111,34 @@ function StageCard({
   onTemplateChange: (template: string) => void;
   onTypeChange: (type: 'generation' | 'tool' | 'analysis') => void;
   onToolChange: (toolId: string) => void;
+  onAddReferenceImage: (image: RecipeReferenceImage) => void;
+  onRemoveReferenceImage: (imageId: string) => void;
   onRemove: () => void;
   onMove: (direction: 'up' | 'down') => void;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const stageType = stage.type || 'generation';
+
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (!files) return;
+    Array.from(files).forEach((file) => {
+      if (!file.type.startsWith('image/')) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const dataUrl = ev.target?.result as string;
+        onAddReferenceImage({
+          id: generateImageId(),
+          url: dataUrl,
+          name: file.name,
+        });
+      };
+      reader.readAsDataURL(file);
+    });
+    // Reset so the same file can be re-picked after remove
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }
 
   function insertField(token: string) {
     const ta = textareaRef.current;
@@ -250,6 +282,63 @@ function StageCard({
           )}
         </div>
       )}
+
+      {/* Reference images — baked into the recipe, auto-attached on use */}
+      {stageType === 'generation' && (
+        <div className="px-3 pb-3 pt-1 border-t border-zinc-700/40">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+              Reference Images
+            </span>
+            <span className="text-[10px] text-cyan-400/70">
+              auto-attached when recipe is used
+            </span>
+          </div>
+
+          <div className="flex gap-2 flex-wrap">
+            {stage.referenceImages.map((img) => (
+              <div key={img.id} className="relative group">
+                <img
+                  src={img.url}
+                  alt={img.name || 'reference'}
+                  className="w-16 h-16 object-cover rounded-lg border border-zinc-700/60"
+                />
+                <button
+                  type="button"
+                  onClick={() => onRemoveReferenceImage(img.id)}
+                  className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-400"
+                  title="Remove image"
+                >
+                  <X className="size-3" />
+                </button>
+                {img.name && (
+                  <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-[9px] text-white px-1 py-0.5 rounded-b-lg truncate">
+                    {img.name}
+                  </div>
+                )}
+              </div>
+            ))}
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="w-16 h-16 flex flex-col items-center justify-center gap-1 border border-dashed border-zinc-600 rounded-lg text-zinc-500 hover:text-cyan-400 hover:border-cyan-500/40 transition-colors"
+              title="Add reference image"
+            >
+              <ImagePlus className="size-4" />
+              <span className="text-[9px]">Add</span>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -269,6 +358,8 @@ export default function RecipeTemplateEditor({
   onStageTemplateChange,
   onStageTypeChange,
   onStageToolChange,
+  onStageAddReferenceImage,
+  onStageRemoveReferenceImage,
   onAddStage,
   onRemoveStage,
   onMoveStage,
@@ -291,6 +382,8 @@ export default function RecipeTemplateEditor({
             onTemplateChange={(t) => onStageTemplateChange(stage.id, t)}
             onTypeChange={(type) => onStageTypeChange(stage.id, type)}
             onToolChange={(toolId) => onStageToolChange(stage.id, toolId)}
+            onAddReferenceImage={(img) => onStageAddReferenceImage(stage.id, img)}
+            onRemoveReferenceImage={(imgId) => onStageRemoveReferenceImage(stage.id, imgId)}
             onRemove={() => onRemoveStage(stage.id)}
             onMove={(dir) => onMoveStage(stage.id, dir)}
           />
