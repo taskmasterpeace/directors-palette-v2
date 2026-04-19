@@ -3556,10 +3556,9 @@ OPTIONAL TAGLINE (smaller text, often a question or quote — leave blank to ski
 OPTIONAL BACKGROUND / SETTING (leave blank to let the model invent a fitting scene):
 <<BACKGROUND:text>>
 
-SUPPORTING CHARACTERS (optional — attach character sheets via @; each appears in a circular medallion with bold name label):
+SUPPORTING CHARACTERS (optional — leave blank if not needed. When used, each appears in a circular medallion with bold name label):
 - Supporting 1: @<<SUPPORTING_1:name>> — label text: "<<SUPPORTING_1_LABEL:text>>"
 - Supporting 2: @<<SUPPORTING_2:name>> — label text: "<<SUPPORTING_2_LABEL:text>>"
-- Supporting 3: @<<SUPPORTING_3:name>> — label text: "<<SUPPORTING_3_LABEL:text>>"
 
 ADDITIONAL ASSET NOTE (optional — describe auxiliary imagery, e.g. "annotated surveillance still in lower-right panel with red circle highlighting figures"):
 <<ADDITIONAL_ASSETS:text>>

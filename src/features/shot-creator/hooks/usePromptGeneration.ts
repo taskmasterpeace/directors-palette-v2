@@ -130,11 +130,27 @@ export function usePromptGeneration() {
             const validation = getActiveValidation()
             const needsImage = activeRecipe.requiresImage !== false
             if (needsImage) {
-                const hasRefs = shotCreatorReferenceImages.length > 0 ||
-                    activeRecipe.stages.some(s => (s.referenceImages?.length || 0) > 0)
+                const hasUserRefs = shotCreatorReferenceImages.length > 0
+                const hasStaticRefs = activeRecipe.stages.some(
+                    s => (s.referenceImages?.length || 0) > 0
+                )
+                const hasNameFieldsFilled = (() => {
+                    const allFields = getAllFields(activeRecipe.stages)
+                    const nameFields = allFields.filter(f => f.type === 'name')
+                    return nameFields.some(f => {
+                        const val = activeFieldValues[f.id]
+                        if (val && val.trim()) return true
+                        return Object.entries(activeFieldValues).some(([id, v]) =>
+                            id.includes(f.name.toLowerCase()) && v && v.trim()
+                        )
+                    })
+                })()
+                // Visual reference satisfied if: user uploaded, recipe has static refs baked in,
+                // OR user @-picked a character sheet (which carries its own visual reference).
+                const hasRefs = hasUserRefs || hasStaticRefs || hasNameFieldsFilled
                 // When user has uploaded reference images, only require 'name' fields
                 // (description is effectively provided by the image itself)
-                if (hasRefs && shotCreatorReferenceImages.length > 0) {
+                if (hasRefs && hasUserRefs) {
                     const allFields = getAllFields(activeRecipe.stages)
                     const nameFields = allFields.filter(f => f.type === 'name' && f.required)
                     if (nameFields.length === 0) return true // No name fields required
@@ -146,6 +162,7 @@ export function usePromptGeneration() {
                         )
                     })
                 }
+                // Static refs OR @-picked character: require all recipe required fields filled
                 return (validation?.isValid ?? false) && hasRefs
             }
             return validation?.isValid ?? false
