@@ -20,9 +20,17 @@ export function generateStageId(): string {
 /**
  * Parse a single stage template and extract fields
  *
- * Syntax: <<FIELD_NAME:type!>>
- * - ! at end means required
- * - type can be: name, text, select(opt1,opt2)
+ * Syntax: <<FIELD_NAME:type[!][:annotation1][:annotation2]>>
+ * - ! at end of type means required
+ * - type can be: name, text, select(opt1,opt2), wildcard(name,browse|random)
+ * - Optional layout annotations (appended after type with colons):
+ *   - :rowN   — group this field with other fields sharing the same N into a 2-column row
+ *   - :collapsed — render inside a collapsible "Optional details" section
+ * Examples:
+ *   <<WHO:name!:row1>>
+ *   <<ARTIST_NAME:text!:row1>>
+ *   <<TAGLINE:text:collapsed>>
+ *   <<SUPPORTING_1:name:collapsed:row2>>
  */
 export function parseStageTemplate(template: string, stageIndex: number): RecipeField[] {
   const fieldRegex = /<<([A-Z_0-9]+):([^>]+)>>/g;
@@ -33,9 +41,27 @@ export function parseStageTemplate(template: string, stageIndex: number): Recipe
   while ((match = fieldRegex.exec(template)) !== null) {
     const [, name, typeSpec] = match;
 
-    // Check if required (ends with !)
-    const required = typeSpec.endsWith('!');
-    const cleanTypeSpec = required ? typeSpec.slice(0, -1) : typeSpec;
+    // Split typeSpec into base type + annotations on `:`
+    // (base types select(...) and wildcard(...) contain commas but no colons, so this is safe)
+    const segments = typeSpec.split(':');
+    const baseTypeSpec = segments[0];
+    const annotations = segments.slice(1);
+
+    // Check if required (base type ends with !)
+    const required = baseTypeSpec.endsWith('!');
+    const cleanTypeSpec = required ? baseTypeSpec.slice(0, -1) : baseTypeSpec;
+
+    // Parse layout annotations
+    let row: number | undefined;
+    let collapsed = false;
+    for (const ann of annotations) {
+      if (ann === 'collapsed') {
+        collapsed = true;
+      } else {
+        const rowMatch = ann.match(/^row(\d+)$/);
+        if (rowMatch) row = parseInt(rowMatch[1], 10);
+      }
+    }
 
     let type: RecipeFieldType = 'text';
     let options: string[] | undefined;
@@ -81,6 +107,8 @@ export function parseStageTemplate(template: string, stageIndex: number): Recipe
       wildcardName,
       wildcardMode,
       placeholder,
+      row,
+      collapsed: collapsed || undefined,
     });
 
     fieldIndex++;
@@ -182,8 +210,11 @@ export function buildStagePrompt(
   result = result.replace(fieldRegex, (_match, name, typeSpec) => {
     const fieldData = valueByName.get(name);
     let value = fieldData?.value || '';
-    const isRequired = typeSpec.endsWith('!');
-    const cleanType = isRequired ? typeSpec.slice(0, -1) : typeSpec;
+    // Strip layout annotations (:rowN, :collapsed) — these are form-layout hints,
+    // not meant for the prompt itself
+    const baseTypeSpec = typeSpec.split(':')[0];
+    const isRequired = baseTypeSpec.endsWith('!');
+    const cleanType = isRequired ? baseTypeSpec.slice(0, -1) : baseTypeSpec;
 
     // If no user value and this is a wildcard field, pick a random entry
     if (!value && cleanType.startsWith('wildcard(') && wildcardEntries) {

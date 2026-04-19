@@ -17,6 +17,8 @@ export interface RecipeField {
   wildcardName?: string;         // For 'wildcard' type - which wildcard to pull entries from
   wildcardMode?: 'browse' | 'random'; // For 'wildcard' type - default mode set by recipe creator
   placeholder: string;           // Placeholder text (includes ! if required)
+  row?: number;                  // Layout hint: group fields with same row number into a 2-column row
+  collapsed?: boolean;           // Layout hint: render inside a collapsible "Optional details" section
 }
 
 // User's filled-in values for a recipe

@@ -66,6 +66,7 @@ export function RecipeFormInline() {
   const [focusedNameField, setFocusedNameField] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isDragOver, setIsDragOver] = useState(false)
+  const [isOptionalOpen, setIsOptionalOpen] = useState(false)
 
   const { handleMultipleImageUpload, removeShotCreatorImage } = useReferenceImageManager(14)
 
@@ -136,6 +137,8 @@ export function RecipeFormInline() {
   const allFields = getAllFields(activeRecipe.stages)
   const requiredFields = allFields.filter(f => f.required)
   const optionalFields = allFields.filter(f => !f.required)
+  const visibleOptionalFields = optionalFields.filter(f => !f.collapsed)
+  const collapsedOptionalFields = optionalFields.filter(f => f.collapsed)
   const needsImage = activeRecipe.requiresImage !== false
   const recipes = getVisibleRecipes()
 
@@ -208,6 +211,60 @@ export function RecipeFormInline() {
         ))}
       </SelectGroup>
     ))
+  }
+
+  /**
+   * Render a list of fields, grouping fields with the same `row` number
+   * into a 2-column grid. Fields without `row` render full-width.
+   * When `legacyAutoGridSelects` is true AND no field has an explicit row,
+   * pair up 2+ select fields into a 2-column grid (backward compat).
+   */
+  const renderFieldRows = (fields: RecipeField[], legacyAutoGridSelects = false) => {
+    const anyHasRow = fields.some(f => f.row !== undefined)
+
+    if (!anyHasRow && legacyAutoGridSelects) {
+      const selectFields = fields.filter(f => f.type === 'select')
+      const otherFields = fields.filter(f => f.type !== 'select')
+      return (
+        <>
+          {selectFields.length >= 2 ? (
+            <div className="grid grid-cols-2 gap-3">
+              {selectFields.map(field => (
+                <div key={field.id}>{renderField(field)}</div>
+              ))}
+            </div>
+          ) : (
+            selectFields.map(field => (
+              <div key={field.id}>{renderField(field)}</div>
+            ))
+          )}
+          {otherFields.map(field => (
+            <div key={field.id}>{renderField(field)}</div>
+          ))}
+        </>
+      )
+    }
+
+    const rendered: React.ReactNode[] = []
+    const seen = new Set<string>()
+    for (const field of fields) {
+      if (seen.has(field.id)) continue
+      if (field.row !== undefined) {
+        const rowFields = fields.filter(f => f.row === field.row)
+        rowFields.forEach(f => seen.add(f.id))
+        rendered.push(
+          <div key={`row-${field.row}`} className="grid grid-cols-2 gap-3">
+            {rowFields.map(f => (
+              <div key={f.id}>{renderField(f)}</div>
+            ))}
+          </div>
+        )
+      } else {
+        seen.add(field.id)
+        rendered.push(<div key={field.id}>{renderField(field)}</div>)
+      }
+    }
+    return <>{rendered}</>
   }
 
   // Render a single field
@@ -588,37 +645,44 @@ export function RecipeFormInline() {
           </div>
         )}
 
-        {/* Required fields */}
-        {requiredFields.map(field => (
-          <div key={field.id}>{renderField(field)}</div>
-        ))}
+        {/* Required fields — honor :rowN pairing */}
+        <div className="space-y-3">
+          {renderFieldRows(requiredFields)}
+        </div>
 
-        {/* Optional fields shown inline — compact layout */}
-        {optionalFields.length > 0 && (
+        {/* Visible optional fields — honor :rowN; fall back to legacy select-pair if no annotations */}
+        {visibleOptionalFields.length > 0 && (
           <div className="space-y-3">
-            {/* Render select fields side-by-side when there are 2+ */}
-            {(() => {
-              const selectFields = optionalFields.filter(f => f.type === 'select')
-              const otherFields = optionalFields.filter(f => f.type !== 'select')
-              return (
-                <>
-                  {selectFields.length >= 2 ? (
-                    <div className="grid grid-cols-2 gap-3">
-                      {selectFields.map(field => (
-                        <div key={field.id}>{renderField(field)}</div>
-                      ))}
-                    </div>
-                  ) : (
-                    selectFields.map(field => (
-                      <div key={field.id}>{renderField(field)}</div>
-                    ))
-                  )}
-                  {otherFields.map(field => (
-                    <div key={field.id}>{renderField(field)}</div>
-                  ))}
-                </>
-              )
-            })()}
+            {renderFieldRows(visibleOptionalFields, true)}
+          </div>
+        )}
+
+        {/* Collapsed optional fields inside a collapsible "Optional details" section */}
+        {collapsedOptionalFields.length > 0 && (
+          <div className="border border-border rounded-md overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setIsOptionalOpen(!isOptionalOpen)}
+              className="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+            >
+              <span>
+                Optional details
+                <span className="ml-2 text-muted-foreground/60">
+                  ({collapsedOptionalFields.length})
+                </span>
+              </span>
+              <ChevronDown
+                className={cn(
+                  'w-4 h-4 transition-transform',
+                  isOptionalOpen && 'rotate-180'
+                )}
+              />
+            </button>
+            {isOptionalOpen && (
+              <div className="px-3 pb-3 pt-1 space-y-3">
+                {renderFieldRows(collapsedOptionalFields)}
+              </div>
+            )}
           </div>
         )}
       </div>

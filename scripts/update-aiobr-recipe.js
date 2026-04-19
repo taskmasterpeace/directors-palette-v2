@@ -52,26 +52,26 @@ WHAT THE THUMBNAIL COMMUNICATES:
 <<WHAT_IT_COMMUNICATES:text!>>
 
 MAIN SUBJECT (character sheet attached via @):
-@<<WHO:name!>>
+@<<WHO:name!:row1>>
 
 ARTIST NAME (render as the LARGEST, MOST DOMINANT text on screen — stacked or wrapped for maximum impact):
-"<<ARTIST_NAME:text!>>"
+"<<ARTIST_NAME:text!:row1>>"
 
 VIBE:
 <<VIBE:select(Dramatic,Cinematic,Gritty,Mysterious,Triumphant,Vulnerable,Aggressive,Nostalgic,Explosive,Somber)!>>
 
 OPTIONAL TAGLINE (smaller text, often a question or quote — leave blank to skip):
-<<TAGLINE:text>>
+<<TAGLINE:text:collapsed>>
 
 OPTIONAL BACKGROUND / SETTING (leave blank to let the model invent a fitting scene):
-<<BACKGROUND:text>>
+<<BACKGROUND:text:collapsed>>
 
 SUPPORTING CHARACTERS (optional — leave blank if not needed. When used, each appears in a circular medallion with bold name label):
-- Supporting 1: @<<SUPPORTING_1:name>> — label text: "<<SUPPORTING_1_LABEL:text>>"
-- Supporting 2: @<<SUPPORTING_2:name>> — label text: "<<SUPPORTING_2_LABEL:text>>"
+- Supporting 1: @<<SUPPORTING_1:name:collapsed:row10>> — label text: "<<SUPPORTING_1_LABEL:text:collapsed:row10>>"
+- Supporting 2: @<<SUPPORTING_2:name:collapsed:row11>> — label text: "<<SUPPORTING_2_LABEL:text:collapsed:row11>>"
 
 ADDITIONAL ASSET NOTE (optional — describe auxiliary imagery, e.g. "annotated surveillance still in lower-right panel with red circle highlighting figures"):
-<<ADDITIONAL_ASSETS:text>>
+<<ADDITIONAL_ASSETS:text:collapsed>>
 
 === COMPOSITION RULES ===
 - ARTIST NAME is the HERO text. Biggest, boldest, highest contrast. Stacked or wrapped for punch.
