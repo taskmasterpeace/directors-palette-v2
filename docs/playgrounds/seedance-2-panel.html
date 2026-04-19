@@ -1,0 +1,1073 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Seedance 2.0 Segment Builder — v2</title>
+<style>
+  :root {
+    --bg: oklch(0.16 0.03 290);
+    --panel: oklch(0.22 0.035 290);
+    --panel-2: oklch(0.26 0.04 290);
+    --border: oklch(0.32 0.04 290);
+    --text: oklch(0.96 0.01 290);
+    --muted: oklch(0.68 0.05 290);
+    --cyan: oklch(0.75 0.15 200);
+    --perf: oklch(0.72 0.18 35);     /* coral/amber — performance */
+    --scene: oklch(0.75 0.15 200);    /* cyan — scene */
+    --broll: oklch(0.78 0.14 155);    /* mint — b-roll */
+    --dance: oklch(0.72 0.22 340);    /* hot pink — dance */
+    --warn: oklch(0.78 0.18 75);
+    --ok: oklch(0.78 0.15 155);
+    --err: oklch(0.65 0.22 25);
+    --r: 0.625rem;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: Inter, system-ui, -apple-system, Segoe UI, sans-serif; font-size: 14px; letter-spacing: -0.005em; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .app { display: grid; grid-template-columns: 300px 1fr 360px; gap: 12px; padding: 12px; height: 100vh; }
+  .col { background: var(--panel); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; display: flex; flex-direction: column; }
+  .hdr { padding: 10px 12px; border-bottom: 1px solid var(--border); font-weight: 600; letter-spacing: -0.025em; display: flex; justify-content: space-between; align-items: center; }
+  .hdr .tag { font-size: 10px; color: var(--muted); font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; }
+  .body { padding: 12px; overflow-y: auto; flex: 1; }
+  .group { margin-bottom: 16px; }
+  .group h4 { margin: 0 0 6px 0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; }
+  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  input[type=text], input[type=number], select, textarea {
+    width: 100%; background: var(--panel-2); border: 1px solid var(--border); color: var(--text);
+    border-radius: var(--r); padding: 8px 10px; font-size: 13px; font-family: inherit;
+    transition: border-color 0.15s;
+  }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--cyan); }
+  textarea { resize: vertical; min-height: 64px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; line-height: 1.5; }
+  .row { display: flex; gap: 8px; }
+  .row > * { flex: 1; }
+  .pill-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pill {
+    padding: 6px 10px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--border);
+    cursor: pointer; font-size: 12px; transition: all 0.15s; user-select: none;
+  }
+  .pill:hover { border-color: var(--cyan); }
+  .pill.active { background: var(--cyan); color: #000; border-color: var(--cyan); font-weight: 600; }
+  .pill.perf.active { background: var(--perf); border-color: var(--perf); }
+  .pill.scene.active { background: var(--scene); border-color: var(--scene); }
+  .pill.broll.active { background: var(--broll); border-color: var(--broll); }
+  .pill.dance.active { background: var(--dance); border-color: var(--dance); }
+  button.btn {
+    background: var(--cyan); color: #000; border: none; padding: 10px 14px; border-radius: var(--r);
+    font-weight: 600; cursor: pointer; font-size: 13px; transition: all 0.15s; font-family: inherit;
+  }
+  button.btn:hover { filter: brightness(1.1); }
+  button.btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  button.btn.ghost:hover { border-color: var(--cyan); color: var(--cyan); background: transparent; }
+  .cost { padding: 10px 12px; background: var(--panel-2); border-radius: var(--r); border: 1px solid var(--border); }
+  .cost .num { font-size: 22px; font-weight: 700; letter-spacing: -0.025em; }
+  .cost .num .unit { font-size: 12px; font-weight: 500; color: var(--muted); }
+  .cost .detail { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  /* Waveform + playhead */
+  .stage { display: flex; flex-direction: column; gap: 10px; padding: 12px; flex: 1; overflow-y: auto; }
+  .wave-wrap { background: var(--panel-2); border: 1px solid var(--border); border-radius: var(--r); padding: 10px; }
+  .wave-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 12px; color: var(--muted); }
+  .wave-head .time { font-family: ui-monospace, Menlo, monospace; color: var(--text); }
+  .wave { position: relative; height: 68px; background: oklch(0.14 0.02 290); border-radius: 6px; overflow: hidden; cursor: crosshair; }
+  .wave canvas { display: block; width: 100%; height: 100%; }
+  .wave .sel { position: absolute; top: 0; bottom: 0; background: oklch(0.75 0.15 200 / 0.22); border-left: 2px solid var(--cyan); border-right: 2px solid var(--cyan); pointer-events: none; }
+  .wave .playhead { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--perf); pointer-events: none; display: none; }
+  .wave .beats { position: absolute; top: 0; bottom: 0; left: 0; right: 0; pointer-events: none; }
+  .wave .beat { position: absolute; top: 0; bottom: 0; width: 1px; background: oklch(0.5 0.05 290 / 0.6); }
+  .wave .beat.down { background: oklch(0.65 0.12 290 / 0.8); width: 1.5px; }
+  .wave-ctrls { display: flex; gap: 6px; margin-top: 8px; align-items: center; }
+  .lyric-strip { margin-top: 8px; font-size: 12px; line-height: 1.6; color: var(--muted); background: oklch(0.14 0.02 290); border-radius: 6px; padding: 8px 10px; min-height: 28px; }
+  .lyric-strip .inwin { color: var(--cyan); font-weight: 600; }
+
+  /* Ref groups */
+  .ref-groups { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .ref-group { background: var(--panel-2); border: 1px solid var(--border); border-radius: var(--r); padding: 10px; }
+  .ref-group h5 { margin: 0 0 8px 0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; display: flex; justify-content: space-between; }
+  .ref-group h5 .count { color: var(--cyan); font-weight: 700; }
+  .ref-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .ref-card {
+    aspect-ratio: 1; background: oklch(0.14 0.02 290); border: 1px dashed var(--border); border-radius: 6px;
+    display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--muted);
+    position: relative; cursor: pointer; padding: 4px; text-align: center;
+    transition: all 0.15s;
+  }
+  .ref-card:hover { border-color: var(--cyan); color: var(--cyan); }
+  .ref-card.filled { border-style: solid; border-color: var(--border); background: oklch(0.2 0.03 290); color: var(--text); font-weight: 600; }
+  .ref-card.filled.perf { border-color: var(--perf); }
+  .ref-card.filled.scene { border-color: var(--scene); }
+  .ref-card .badge { position: absolute; top: 2px; left: 2px; font-size: 9px; background: rgba(0,0,0,0.55); padding: 1px 5px; border-radius: 3px; color: var(--text); font-weight: 600; }
+
+  /* Prompt editor */
+  .prompt-editor { background: var(--panel-2); border: 1px solid var(--border); border-radius: var(--r); padding: 10px; }
+  .shot-rows { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+  .shot-row { display: grid; grid-template-columns: 68px 1fr auto; gap: 6px; align-items: center; }
+  .shot-row input[type=text] { padding: 6px 8px; font-size: 12px; }
+  .shot-row .timecode { text-align: center; font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: var(--muted); background: oklch(0.14 0.02 290); padding: 6px; border-radius: 6px; border: 1px solid var(--border); }
+  .shot-row button { background: transparent; border: 1px solid var(--border); color: var(--muted); border-radius: 6px; padding: 4px 8px; font-size: 11px; cursor: pointer; }
+  .shot-row button:hover { color: var(--err); border-color: var(--err); }
+  .grammar { margin-top: 8px; }
+
+  /* Right column */
+  .prompt-box { background: oklch(0.14 0.02 290); border: 1px solid var(--border); border-radius: var(--r); padding: 10px; font-family: ui-monospace, Menlo, monospace; font-size: 11.5px; line-height: 1.55; white-space: pre-wrap; word-break: break-word; color: var(--text); }
+  .lint { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+  .lint-item { padding: 8px 10px; border-radius: 6px; font-size: 12px; display: flex; gap: 8px; align-items: flex-start; }
+  .lint-item.warn { background: oklch(0.25 0.08 75); border: 1px solid var(--warn); }
+  .lint-item.err { background: oklch(0.28 0.12 25); border: 1px solid var(--err); }
+  .lint-item.ok { background: oklch(0.22 0.06 155); border: 1px solid var(--ok); color: var(--ok); }
+  .lint-item .dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 6px; flex: 0 0 auto; }
+  .lint-item.warn .dot { background: var(--warn); }
+  .lint-item.err .dot { background: var(--err); }
+  .lint-item.ok .dot { background: var(--ok); }
+
+  /* Reference inspector */
+  .ref-inspect { background: var(--panel-2); border: 1px solid var(--border); border-radius: var(--r); padding: 10px; margin-top: 10px; }
+  .ref-inspect h4 { margin: 0 0 8px 0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+  .ref-inspect-item { display: grid; grid-template-columns: 52px 1fr auto; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px dashed var(--border); font-size: 12px; }
+  .ref-inspect-item:last-child { border-bottom: none; }
+  .ref-inspect-item .tag-badge { background: var(--cyan); color: #000; font-weight: 700; padding: 4px 6px; border-radius: 4px; text-align: center; font-size: 11px; font-family: ui-monospace, Menlo, monospace; }
+  .ref-inspect-item .tag-badge.perf { background: var(--perf); }
+  .ref-inspect-item .tag-badge.scene { background: var(--scene); }
+  .ref-inspect-item .tag-badge.audio { background: var(--dance); }
+  .ref-inspect-item .tag-badge.video { background: var(--broll); color: #000; }
+  .ref-inspect-item .label-col { color: var(--muted); font-size: 11px; }
+  .ref-inspect-item .label-col strong { color: var(--text); display: block; font-size: 12px; margin-bottom: 2px; }
+  .ref-inspect-item .status-ok { color: var(--ok); font-size: 11px; }
+  .ref-inspect-item .status-unused { color: var(--muted); font-size: 11px; }
+
+  .toast { position: fixed; bottom: 20px; right: 20px; background: var(--cyan); color: #000; padding: 10px 16px; border-radius: var(--r); font-weight: 600; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+  details { background: var(--panel-2); border: 1px solid var(--border); border-radius: var(--r); padding: 0; }
+  details > summary { padding: 8px 12px; cursor: pointer; font-size: 12px; color: var(--muted); font-weight: 600; user-select: none; }
+  details[open] > summary { border-bottom: 1px solid var(--border); }
+  details > .sum-body { padding: 10px 12px; }
+
+  .chip-tiny { display: inline-block; padding: 1px 6px; font-size: 10px; border-radius: 4px; background: var(--panel); color: var(--muted); margin-left: 6px; border: 1px solid var(--border); }
+  .chip-tiny.ok { color: var(--ok); border-color: var(--ok); }
+  .chip-tiny.warn { color: var(--warn); border-color: var(--warn); }
+
+  input[type=range] { width: 100%; accent-color: var(--cyan); }
+  .kbd { font-family: ui-monospace, Menlo, monospace; font-size: 11px; background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ================= LEFT: INPUTS ================= -->
+  <div class="col">
+    <div class="hdr">Segment Setup <span class="tag">v2</span></div>
+    <div class="body">
+
+      <div class="group">
+        <h4>Song</h4>
+        <select id="songSel">
+          <option value="demo1">Demo: "Run It Back" — 112 BPM, hip-hop</option>
+          <option value="demo2">Demo: "Midnight Drift" — 88 BPM, synthwave</option>
+          <option value="demo3">Demo: "Gravity" — 140 BPM, pop</option>
+        </select>
+        <label style="margin-top:8px">Lyrics <span class="chip-tiny" id="lyricCountChip">0 lines</span></label>
+        <textarea id="lyrics" placeholder="Paste lyrics from Suno (one line per bar works best)&#10;Auto-scoped to your selected window."></textarea>
+      </div>
+
+      <div class="group">
+        <h4>Artist</h4>
+        <select id="artistSel">
+          <option value="marcus">Marcus Vell — male, R&B, edgy</option>
+          <option value="lyra">Lyra Kade — female, pop, ethereal</option>
+          <option value="ares">DJ Ares — male, EDM, bold</option>
+        </select>
+      </div>
+
+      <div class="group">
+        <h4>Director <span class="chip-tiny" id="directorBoostChip">+ prompt boost</span></h4>
+        <select id="directorSel">
+          <option value="skip">— Skip (no director style) —</option>
+          <option value="hype" selected>Hype Millions (music video specialist)</option>
+          <option value="ryan">Ryan Cooler (cinematic, emotional)</option>
+          <option value="clint">Clint Westwood (stoic, wide)</option>
+          <option value="david">David Pincher (precise, dark)</option>
+          <option value="wes">Wes Sanderson (symmetric, pastel)</option>
+        </select>
+        <div id="directorHint" style="font-size:11px;color:var(--muted);margin-top:6px;line-height:1.4"></div>
+      </div>
+
+      <div class="group">
+        <h4>Segment Intent</h4>
+        <div class="pill-row" id="intentPills">
+          <div class="pill perf active" data-v="performance">Performance</div>
+          <div class="pill scene" data-v="scene">Scene</div>
+          <div class="pill broll" data-v="broll">B-roll</div>
+          <div class="pill dance" data-v="dance">Dance</div>
+        </div>
+        <div id="intentHint" style="font-size:11px;color:var(--muted);margin-top:6px;line-height:1.4"></div>
+      </div>
+
+      <div class="group">
+        <h4>Format</h4>
+        <div class="row">
+          <div>
+            <label>Resolution</label>
+            <select id="resSel">
+              <option value="480p" selected>480p (default — lowest cost)</option>
+              <option value="720p">720p</option>
+              <option value="1080p">1080p</option>
+            </select>
+          </div>
+          <div>
+            <label>Aspect</label>
+            <select id="aspectSel">
+              <option value="16:9">16:9</option>
+              <option value="9:16" selected>9:16</option>
+              <option value="1:1">1:1</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-top:8px">
+          <label>Duration <span class="mono" id="durLabel">10s</span> <span class="chip-tiny warn">15s max</span></label>
+          <input type="range" id="durRange" min="3" max="15" step="1" value="10" />
+        </div>
+        <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+          <input type="checkbox" id="genAudio" checked style="accent-color:var(--cyan)" />
+          <label for="genAudio" style="margin:0">Generate audio <span class="chip-tiny">Seedance native</span></label>
+        </div>
+        <div style="margin-top:6px;display:flex;gap:8px;align-items:center">
+          <input type="checkbox" id="tcToggle" style="accent-color:var(--cyan)" />
+          <label for="tcToggle" style="margin:0">Time-coded multi-shot</label>
+        </div>
+        <div style="margin-top:6px;display:flex;gap:8px;align-items:center">
+          <input type="checkbox" id="contToggle" style="accent-color:var(--cyan)" />
+          <label for="contToggle" style="margin:0">Continuity from prior clip <span class="chip-tiny warn">experimental</span></label>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="cost">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em">Estimated cost</span>
+            <span class="chip-tiny warn" title="Pricing not yet published on Replicate">unverified</span>
+          </div>
+          <div class="num" id="costNum">— <span class="unit">pts</span></div>
+          <div class="detail" id="costDetail">—</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= CENTER: STAGE ================= -->
+  <div class="col">
+    <div class="hdr">Stage <span class="tag" id="stageStatus">ready</span></div>
+    <div class="stage">
+
+      <!-- Waveform + playback + lyric strip -->
+      <div class="wave-wrap">
+        <div class="wave-head">
+          <span>Song timeline — drag to pick segment <span class="kbd">shift-drag</span> extends</span>
+          <span class="time" id="timeDisp">0:00 – 0:10 (10s)</span>
+        </div>
+        <div class="wave" id="wave">
+          <canvas id="waveCanvas"></canvas>
+          <div class="beats" id="beats"></div>
+          <div class="sel" id="sel"></div>
+          <div class="playhead" id="playhead"></div>
+        </div>
+        <div class="wave-ctrls">
+          <button class="btn ghost" id="playBtn">▶ Preview window</button>
+          <button class="btn ghost" id="stopBtn">■ Stop</button>
+          <button class="btn ghost" id="dlBtn">⬇ Download audio slice</button>
+          <div style="flex:1"></div>
+          <span style="font-size:11px;color:var(--muted)" id="bpmDisp">112 BPM · 4/4</span>
+        </div>
+        <div class="lyric-strip" id="lyricStrip">Paste lyrics on the left to see words scoped to your window.</div>
+      </div>
+
+      <!-- Reference groups -->
+      <div class="ref-groups">
+        <div class="ref-group">
+          <h5>Artist sheets <span class="count" id="artistCount">0/3</span></h5>
+          <div class="ref-grid" id="gridArtist"></div>
+        </div>
+        <div class="ref-group">
+          <h5>Wardrobe <span class="count" id="wardrobeCount">0/2</span></h5>
+          <div class="ref-grid" id="gridWardrobe"></div>
+        </div>
+        <div class="ref-group">
+          <h5>Location <span class="count" id="locationCount">0/2</span></h5>
+          <div class="ref-grid" id="gridLocation"></div>
+        </div>
+        <div class="ref-group">
+          <h5>Motion reference <span class="count" id="motionCount">0/3</span></h5>
+          <div class="ref-grid" id="gridMotion"></div>
+          <div style="font-size:10.5px;color:var(--muted);margin-top:6px;line-height:1.4">
+            Video refs transfer camera moves + physical dynamics (not faces). Use for dance sync, parkour, crowd energy.
+          </div>
+        </div>
+      </div>
+
+      <!-- Prompt editor -->
+      <div class="prompt-editor">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <h5 style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted)">Shot prompt</h5>
+          <div style="display:flex;gap:6px">
+            <button class="btn ghost" id="askDirectorBtn" style="padding:4px 10px;font-size:11px">🎬 Ask director to write it</button>
+            <button class="btn ghost" id="addShotBtn" style="padding:4px 10px;font-size:11px">+ Add shot</button>
+          </div>
+        </div>
+
+        <div id="singleShotWrap">
+          <textarea id="singlePrompt" placeholder="Describe the shot. Use [Image1]..[ImageN] and [Audio1]/[Video1] to reference uploads."></textarea>
+        </div>
+        <div id="multiShotWrap" style="display:none">
+          <div class="shot-rows" id="shotRows"></div>
+        </div>
+
+        <div class="grammar">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Shot grammar — click to insert</div>
+          <div class="pill-row">
+            <div class="pill" data-insert="wide shot">Wide</div>
+            <div class="pill" data-insert="medium shot">Medium</div>
+            <div class="pill" data-insert="close-up">CU</div>
+            <div class="pill" data-insert="extreme close-up">ECU</div>
+            <div class="pill" data-insert="POV shot">POV</div>
+            <div class="pill" data-insert="over-the-shoulder">OTS</div>
+          </div>
+          <div class="pill-row" style="margin-top:6px">
+            <div class="pill" data-insert="slow dolly push-in">Push-in</div>
+            <div class="pill" data-insert="dolly pullout">Pullout</div>
+            <div class="pill" data-insert="handheld">Handheld</div>
+            <div class="pill" data-insert="steadicam orbit">Orbit</div>
+            <div class="pill" data-insert="whip pan">Whip pan</div>
+            <div class="pill" data-insert="crane up">Crane up</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Coverage view -->
+      <details>
+        <summary>Director's Coverage View <span class="chip-tiny" id="coverageChip">0 clips</span></summary>
+        <div class="sum-body">
+          <div style="font-size:12px;color:var(--muted);line-height:1.5">
+            Shows all segments across the full song. Gaps are flagged so you know what's left to cover.
+            This is a mock — wiring to the store comes after Phase 1.
+          </div>
+          <div id="coverageBar" style="margin-top:10px;height:28px;background:oklch(0.14 0.02 290);border-radius:6px;position:relative;border:1px solid var(--border)"></div>
+        </div>
+      </details>
+
+    </div>
+  </div>
+
+  <!-- ================= RIGHT: OUTPUT ================= -->
+  <div class="col">
+    <div class="hdr">Output <button class="btn" id="copyBtn" style="padding:4px 10px;font-size:11px">Copy prompt</button></div>
+    <div class="body">
+
+      <div class="group">
+        <h4>Final prompt</h4>
+        <div class="prompt-box" id="finalPrompt"></div>
+      </div>
+
+      <div class="group">
+        <h4>Prompt lint</h4>
+        <div class="lint" id="lintBox"></div>
+      </div>
+
+      <div class="ref-inspect">
+        <h4>Reference inspector — what Seedance will see</h4>
+        <div id="refInspect"></div>
+      </div>
+
+      <div class="group" style="margin-top:14px">
+        <details>
+          <summary>Replicate API payload</summary>
+          <div class="sum-body">
+            <div class="prompt-box mono" id="apiJson" style="font-size:10.5px"></div>
+          </div>
+        </details>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast">Copied!</div>
+
+<script>
+/* ============================================================
+   State
+============================================================ */
+const DEMOS = {
+  demo1: { title: 'Run It Back', bpm: 112, dur: 180, genre: 'hip-hop', lyrics: [
+    'Started from the bottom now we runnin it back',
+    'City lights paint the block in a hundred stacks',
+    'Every eye on the kid with the gold on his neck',
+    'Turn the mic up louder, hear me cashin the check',
+    'Run it back, run it back, run it all the way back',
+    'Same story same block but a different track' ]},
+  demo2: { title: 'Midnight Drift', bpm: 88, dur: 210, genre: 'synthwave', lyrics: [
+    'Neon burning low on a silent avenue',
+    'Rearview fading into shades of midnight blue',
+    'Driving til the dashboard is the only thing I know',
+    'Chasing ghosts of summers in the afterglow' ]},
+  demo3: { title: 'Gravity', bpm: 140, dur: 195, genre: 'pop', lyrics: [
+    'We fall we rise we fall again',
+    'Gravity can\'t hold us in',
+    'Every heartbeat every scar',
+    'Shows me just how strong we are' ]},
+};
+
+const DIRECTORS = {
+  skip:  { name: 'Skip', boost: '' },
+  hype:  { name: 'Hype Millions',   boost: 'fisheye lens bursts, fast whip-pans, neon-saturated highlights, rhythmic cuts on every downbeat, larger-than-life energy, crowd-filling frames' },
+  ryan:  { name: 'Ryan Cooler',     boost: 'cinematic anamorphic feel, emotional close-ups on breath and eyes, steady handheld, warm diffuse fill, patient pacing' },
+  clint: { name: 'Clint Westwood',  boost: 'wide stoic compositions, hard shadows, long lenses, minimal camera movement, lingering frames' },
+  david: { name: 'David Pincher',   boost: 'precise locked-off frames, cool desaturated palette, centered subjects, silky slow dolly moves' },
+  wes:   { name: 'Wes Sanderson',   boost: 'symmetrical compositions, pastel palette, flat staging, deadpan blocking, whip pans on action beats' },
+};
+
+const INTENT_HINTS = {
+  performance: 'Lip-sync to song. Enable audio. Artist sheet required. Consider motion ref.',
+  scene:       'Narrative moment, no lip-sync. Audio optional. Location + wardrobe drive it.',
+  broll:       'Texture, cutaways, environment. Short duration, no artist required.',
+  dance:       'Movement sync. Motion reference strongly recommended.',
+};
+
+const DEFAULTS = {
+  duration: 10, resolution: '480p', aspect: '9:16', intent: 'performance',
+  director: 'hype', artist: 'marcus', song: 'demo1',
+  startS: 12, endS: 22, genAudio: true, timeCoded: false, continuity: false,
+};
+
+const state = {
+  ...DEFAULTS,
+  singlePrompt: 'Medium shot on [Image1] performing into the camera. Neon-lit alley from [Image3]. Handheld, rhythmic motion. [Audio1] drives the lip-sync.',
+  shots: [
+    { t0: 0, t1: 5, text: 'Wide establishing on [Image3]. Camera drifts in slowly.' },
+    { t0: 5, t1: 10, text: 'Medium of [Image1] performing. Match motion of [Video1].' },
+  ],
+  refs: {
+    artist:   [{tag:'Image1', label:'Front sheet', filled:true}, {tag:'Image2', label:'Profile', filled:false}, {tag:'Image3', label:'Body sheet', filled:false}],
+    wardrobe: [{tag:'Image4', label:'Outfit A', filled:true}, {tag:'Image5', label:'Outfit B', filled:false}],
+    location: [{tag:'Image6', label:'Alley', filled:true}, {tag:'Image7', label:'Rooftop', filled:false}],
+    motion:   [{tag:'Video1', label:'Dance ref', filled:false}, {tag:'Video2', label:'Crowd ref', filled:false}, {tag:'Video3', label:'Camera move', filled:false}],
+    audio:    [{tag:'Audio1', label:'Song slice', filled:true}],
+  },
+  lyrics: '',
+};
+
+/* ============================================================
+   Elements
+============================================================ */
+const $ = id => document.getElementById(id);
+const songSel = $('songSel'), artistSel = $('artistSel'), directorSel = $('directorSel');
+const intentPills = $('intentPills'), resSel = $('resSel'), aspectSel = $('aspectSel');
+const durRange = $('durRange'), durLabel = $('durLabel');
+const genAudio = $('genAudio'), tcToggle = $('tcToggle'), contToggle = $('contToggle');
+const lyricsEl = $('lyrics'), lyricCountChip = $('lyricCountChip'), lyricStrip = $('lyricStrip');
+const waveCanvas = $('waveCanvas'), waveEl = $('wave'), selEl = $('sel'), beatsEl = $('beats');
+const playheadEl = $('playhead'), timeDisp = $('timeDisp'), bpmDisp = $('bpmDisp');
+const playBtn = $('playBtn'), stopBtn = $('stopBtn'), dlBtn = $('dlBtn');
+const singleShotWrap = $('singleShotWrap'), multiShotWrap = $('multiShotWrap');
+const singlePrompt = $('singlePrompt'), shotRows = $('shotRows'), addShotBtn = $('addShotBtn');
+const askDirectorBtn = $('askDirectorBtn'), directorHint = $('directorHint'), intentHint = $('intentHint');
+const costNum = $('costNum'), costDetail = $('costDetail');
+const finalPrompt = $('finalPrompt'), lintBox = $('lintBox'), refInspect = $('refInspect'), apiJson = $('apiJson');
+const copyBtn = $('copyBtn'), toast = $('toast');
+
+/* ============================================================
+   Waveform (synthetic, visual only)
+============================================================ */
+function drawWave() {
+  const c = waveCanvas;
+  const rect = waveEl.getBoundingClientRect();
+  c.width = rect.width * devicePixelRatio;
+  c.height = rect.height * devicePixelRatio;
+  const ctx = c.getContext('2d');
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+  const w = rect.width, h = rect.height;
+  ctx.clearRect(0,0,w,h);
+  const song = DEMOS[state.song];
+  const bars = Math.floor(w / 2);
+  for (let i = 0; i < bars; i++) {
+    const t = i / bars;
+    const env = 0.3 + 0.6 * Math.abs(Math.sin(t * Math.PI * 8) * Math.cos(t * Math.PI * 3));
+    const beat = Math.abs(Math.sin(t * song.dur * (song.bpm/60) * Math.PI));
+    const amp = env * (0.3 + 0.7 * beat);
+    const barH = Math.max(2, amp * h * 0.8);
+    ctx.fillStyle = 'oklch(0.6 0.12 290 / 0.7)';
+    ctx.fillRect(i * 2, (h - barH) / 2, 1.4, barH);
+  }
+}
+function drawBeats() {
+  const song = DEMOS[state.song];
+  const rect = waveEl.getBoundingClientRect();
+  beatsEl.innerHTML = '';
+  const beatDur = 60 / song.bpm;
+  const total = song.dur;
+  for (let t = 0; t < total; t += beatDur) {
+    const beatIdx = Math.round(t / beatDur);
+    const x = (t / total) * rect.width;
+    const d = document.createElement('div');
+    d.className = 'beat' + (beatIdx % 4 === 0 ? ' down' : '');
+    d.style.left = x + 'px';
+    beatsEl.appendChild(d);
+  }
+}
+function drawSelection() {
+  const song = DEMOS[state.song];
+  const rect = waveEl.getBoundingClientRect();
+  const left = (state.startS / song.dur) * rect.width;
+  const right = (state.endS / song.dur) * rect.width;
+  selEl.style.left = left + 'px';
+  selEl.style.width = (right - left) + 'px';
+  const fmt = s => `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+  const dur = (state.endS - state.startS).toFixed(1);
+  timeDisp.textContent = `${fmt(state.startS)} – ${fmt(state.endS)} (${dur}s)`;
+}
+
+/* Drag-to-select on waveform */
+let drag = null;
+waveEl.addEventListener('mousedown', e => {
+  const rect = waveEl.getBoundingClientRect();
+  const song = DEMOS[state.song];
+  const x = e.clientX - rect.left;
+  const s = (x / rect.width) * song.dur;
+  drag = { startS: s, endS: s + 10, shift: e.shiftKey };
+  if (e.shiftKey) {
+    drag = { startS: state.startS, endS: s };
+  }
+  updateDrag(e);
+});
+function updateDrag(e) {
+  if (!drag) return;
+  const rect = waveEl.getBoundingClientRect();
+  const song = DEMOS[state.song];
+  const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+  let s = (x / rect.width) * song.dur;
+  let startS, endS;
+  if (drag.shift) {
+    startS = Math.min(drag.startS, s);
+    endS   = Math.max(drag.startS, s);
+  } else {
+    startS = drag.startS;
+    endS = s;
+  }
+  if (endS < startS) { const t = startS; startS = endS; endS = t; }
+  // HARD 15s cap
+  if (endS - startS > 15) {
+    endS = startS + 15;
+  }
+  if (endS - startS < 1) endS = startS + 1;
+  state.startS = +startS.toFixed(2);
+  state.endS = +endS.toFixed(2);
+  state.duration = Math.min(15, Math.max(3, Math.round(endS - startS)));
+  durRange.value = state.duration;
+  durLabel.textContent = state.duration + 's';
+  renderAll();
+}
+window.addEventListener('mousemove', e => { if (drag) updateDrag(e); });
+window.addEventListener('mouseup', () => { drag = null; });
+
+/* ============================================================
+   Web Audio synthesized playback (lets user "hear" the window)
+============================================================ */
+let audioCtx = null, playingNodes = [], playStartWall = 0, rafId = null;
+function ensureCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+function stopPlayback() {
+  playingNodes.forEach(n => { try { n.stop(); } catch(e){} });
+  playingNodes = [];
+  playheadEl.style.display = 'none';
+  if (rafId) cancelAnimationFrame(rafId);
+  rafId = null;
+}
+function playWindow() {
+  stopPlayback();
+  ensureCtx();
+  const song = DEMOS[state.song];
+  const beatDur = 60 / song.bpm;
+  const startWindow = state.startS;
+  const endWindow = state.endS;
+  const len = endWindow - startWindow;
+  const startTime = audioCtx.currentTime + 0.05;
+
+  // Kick on each downbeat within window
+  for (let t = 0; t < song.dur; t += beatDur) {
+    if (t < startWindow || t > endWindow) continue;
+    const rel = t - startWindow;
+    const when = startTime + rel;
+    const isDown = Math.round(t / beatDur) % 4 === 0;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(isDown ? 90 : 160, when);
+    osc.frequency.exponentialRampToValueAtTime(isDown ? 40 : 80, when + 0.15);
+    gain.gain.setValueAtTime(0, when);
+    gain.gain.linearRampToValueAtTime(isDown ? 0.6 : 0.3, when + 0.005);
+    gain.gain.exponentialRampToValueAtTime(0.001, when + 0.2);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(when);
+    osc.stop(when + 0.25);
+    playingNodes.push(osc);
+  }
+  // Pad drone
+  const pad = audioCtx.createOscillator();
+  const padGain = audioCtx.createGain();
+  pad.type = 'triangle';
+  pad.frequency.value = 220;
+  padGain.gain.setValueAtTime(0, startTime);
+  padGain.gain.linearRampToValueAtTime(0.08, startTime + 0.2);
+  padGain.gain.linearRampToValueAtTime(0.0, startTime + len);
+  pad.connect(padGain).connect(audioCtx.destination);
+  pad.start(startTime);
+  pad.stop(startTime + len);
+  playingNodes.push(pad);
+
+  playStartWall = performance.now();
+  playheadEl.style.display = 'block';
+  const rect = waveEl.getBoundingClientRect();
+  function tick() {
+    const elapsed = (performance.now() - playStartWall) / 1000;
+    if (elapsed >= len) { stopPlayback(); return; }
+    const pos = state.startS + elapsed;
+    const x = (pos / song.dur) * rect.width;
+    playheadEl.style.left = x + 'px';
+    rafId = requestAnimationFrame(tick);
+  }
+  rafId = requestAnimationFrame(tick);
+}
+playBtn.addEventListener('click', playWindow);
+stopBtn.addEventListener('click', stopPlayback);
+
+/* Download audio slice (generates WAV of synth window so user has something to carry) */
+dlBtn.addEventListener('click', () => {
+  const song = DEMOS[state.song];
+  const sampleRate = 22050;
+  const len = state.endS - state.startS;
+  const samples = Math.floor(sampleRate * len);
+  const buf = new Float32Array(samples);
+  const beatDur = 60 / song.bpm;
+  for (let t = 0; t < song.dur; t += beatDur) {
+    if (t < state.startS || t > state.endS) continue;
+    const rel = t - state.startS;
+    const startIdx = Math.floor(rel * sampleRate);
+    const isDown = Math.round(t / beatDur) % 4 === 0;
+    const freq = isDown ? 90 : 160;
+    for (let i = 0; i < sampleRate * 0.2; i++) {
+      if (startIdx + i >= samples) break;
+      const env = Math.exp(-i / (sampleRate * 0.05));
+      buf[startIdx + i] += Math.sin(2 * Math.PI * freq * i / sampleRate) * 0.5 * env;
+    }
+  }
+  // Add pad
+  for (let i = 0; i < samples; i++) {
+    const env = Math.min(1, i / (sampleRate * 0.2)) * Math.min(1, (samples - i) / (sampleRate * 0.2));
+    buf[i] += Math.sin(2 * Math.PI * 220 * i / sampleRate) * 0.08 * env;
+  }
+  // WAV encode
+  const wav = encodeWav(buf, sampleRate);
+  const blob = new Blob([wav], { type: 'audio/wav' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${song.title.replace(/\s+/g,'_')}_${state.startS.toFixed(1)}-${state.endS.toFixed(1)}.wav`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast('Slice downloaded');
+});
+function encodeWav(samples, rate) {
+  const buf = new ArrayBuffer(44 + samples.length * 2);
+  const view = new DataView(buf);
+  const writeStr = (o, s) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)); };
+  writeStr(0, 'RIFF'); view.setUint32(4, 36 + samples.length * 2, true); writeStr(8, 'WAVE');
+  writeStr(12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+  view.setUint32(24, rate, true); view.setUint32(28, rate * 2, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+  writeStr(36, 'data'); view.setUint32(40, samples.length * 2, true);
+  for (let i = 0; i < samples.length; i++) {
+    const s = Math.max(-1, Math.min(1, samples[i]));
+    view.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+  }
+  return buf;
+}
+
+/* ============================================================
+   Ref grids
+============================================================ */
+function renderRefGrids() {
+  const groups = [
+    { id: 'gridArtist',   arr: state.refs.artist,   color: 'perf',  countId: 'artistCount', max: 3 },
+    { id: 'gridWardrobe', arr: state.refs.wardrobe, color: 'scene', countId: 'wardrobeCount', max: 2 },
+    { id: 'gridLocation', arr: state.refs.location, color: 'scene', countId: 'locationCount', max: 2 },
+    { id: 'gridMotion',   arr: state.refs.motion,   color: 'broll', countId: 'motionCount', max: 3 },
+  ];
+  for (const g of groups) {
+    const el = $(g.id);
+    el.innerHTML = '';
+    const filled = g.arr.filter(r => r.filled).length;
+    $(g.countId).textContent = `${filled}/${g.max}`;
+    for (const r of g.arr) {
+      const d = document.createElement('div');
+      d.className = 'ref-card' + (r.filled ? ' filled ' + g.color : '');
+      d.innerHTML = `<span class="badge">${r.tag}</span>${r.filled ? r.label : '+ upload'}`;
+      d.onclick = () => { r.filled = !r.filled; renderAll(); };
+      el.appendChild(d);
+    }
+  }
+}
+
+/* ============================================================
+   Prompt editor (single / multi-shot)
+============================================================ */
+function renderShotRows() {
+  shotRows.innerHTML = '';
+  const windowLen = state.endS - state.startS;
+  state.shots.forEach((shot, i) => {
+    const row = document.createElement('div');
+    row.className = 'shot-row';
+    row.innerHTML = `
+      <div class="timecode">[${shot.t0}-${shot.t1}s]</div>
+      <input type="text" value="${shot.text.replace(/"/g,'&quot;')}" placeholder="Describe shot…" />
+      <button title="Remove">×</button>
+    `;
+    const [timecodeEl, inputEl, btnEl] = row.children;
+    inputEl.oninput = e => { state.shots[i].text = e.target.value; renderRight(); };
+    btnEl.onclick = () => { state.shots.splice(i, 1); renderAll(); };
+    shotRows.appendChild(row);
+  });
+}
+addShotBtn.onclick = () => {
+  const windowLen = Math.round(state.endS - state.startS);
+  const lastEnd = state.shots.length ? state.shots[state.shots.length-1].t1 : 0;
+  if (lastEnd >= windowLen) { showToast('Window full'); return; }
+  state.shots.push({ t0: lastEnd, t1: Math.min(windowLen, lastEnd + 3), text: '' });
+  if (!state.timeCoded) { state.timeCoded = true; tcToggle.checked = true; }
+  renderAll();
+};
+askDirectorBtn.onclick = () => {
+  // Mock: show what we'd send to the LLM
+  const song = DEMOS[state.song];
+  const windowLyrics = getLyricsForWindow();
+  const director = DIRECTORS[state.director];
+  const artistLabel = artistSel.options[artistSel.selectedIndex].text;
+  const brief = [
+    `I'd send this to the LLM director:`,
+    `---`,
+    `Song: ${song.title} (${song.bpm} BPM, ${song.genre})`,
+    `Window: ${state.startS.toFixed(1)}–${state.endS.toFixed(1)}s (${(state.endS-state.startS).toFixed(1)}s)`,
+    `Lyrics in window: ${windowLyrics.join(' / ') || '(none provided)'}`,
+    `Artist: ${artistLabel}`,
+    `Intent: ${state.intent}`,
+    `Director: ${director.name} — ${director.boost || '(skip)'}`,
+    `Refs available: ${inspectorItems().map(r => r.tag).join(', ')}`,
+    `Format: ${state.resolution} ${state.aspect}, ${state.duration}s, audio=${state.genAudio}`,
+    `Time-coded: ${state.timeCoded}`,
+    `---`,
+    `LLM returns: Seedance 2.0 prompt w/ bracket tags + time codes.`,
+  ].join('\n');
+  alert(brief);
+};
+
+/* Shot grammar pill insertion */
+document.addEventListener('click', e => {
+  const pill = e.target.closest('.pill[data-insert]');
+  if (!pill) return;
+  const text = pill.dataset.insert;
+  if (state.timeCoded && state.shots.length) {
+    // Insert into focused shot input, else last
+    const active = document.activeElement;
+    if (active && active.tagName === 'INPUT' && active.closest('.shot-row')) {
+      const idx = [...shotRows.children].indexOf(active.closest('.shot-row'));
+      if (idx >= 0) { state.shots[idx].text = (state.shots[idx].text + ' ' + text).trim(); renderAll(); return; }
+    }
+    const last = state.shots.length - 1;
+    state.shots[last].text = (state.shots[last].text + ' ' + text).trim();
+  } else {
+    state.singlePrompt = (state.singlePrompt + ' ' + text).trim();
+  }
+  renderAll();
+});
+
+/* ============================================================
+   Lyrics handling
+============================================================ */
+function loadLyricsForSong() {
+  const song = DEMOS[state.song];
+  state.lyrics = song.lyrics.join('\n');
+  lyricsEl.value = state.lyrics;
+}
+function getLyricsForWindow() {
+  // Simple: distribute lines evenly across song duration, pick ones landing in window
+  const song = DEMOS[state.song];
+  const lines = state.lyrics.split('\n').map(s => s.trim()).filter(Boolean);
+  if (!lines.length) return [];
+  const per = song.dur / lines.length;
+  const out = [];
+  lines.forEach((l, i) => {
+    const t = i * per;
+    if (t >= state.startS - 2 && t <= state.endS + 1) out.push(l);
+  });
+  return out;
+}
+function renderLyricStrip() {
+  const lines = state.lyrics.split('\n').map(s => s.trim()).filter(Boolean);
+  lyricCountChip.textContent = `${lines.length} lines`;
+  if (!lines.length) { lyricStrip.textContent = 'Paste lyrics on the left to see words scoped to your window.'; return; }
+  const song = DEMOS[state.song];
+  const per = song.dur / lines.length;
+  const parts = lines.map((l, i) => {
+    const t = i * per;
+    const inWin = t >= state.startS - 2 && t <= state.endS + 1;
+    return inWin ? `<span class="inwin">${l}</span>` : `<span>${l}</span>`;
+  });
+  lyricStrip.innerHTML = parts.join(' · ');
+}
+
+/* ============================================================
+   Cost
+============================================================ */
+function computeCost() {
+  // Unverified placeholder table (pts/sec). User asked to flag as needs verification.
+  // Deliberately errs higher to avoid undershooting.
+  const table = { '480p': 7, '720p': 12, '1080p': 20 };
+  const perSec = table[state.resolution] ?? 12;
+  const secs = state.duration;
+  const total = perSec * secs;
+  costNum.innerHTML = `${total} <span class="unit">pts</span>`;
+  costDetail.textContent = `${perSec} pts/sec × ${secs}s · ${state.resolution} · needs verification against Replicate pricing`;
+}
+
+/* ============================================================
+   Final prompt build
+============================================================ */
+function buildFinalPrompt() {
+  const song = DEMOS[state.song];
+  const director = DIRECTORS[state.director];
+  const dur = state.duration;
+  const shotCount = state.timeCoded ? state.shots.length : 1;
+  const header = `Total: ${dur}s / ${state.aspect} / ${state.resolution} / ${shotCount} shot${shotCount===1?'':'s'}`;
+
+  let body;
+  if (state.timeCoded) {
+    body = state.shots.map(s => `[${s.t0}-${s.t1}s]: ${s.text}`).join('\n');
+  } else {
+    body = state.singlePrompt;
+  }
+
+  const directorLine = state.director !== 'skip' && director.boost
+    ? `\nDirector style (${director.name}): ${director.boost}`
+    : '';
+
+  const continuityLine = state.continuity
+    ? `\nContinuity: carry last frame and wardrobe from prior clip.`
+    : '';
+
+  const windowLyrics = getLyricsForWindow();
+  const lyricsLine = (state.intent === 'performance' && windowLyrics.length)
+    ? `\nLip-sync reference lyrics (${state.startS.toFixed(1)}–${state.endS.toFixed(1)}s): "${windowLyrics.join(' / ')}"`
+    : '';
+
+  return `${header}\n\n${body}${directorLine}${continuityLine}${lyricsLine}`;
+}
+
+/* ============================================================
+   Lint
+============================================================ */
+function lint() {
+  const items = [];
+  const allRefs = inspectorItems();
+  const prompt = state.timeCoded ? state.shots.map(s => s.text).join(' ') : state.singlePrompt;
+  const tagsInPrompt = [...prompt.matchAll(/\[(Image|Audio|Video)(\d+)\]/g)].map(m => m[0]);
+  const uniqueTags = [...new Set(tagsInPrompt)];
+
+  // Unresolved tags
+  const resolved = new Set(allRefs.filter(r => r.filled).map(r => `[${r.tag}]`));
+  const unresolved = uniqueTags.filter(t => !resolved.has(t));
+  if (unresolved.length) {
+    items.push({ type: 'err', text: `Unresolved tags: ${unresolved.join(', ')} — upload these refs or remove them.` });
+  }
+
+  // Unused refs
+  const unused = allRefs.filter(r => r.filled && !uniqueTags.includes(`[${r.tag}]`));
+  if (unused.length) {
+    items.push({ type: 'warn', text: `${unused.length} filled ref(s) not cited in prompt: ${unused.map(r => `[${r.tag}]`).join(', ')}` });
+  }
+
+  // 15s cap
+  if (state.endS - state.startS > 15.01) {
+    items.push({ type: 'err', text: `Window exceeds 15s cap (Seedance 2.0 hard limit).` });
+  }
+
+  // Performance without audio
+  if (state.intent === 'performance' && !state.genAudio) {
+    items.push({ type: 'warn', text: `Performance intent but audio disabled — lip-sync won't match music.` });
+  }
+
+  // Performance without artist ref
+  if (state.intent === 'performance' && !state.refs.artist.some(r => r.filled)) {
+    items.push({ type: 'err', text: `Performance intent requires at least one artist sheet.` });
+  }
+
+  // Multi-shot time coverage
+  if (state.timeCoded && state.shots.length) {
+    const last = state.shots[state.shots.length-1].t1;
+    if (last < state.duration) {
+      items.push({ type: 'warn', text: `Shots cover ${last}s but window is ${state.duration}s — add a shot or trim duration.` });
+    }
+  }
+
+  // Audio ref in prompt but no audio ref filled
+  if (prompt.includes('[Audio1]') && !state.refs.audio.some(r => r.filled)) {
+    items.push({ type: 'err', text: `Prompt cites [Audio1] but no audio reference attached.` });
+  }
+
+  if (!items.length) items.push({ type: 'ok', text: 'All checks pass. Ready to generate.' });
+  return items;
+}
+function renderLint() {
+  const items = lint();
+  lintBox.innerHTML = items.map(it => `
+    <div class="lint-item ${it.type}">
+      <div class="dot"></div>
+      <div>${it.text}</div>
+    </div>
+  `).join('');
+}
+
+/* ============================================================
+   Reference inspector
+============================================================ */
+function inspectorItems() {
+  const out = [];
+  const push = (group, arr) => arr.forEach(r => out.push({ ...r, group }));
+  push('Artist', state.refs.artist);
+  push('Wardrobe', state.refs.wardrobe);
+  push('Location', state.refs.location);
+  push('Motion', state.refs.motion);
+  push('Audio', state.refs.audio);
+  return out;
+}
+function renderInspector() {
+  const items = inspectorItems();
+  const prompt = state.timeCoded ? state.shots.map(s => s.text).join(' ') : state.singlePrompt;
+  const filled = items.filter(r => r.filled);
+  if (!filled.length) {
+    refInspect.innerHTML = `<div style="font-size:11px;color:var(--muted)">No references attached yet.</div>`;
+    return;
+  }
+  refInspect.innerHTML = filled.map(r => {
+    const cited = prompt.includes(`[${r.tag}]`);
+    const type = r.tag.startsWith('Audio') ? 'audio' : r.tag.startsWith('Video') ? 'video' : (r.group === 'Artist' ? 'perf' : 'scene');
+    return `
+      <div class="ref-inspect-item">
+        <div class="tag-badge ${type}">${r.tag}</div>
+        <div class="label-col">
+          <strong>${r.label}</strong>
+          ${r.group} · ${type === 'audio' ? 'audio ref' : type === 'video' ? 'motion ref' : 'image ref'}
+        </div>
+        <div class="${cited ? 'status-ok' : 'status-unused'}">${cited ? '● cited' : '○ unused'}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+/* ============================================================
+   API payload
+============================================================ */
+function buildApiPayload() {
+  const items = inspectorItems().filter(r => r.filled);
+  const image_refs = items.filter(r => r.tag.startsWith('Image')).map(r => `https://.../refs/${r.tag}.jpg`);
+  const video_refs = items.filter(r => r.tag.startsWith('Video')).map(r => `https://.../refs/${r.tag}.mp4`);
+  const audio_refs = items.filter(r => r.tag.startsWith('Audio')).map(r => `https://.../refs/${r.tag}.wav`);
+  return {
+    model: 'bytedance/seedance-2.0',
+    input: {
+      prompt: buildFinalPrompt(),
+      duration: state.duration,
+      resolution: state.resolution,
+      aspect_ratio: state.aspect,
+      generate_audio: state.genAudio,
+      reference_images: image_refs,
+      ...(video_refs.length ? { reference_videos: video_refs } : {}),
+      ...(audio_refs.length ? { reference_audios: audio_refs } : {}),
+    }
+  };
+}
+
+/* ============================================================
+   Render
+============================================================ */
+function renderRight() {
+  finalPrompt.textContent = buildFinalPrompt();
+  apiJson.textContent = JSON.stringify(buildApiPayload(), null, 2);
+  renderLint();
+  renderInspector();
+}
+function renderAll() {
+  durLabel.textContent = state.duration + 's';
+  if (state.timeCoded) { singleShotWrap.style.display = 'none'; multiShotWrap.style.display = 'block'; }
+  else { singleShotWrap.style.display = 'block'; multiShotWrap.style.display = 'none'; }
+  singlePrompt.value = state.singlePrompt;
+  bpmDisp.textContent = `${DEMOS[state.song].bpm} BPM · 4/4`;
+  directorHint.textContent = DIRECTORS[state.director].boost || 'No director boost applied.';
+  intentHint.textContent = INTENT_HINTS[state.intent];
+  drawWave(); drawBeats(); drawSelection();
+  renderShotRows();
+  renderRefGrids();
+  renderLyricStrip();
+  computeCost();
+  renderRight();
+}
+
+/* ============================================================
+   Wire controls
+============================================================ */
+songSel.onchange = e => { state.song = e.target.value; loadLyricsForSong(); renderAll(); };
+artistSel.onchange = e => { state.artist = e.target.value; renderAll(); };
+directorSel.onchange = e => { state.director = e.target.value; renderAll(); };
+resSel.onchange = e => { state.resolution = e.target.value; renderAll(); };
+aspectSel.onchange = e => { state.aspect = e.target.value; renderAll(); };
+durRange.oninput = e => {
+  state.duration = +e.target.value;
+  // snap window end to startS + duration
+  state.endS = Math.min(DEMOS[state.song].dur, state.startS + state.duration);
+  renderAll();
+};
+genAudio.onchange = e => { state.genAudio = e.target.checked; renderAll(); };
+tcToggle.onchange = e => { state.timeCoded = e.target.checked; renderAll(); };
+contToggle.onchange = e => { state.continuity = e.target.checked; renderAll(); };
+lyricsEl.oninput = e => { state.lyrics = e.target.value; renderLyricStrip(); renderRight(); };
+singlePrompt.oninput = e => { state.singlePrompt = e.target.value; renderRight(); };
+
+intentPills.addEventListener('click', e => {
+  const pill = e.target.closest('.pill');
+  if (!pill || !pill.dataset.v) return;
+  state.intent = pill.dataset.v;
+  [...intentPills.children].forEach(p => p.classList.toggle('active', p.dataset.v === state.intent));
+  renderAll();
+});
+
+copyBtn.onclick = async () => {
+  try {
+    await navigator.clipboard.writeText(buildFinalPrompt());
+    showToast('Copied!');
+  } catch (e) { showToast('Copy failed'); }
+};
+function showToast(msg) {
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 1400);
+}
+
+/* ============================================================
+   Init
+============================================================ */
+loadLyricsForSong();
+renderAll();
+window.addEventListener('resize', renderAll);
+</script>
+</body>
+</html>
