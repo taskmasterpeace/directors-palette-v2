@@ -29,6 +29,7 @@ import { useRecipeStore } from '../store/recipe.store'
 import { RecipeCatalogModal } from './recipe/RecipeCatalogModal'
 import { RecipeEditorModal } from './recipe/RecipeEditorModal'
 import { RecipeManagement } from './recipe/RecipeManagement'
+import { FlaskConical, Plus, LibraryBig } from 'lucide-react'
 
 const ShotCreator = () => {
     const { setActiveTab } = useLayoutStore()
@@ -277,6 +278,40 @@ const ShotCreator = () => {
                         </div>
                     )}
 
+                    {/* Recipes toolbar */}
+                    <div className="flex items-center gap-1.5 flex-wrap px-1">
+                        <span className="text-[11px] text-muted-foreground font-medium flex items-center gap-1 mr-1">
+                            <FlaskConical className="w-3 h-3 text-cyan-400" />
+                            Recipes:
+                        </span>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => { setEditingRecipeId(null); setIsEditorOpen(true) }}
+                            className="h-7 px-2.5 text-xs border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
+                        >
+                            <Plus className="w-3 h-3 mr-1" />
+                            New
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setIsManagementOpen(true)}
+                            className="h-7 px-2.5 text-xs text-muted-foreground hover:text-white"
+                        >
+                            My Recipes
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setIsCatalogOpen(true)}
+                            className="h-7 px-2.5 text-xs text-muted-foreground hover:text-white"
+                        >
+                            <LibraryBig className="w-3 h-3 mr-1" />
+                            Browse Catalog
+                        </Button>
+                    </div>
+
                     {/* Prompt */}
                     <div className="bg-background/30">
                         <CreatorPromptSettings compact={false} showResizeControls={false} />
@@ -344,6 +379,40 @@ const ShotCreator = () => {
                         {/* LEFT PANEL - Reference Images & Prompt */}
                         <ResizablePanel defaultSize={rightPanelCollapsed ? 100 : 60} minSize={30}>
                             <div className="h-full pr-3 space-y-4 overflow-y-auto">
+                                {/* Recipes toolbar */}
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                    <span className="text-xs text-muted-foreground font-medium flex items-center gap-1 mr-1">
+                                        <FlaskConical className="w-3.5 h-3.5 text-cyan-400" />
+                                        Recipes:
+                                    </span>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => { setEditingRecipeId(null); setIsEditorOpen(true) }}
+                                        className="h-7 px-2.5 text-xs border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
+                                    >
+                                        <Plus className="w-3 h-3 mr-1" />
+                                        New
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => setIsManagementOpen(true)}
+                                        className="h-7 px-2.5 text-xs text-muted-foreground hover:text-white"
+                                    >
+                                        My Recipes
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => setIsCatalogOpen(true)}
+                                        className="h-7 px-2.5 text-xs text-muted-foreground hover:text-white"
+                                    >
+                                        <LibraryBig className="w-3 h-3 mr-1" />
+                                        Browse Catalog
+                                    </Button>
+                                </div>
+
                                 {/* Reference Images — hidden when recipe is active */}
                                 {!activeRecipeId && (
                                     <div className={modelConfig?.maxReferenceImages === 0
