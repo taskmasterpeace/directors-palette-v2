@@ -86,9 +86,10 @@ export const ANIMATION_MODELS: Record<AnimationModel, ModelConfig> = {
     maxDuration: 12,
     supportedResolutions: ['480p', '720p'],
     supportedAspectRatios: ['16:9', '4:3', '1:1', '3:4', '9:16', '21:9', '9:21'],
-    pricingType: 'per-second',
+    pricingType: 'per-video',
     promptStyle: 'reasoning',
     aspectRatioIgnoredWithImage: true,
+    durationChoices: { short: 5, long: 12 },
     restrictions: [
       'Last frame requires start frame image'
     ]
@@ -100,13 +101,14 @@ export const ANIMATION_MODELS: Record<AnimationModel, ModelConfig> = {
     maxReferenceImages: 0,
     maxReferenceVideos: 4,
     supportsLastFrame: true,
-    defaultResolution: '720p',
-    maxDuration: 12,
-    supportedResolutions: ['480p', '720p', '1080p'],
+    defaultResolution: '480p',
+    maxDuration: 15,
+    supportedResolutions: ['480p', '720p'],
     supportedAspectRatios: ['16:9', '4:3', '1:1', '3:4', '9:16', '21:9', '9:21'],
-    pricingType: 'per-second',
+    pricingType: 'per-video',
     promptStyle: 'reasoning',
     aspectRatioIgnoredWithImage: true,
+    durationChoices: { short: 5, long: 15 },
     restrictions: [
       'Reference videos must be ≤ 15 seconds each',
       'Max 4 reference videos'
@@ -119,13 +121,14 @@ export const ANIMATION_MODELS: Record<AnimationModel, ModelConfig> = {
     maxReferenceImages: 0,
     maxReferenceVideos: 4,
     supportsLastFrame: true,
-    defaultResolution: '720p',
-    maxDuration: 12,
-    supportedResolutions: ['480p', '720p', '1080p'],
+    defaultResolution: '480p',
+    maxDuration: 15,
+    supportedResolutions: ['480p', '720p'],
     supportedAspectRatios: ['16:9', '4:3', '1:1', '3:4', '9:16', '21:9', '9:21'],
-    pricingType: 'per-second',
+    pricingType: 'per-video',
     promptStyle: 'reasoning',
     aspectRatioIgnoredWithImage: true,
+    durationChoices: { short: 5, long: 15 },
     restrictions: [
       'Reference videos must be ≤ 15 seconds each',
       'Max 4 reference videos'
@@ -219,7 +222,7 @@ export const DEFAULT_MODEL_SETTINGS: Record<AnimationModel, ModelSettings> = {
     cameraFixed: false
   },
   'seedance-1.5-pro': {
-    duration: 12,
+    duration: 5,
     resolution: '480p',
     aspectRatio: '16:9',
     fps: 24,
@@ -228,14 +231,14 @@ export const DEFAULT_MODEL_SETTINGS: Record<AnimationModel, ModelSettings> = {
   },
   'seedance-2.0-fast': {
     duration: 5,
-    resolution: '720p',
+    resolution: '480p',
     aspectRatio: '16:9',
     fps: 24,
     cameraFixed: false
   },
   'seedance-2.0': {
     duration: 5,
-    resolution: '720p',
+    resolution: '480p',
     aspectRatio: '16:9',
     fps: 24,
     cameraFixed: false

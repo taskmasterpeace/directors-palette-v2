@@ -120,6 +120,12 @@ export interface ModelConfig {
   promptStyle: 'specific' | 'reasoning'
   supportsAudio?: boolean // Model can generate synchronized audio
   aspectRatioIgnoredWithImage?: boolean // API ignores aspect_ratio when an image is provided (i2v)
+  /**
+   * Active Seedance models in Shot Animator restrict users to two duration choices —
+   * Short (fast iteration) and Long (model max). Pricing is flat per choice.
+   * Undefined on models that still use a free-form duration slider.
+   */
+  durationChoices?: { short: number; long: number }
   restrictions?: string[]
 }
 
@@ -130,15 +136,55 @@ export interface VideoPricing {
   '1080p'?: number
 }
 
-// Model pricing map
+/**
+ * Flat pricing for active Seedance models (Shot Animator).
+ * User picks Short or Long duration; cost is a fixed pts number per resolution.
+ * No per-second math — we priced against real Replicate $ cost at each duration
+ * with a ~20% markup and rounded to clean integers.
+ *
+ * Short is always 5s. Long is the model's max:
+ *   - seedance-1.5-pro: 12s
+ *   - seedance-2.0-fast / seedance-2.0: 15s
+ *
+ * seedance-1.5-pro is flat across resolutions — the Replicate model picks
+ * resolution internally, so we charge the same for 480p and 720p.
+ */
+export interface FlatVideoPricing {
+  short: VideoPricing
+  long: VideoPricing
+}
+
+export const ACTIVE_VIDEO_PRICING: Partial<Record<AnimationModel, FlatVideoPricing>> = {
+  'seedance-1.5-pro': {
+    short: { '480p': 30,  '720p': 30  },
+    long:  { '480p': 75,  '720p': 75  },
+  },
+  'seedance-2.0-fast': {
+    short: { '480p': 45,  '720p': 90  },
+    long:  { '480p': 125, '720p': 270 },
+  },
+  'seedance-2.0': {
+    short: { '480p': 50,  '720p': 110 },
+    long:  { '480p': 145, '720p': 325 },
+  },
+}
+
+/**
+ * Legacy pricing map. Non-active models keep their original per-second / per-video
+ * semantics (used by storyboard batch cost, v2 API consumers, legacy code paths).
+ * Active model entries here store the LONG-duration flat cost as a fallback for
+ * any legacy call site that isn't aware of ACTIVE_VIDEO_PRICING.
+ */
 export const VIDEO_MODEL_PRICING: Record<AnimationModel, VideoPricing> = {
   'wan-2.2-5b-fast': { '480p': 1, '720p': 1 },           // Per video (~4s)
   'wan-2.2-i2v-fast': { '480p': 2, '720p': 3 },          // Per video (5s)
   'seedance-pro-fast': { '480p': 2, '720p': 4, '1080p': 9 },   // Per second
   'seedance-lite': { '480p': 3, '720p': 5, '1080p': 11 },      // Per second
-  'seedance-1.5-pro': { '480p': 5, '720p': 8 },                // Per second — cheapest curated option
-  'seedance-2.0-fast': { '480p': 7, '720p': 10, '1080p': 17 }, // Per second — supports video refs
-  'seedance-2.0': { '480p': 8, '720p': 11, '1080p': 19 },      // Per second — premium + video refs
+  // Active models — values reflect the LONG-duration flat cost. Shot Animator
+  // uses ACTIVE_VIDEO_PRICING (short/long split) for actual charging.
+  'seedance-1.5-pro': { '480p': 75,  '720p': 75  },
+  'seedance-2.0-fast': { '480p': 125, '720p': 270, '1080p': 270 },
+  'seedance-2.0': { '480p': 145, '720p': 325, '1080p': 325 },
   'kling-2.5-turbo-pro': { '480p': 10, '720p': 10 },           // Per second
   'p-video': { '480p': 1, '720p': 2 },                          // Minimal cost to prevent abuse
   'seedance-pro': { '480p': 4, '720p': 6, '1080p': 15 },       // Per second (legacy)

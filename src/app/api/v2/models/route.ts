@@ -3,7 +3,8 @@ import { validateV2ApiKey, isAuthContext } from '../_lib/middleware'
 import { successResponse } from '../_lib/response'
 import { MODEL_CONFIGS, ASPECT_RATIO_SIZES } from '@/config'
 import { ANIMATION_MODELS } from '@/features/shot-animator/config/models.config'
-import { VIDEO_MODEL_PRICING } from '@/features/shot-animator/types'
+import { VIDEO_MODEL_PRICING, ACTIVE_VIDEO_PRICING } from '@/features/shot-animator/types'
+import type { AnimationModel } from '@/features/shot-animator/types'
 import { apiKeyService } from '@/features/api-keys/services/api-key.service'
 
 export async function GET(request: NextRequest) {
@@ -30,18 +31,28 @@ export async function GET(request: NextRequest) {
 
   const video_models = Object.entries(ANIMATION_MODELS)
     .filter(([id]) => id !== 'seedance-pro')
-    .map(([id, config]) => ({
-      id,
-      name: config.displayName,
-      category: 'video' as const,
-      type: 'generation',
-      cost_pts_per_unit: VIDEO_MODEL_PRICING[id as keyof typeof VIDEO_MODEL_PRICING],
-      pricing_type: config.pricingType,
-      max_duration: config.maxDuration,
-      supported_resolutions: config.supportedResolutions,
-      supported_aspect_ratios: config.supportedAspectRatios,
-      requires_input_image: id !== 'seedance-1.5-pro' && id !== 'p-video',
-    }))
+    .map(([id, config]) => {
+      const modelId = id as AnimationModel
+      const flat = ACTIVE_VIDEO_PRICING[modelId] ?? null
+      return {
+        id,
+        name: config.displayName,
+        category: 'video' as const,
+        type: 'generation',
+        cost_pts_per_unit: VIDEO_MODEL_PRICING[modelId],
+        // Active Seedance models charge flat pts based on Short/Long choice × resolution.
+        // `cost_flat` is the authoritative price for these; `cost_pts_per_unit` is the
+        // long-duration fallback kept for backwards compat. `duration_choices` tells
+        // API consumers exactly which two durations are valid.
+        cost_flat: flat,
+        duration_choices: config.durationChoices ?? null,
+        pricing_type: config.pricingType,
+        max_duration: config.maxDuration,
+        supported_resolutions: config.supportedResolutions,
+        supported_aspect_ratios: config.supportedAspectRatios,
+        requires_input_image: id !== 'seedance-1.5-pro' && id !== 'p-video',
+      }
+    })
 
   await apiKeyService.logUsage({
     apiKeyId: auth.apiKeyId,

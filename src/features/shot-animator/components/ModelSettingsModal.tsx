@@ -27,7 +27,8 @@ import {
   ACTIVE_VIDEO_MODELS,
   MODEL_TIER_LABELS,
 } from '../config/models.config'
-import { VIDEO_MODEL_PRICING } from '../types'
+import { VIDEO_MODEL_PRICING, ACTIVE_VIDEO_PRICING } from '../types'
+import { VideoGenerationService } from '../services/video-generation.service'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 
@@ -151,18 +152,33 @@ interface ModelSettingsPanelProps {
 function ModelSettingsPanel({ model, settings, onUpdate }: ModelSettingsPanelProps) {
   const modelConfig = ANIMATION_MODELS[model]
   const pricing = VIDEO_MODEL_PRICING[model]
+  const flatPricing = ACTIVE_VIDEO_PRICING[model]
   const tier = MODEL_TIER_LABELS[model]
 
-  // Calculate estimated cost for preview (with null guards)
-  const resolution = settings?.resolution ?? '720p'
+  const resolution = settings?.resolution ?? modelConfig?.defaultResolution ?? '480p'
   const duration = settings?.duration ?? 5
-  const pricePerUnit = pricing?.[resolution] ?? pricing?.['720p'] ?? 0
-  const estimatedCost = modelConfig?.pricingType === 'per-video'
-    ? pricePerUnit
-    : pricePerUnit * duration
 
-  // Check if duration is fixed for this model
-  const isFixedDuration = modelConfig?.pricingType === 'per-video'
+  // Flat-priced models (active Seedance) lock users to Short / Long only.
+  // Everyone else keeps the legacy slider.
+  const isFlatPriced = !!flatPricing && !!modelConfig?.durationChoices
+  const isFixedDuration = !isFlatPriced && modelConfig?.pricingType === 'per-video'
+
+  const estimatedCost = VideoGenerationService.calculateCost(model, duration, resolution)
+
+  // Build the "pricing context" line shown in the banner — tells the user what
+  // they're being charged against without having to read the table elsewhere.
+  const pricingContext = (() => {
+    if (isFlatPriced && modelConfig?.durationChoices) {
+      const tierLabel = duration <= (modelConfig.durationChoices.short + modelConfig.durationChoices.long) / 2
+        ? `${modelConfig.durationChoices.short}s short`
+        : `${modelConfig.durationChoices.long}s long`
+      return `${tierLabel} @ ${resolution}`
+    }
+    const pricePerUnit = pricing?.[resolution] ?? pricing?.['720p'] ?? 0
+    return modelConfig?.pricingType === 'per-video'
+      ? `${pricePerUnit} pts/video`
+      : `${pricePerUnit} pts/sec @ ${resolution}`
+  })()
 
   return (
     <div className="space-y-6 p-4 sm:p-4 bg-card/50 rounded-lg border border-border">
@@ -170,19 +186,15 @@ function ModelSettingsPanel({ model, settings, onUpdate }: ModelSettingsPanelPro
       <div className="flex items-center justify-between bg-primary/10 border border-primary/30 rounded p-3">
         <div className="flex items-center gap-2">
           <Badge variant="secondary" className="text-xs">{tier}</Badge>
-          <span className="text-sm text-muted-foreground">
-            {modelConfig?.pricingType === 'per-video'
-              ? `${pricePerUnit} pts/video`
-              : `${pricePerUnit} pts/sec @ ${resolution}`}
-          </span>
+          <span className="text-sm text-muted-foreground">{pricingContext}</span>
         </div>
         <div className="text-right">
           <span className="text-primary font-semibold">{estimatedCost} pts</span>
-          <span className="text-xs text-muted-foreground ml-1">estimated</span>
+          <span className="text-xs text-muted-foreground ml-1">per video</span>
         </div>
       </div>
 
-      {/* Duration Slider */}
+      {/* Duration */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <Label className="text-white">Duration</Label>
@@ -190,7 +202,42 @@ function ModelSettingsPanel({ model, settings, onUpdate }: ModelSettingsPanelPro
             {isFixedDuration ? `${modelConfig?.maxDuration ?? 5} sec (fixed)` : `${duration} sec`}
           </span>
         </div>
-        {isFixedDuration ? (
+        {isFlatPriced && modelConfig?.durationChoices ? (
+          <RadioGroup
+            value={duration === modelConfig.durationChoices.short ? 'short' : 'long'}
+            onValueChange={(value) => {
+              const d = value === 'short'
+                ? modelConfig.durationChoices!.short
+                : modelConfig.durationChoices!.long
+              onUpdate({ duration: d })
+            }}
+            className="grid grid-cols-2 gap-3"
+          >
+            {(['short', 'long'] as const).map((key) => {
+              const secs = modelConfig.durationChoices![key]
+              const cost = flatPricing![key][resolution] ?? flatPricing![key]['720p']
+              const isActive = duration === secs
+              return (
+                <Label
+                  key={key}
+                  htmlFor={`${model}-dur-${key}`}
+                  className={`cursor-pointer rounded border px-3 py-3 flex items-center justify-between transition-colors ${
+                    isActive
+                      ? 'border-primary bg-primary/10 text-white'
+                      : 'border-border bg-background/40 text-foreground hover:border-primary/50'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value={key} id={`${model}-dur-${key}`} />
+                    <span className="font-medium capitalize">{key}</span>
+                    <span className="text-xs text-muted-foreground">{secs}s</span>
+                  </div>
+                  <span className="text-sm text-primary font-semibold">{cost} pts</span>
+                </Label>
+              )
+            })}
+          </RadioGroup>
+        ) : isFixedDuration ? (
           <div className="text-xs text-muted-foreground bg-secondary/30 rounded p-2">
             This model has a fixed duration of {modelConfig?.maxDuration ?? 5} seconds per video.
           </div>
@@ -221,7 +268,12 @@ function ModelSettingsPanel({ model, settings, onUpdate }: ModelSettingsPanelPro
           className="flex flex-col sm:flex-row gap-3 sm:gap-4"
         >
           {(modelConfig?.supportedResolutions ?? ['720p']).map((res) => {
-            const resPrice = pricing?.[res] ?? pricing?.['720p'] ?? 0
+            const resPrice = isFlatPriced && modelConfig?.durationChoices
+              ? (() => {
+                  const tier = duration === modelConfig.durationChoices!.short ? 'short' : 'long'
+                  return flatPricing![tier][res] ?? flatPricing![tier]['720p']
+                })()
+              : pricing?.[res] ?? pricing?.['720p'] ?? 0
             return (
               <div key={res} className="flex items-center space-x-2 touch-manipulation min-h-[44px] sm:min-h-0">
                 <RadioGroupItem value={res} id={`${model}-${res}`} className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0" />

@@ -27,7 +27,8 @@ import {
   DEFAULT_ACTIVE_MODEL,
   COST_CONFIRM_THRESHOLD_PTS,
 } from '../config/models.config'
-import { VIDEO_MODEL_PRICING } from '../types'
+import { ACTIVE_VIDEO_PRICING } from '../types'
+import { VideoGenerationService } from '../services/video-generation.service'
 import { toast } from '@/hooks/use-toast'
 import { ALLOWED_IMAGE_TYPES, GALLERY_IMAGE_MIME_TYPE, GalleryImageDragPayload } from '../constants/drag-drop.constants'
 import { filesToShotConfigs, findOversizedFiles } from '../utils/files-to-shot-configs'
@@ -90,14 +91,33 @@ export function ShotAnimatorView() {
     updateShotAnimatorSettings({ selectedModel: model })
   }
 
-  // Get model settings from settings store, merging with defaults per-model
+  // Get model settings from settings store, merging with defaults per-model.
+  // For flat-priced active models, snap persisted duration/resolution to a
+  // currently-valid choice — otherwise old users hit the UI with stale values
+  // (duration: 7 / resolution: '1080p') that don't match any control state.
   const modelSettings = useMemo(() => {
     const saved = shotAnimator.modelSettings as Partial<AnimatorSettingsType> | undefined
-    if (!saved) return DEFAULT_MODEL_SETTINGS
     const merged = { ...DEFAULT_MODEL_SETTINGS } as AnimatorSettingsType
+    if (saved) {
+      for (const key of Object.keys(merged) as AnimationModel[]) {
+        if (saved[key]) {
+          merged[key] = { ...merged[key], ...saved[key] }
+        }
+      }
+    }
     for (const key of Object.keys(merged) as AnimationModel[]) {
-      if (saved[key]) {
-        merged[key] = { ...merged[key], ...saved[key] }
+      const cfg = ANIMATION_MODELS[key]
+      const flat = ACTIVE_VIDEO_PRICING[key]
+      if (!flat || !cfg.durationChoices) continue
+      const setting = merged[key]
+      const { short, long } = cfg.durationChoices
+      // Snap duration → nearest of (short, long)
+      if (setting.duration !== short && setting.duration !== long) {
+        setting.duration = setting.duration <= (short + long) / 2 ? short : long
+      }
+      // Snap resolution → something the model actually supports now (1080p removed)
+      if (!cfg.supportedResolutions.includes(setting.resolution)) {
+        setting.resolution = cfg.defaultResolution
       }
     }
     return merged
@@ -200,22 +220,19 @@ export function ShotAnimatorView() {
 
   const selectedCount = shotConfigs.filter((s) => s.includeInBatch).length
 
-  // Calculate estimated cost for the batch
+  // Calculate estimated cost for the batch — delegates to the service so active
+  // Seedance models get flat Short/Long pricing, everyone else uses per-sec / per-video.
   const estimatedCost = useMemo(() => {
     if (selectedCount === 0) return 0
     const settings = modelSettings[selectedModel]
-    const pricing = VIDEO_MODEL_PRICING[selectedModel]
-
-    if (!settings || !pricing) return 0
-
-    const pricePerUnit = pricing[settings.resolution] ?? pricing['720p'] ?? 0
-
-    if (currentModelConfig.pricingType === 'per-video') {
-      return selectedCount * pricePerUnit
-    } else {
-      return selectedCount * pricePerUnit * (settings.duration ?? 5)
-    }
-  }, [selectedCount, selectedModel, modelSettings, currentModelConfig.pricingType])
+    if (!settings) return 0
+    const perVideo = VideoGenerationService.calculateCost(
+      selectedModel,
+      settings.duration ?? 5,
+      settings.resolution ?? '480p',
+    )
+    return selectedCount * perVideo
+  }, [selectedCount, selectedModel, modelSettings])
 
   // Stable key of processing gallery IDs to avoid subscription churn
   const processingGalleryIdsKey = useMemo(() => {

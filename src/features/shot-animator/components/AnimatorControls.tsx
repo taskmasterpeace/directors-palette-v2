@@ -26,7 +26,7 @@ import {
   ACTIVE_VIDEO_MODELS,
   MODEL_TIER_LABELS,
 } from '../config/models.config'
-import { VIDEO_MODEL_PRICING } from '../types'
+import { VIDEO_MODEL_PRICING, ACTIVE_VIDEO_PRICING } from '../types'
 import {
   Select,
   SelectContent,
@@ -214,12 +214,15 @@ export function AnimatorControls({
             {ACTIVE_VIDEO_MODELS.map((modelId) => {
               const config = ANIMATION_MODELS[modelId]
               const pricing = VIDEO_MODEL_PRICING[modelId]
+              const flat = ACTIVE_VIDEO_PRICING[modelId]
               const tierLabel = MODEL_TIER_LABELS[modelId]
-              // Mobile has no room for full "pts/sec" copy — use a compact "· N pts" suffix
-              // so tier + price still both show without wrapping.
-              const compactPrice = config.pricingType === 'per-video'
-                ? `${pricing['720p']} pts`
-                : `${pricing['720p']}/s`
+              // Active Seedance models quote a short→long range at default 480p so users
+              // see the floor and ceiling without opening settings. Legacy models show per-sec.
+              const compactPrice = flat
+                ? `${flat.short['480p']}–${flat.long['480p']} pts`
+                : config.pricingType === 'per-video'
+                  ? `${pricing['720p']} pts`
+                  : `${pricing['720p']}/s`
               return (
                 <SelectItem key={modelId} value={modelId} className="cursor-pointer text-sm">
                   <div className="flex items-center gap-1">
@@ -284,10 +287,13 @@ export function AnimatorControls({
                 {ACTIVE_VIDEO_MODELS.map((modelId) => {
                   const config = ANIMATION_MODELS[modelId]
                   const pricing = VIDEO_MODEL_PRICING[modelId]
+                  const flat = ACTIVE_VIDEO_PRICING[modelId]
                   const tierLabel = MODEL_TIER_LABELS[modelId]
-                  const priceDisplay = config.pricingType === 'per-video'
-                    ? `${pricing['720p']} pts/video`
-                    : `${pricing['720p']} pts/sec`
+                  const priceDisplay = flat
+                    ? `${flat.short['480p']}–${flat.long['480p']} pts @ 480p`
+                    : config.pricingType === 'per-video'
+                      ? `${pricing['720p']} pts/video`
+                      : `${pricing['720p']} pts/sec`
 
                   return (
                     <SelectItem key={modelId} value={modelId} className="cursor-pointer">

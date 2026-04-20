@@ -4,7 +4,7 @@
  */
 
 import type { AnimationModel, ModelSettings } from '../types'
-import { VIDEO_MODEL_PRICING } from '../types'
+import { VIDEO_MODEL_PRICING, ACTIVE_VIDEO_PRICING } from '../types'
 import { ANIMATION_MODELS } from '../config/models.config'
 
 export interface VideoGenerationInput {
@@ -261,25 +261,38 @@ export class VideoGenerationService {
   }
 
   /**
-   * Calculate estimated cost in points for a video generation
+   * Calculate estimated cost in points for a video generation.
+   *
+   * Resolution order of precedence:
+   *  1. If ACTIVE_VIDEO_PRICING has the model, match `duration` to the model's
+   *     Short/Long choice and return the flat pts for that (tier, resolution).
+   *  2. If model is per-video, return the per-resolution flat cost.
+   *  3. Otherwise, per-second model — cost = price/sec × duration.
    */
   static calculateCost(
     model: AnimationModel,
     duration: number,
     resolution: '480p' | '720p' | '1080p'
   ): number {
+    const flat = ACTIVE_VIDEO_PRICING[model]
+    if (flat) {
+      const choices = ANIMATION_MODELS[model].durationChoices
+      // Pick Short tier if the duration matches (or if it's closer to short than long).
+      // Anything above the midpoint rounds up to Long so users aren't under-charged.
+      const tier: 'short' | 'long' = choices
+        ? duration <= (choices.short + choices.long) / 2 ? 'short' : 'long'
+        : 'long'
+      const tierPricing = flat[tier]
+      return tierPricing[resolution] ?? tierPricing['720p']
+    }
+
     const config = ANIMATION_MODELS[model]
     const pricing = VIDEO_MODEL_PRICING[model]
-
-    // Get price for resolution (fallback to 720p if not supported)
     const pricePerUnit = pricing[resolution] ?? pricing['720p']
 
-    // Per-video models charge flat rate regardless of duration
     if (config.pricingType === 'per-video') {
       return pricePerUnit
     }
-
-    // Per-second models charge based on duration
     return pricePerUnit * duration
   }
 
