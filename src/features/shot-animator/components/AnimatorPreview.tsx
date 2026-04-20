@@ -99,6 +99,7 @@ export function AnimatorPreview({
                 key={config.id}
                 config={config}
                 maxReferenceImages={currentModelConfig.maxReferenceImages}
+                maxReferenceVideos={currentModelConfig.maxReferenceVideos ?? 0}
                 supportsLastFrame={currentModelConfig.supportsLastFrame}
                 selectedModel={selectedModel}
                 currentModelSettings={currentModelSettings}

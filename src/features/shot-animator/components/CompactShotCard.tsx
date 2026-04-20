@@ -2,13 +2,14 @@
 
 import React, { memo, useState, useRef, useCallback } from 'react'
 import Image from 'next/image'
-import { Image as ImageIcon, Film, Trash2, Wand2, ZoomIn, Replace, Clapperboard, Info, AlertTriangle } from 'lucide-react'
+import { Image as ImageIcon, Film, Trash2, Wand2, ZoomIn, Replace, Clapperboard, Info, AlertTriangle, Video as VideoIcon } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
-import { ShotAnimationConfig, ShotGeneratedVideo, AnimationModel, ModelSettings } from '../types'
+import { ShotAnimationConfig, ShotGeneratedVideo, AnimationModel, ModelSettings, ShotReferenceVideo } from '../types'
+import { VideoCropModal } from './VideoCropModal'
 import { Textarea } from "@/components/ui/textarea"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { CompactVideoCard } from './CompactVideoCard'
@@ -25,6 +26,7 @@ import { logger } from '@/lib/logger'
 interface CompactShotCardProps {
   config: ShotAnimationConfig
   maxReferenceImages: number
+  maxReferenceVideos: number
   supportsLastFrame: boolean
   selectedModel: AnimationModel
   currentModelSettings?: ModelSettings
@@ -42,6 +44,7 @@ type DropZoneSide = 'left' | 'right' | null
 const CompactShotCardComponent = ({
   config,
   maxReferenceImages,
+  maxReferenceVideos,
   supportsLastFrame,
   selectedModel,
   currentModelSettings,
@@ -64,6 +67,40 @@ const CompactShotCardComponent = ({
   const recentDropRef = useRef(false)
   const replaceInputRef = useRef<HTMLInputElement>(null)
   const lastFrameInputRef = useRef<HTMLInputElement>(null)
+  const refVideoInputRef = useRef<HTMLInputElement>(null)
+  const [pendingVideoFile, setPendingVideoFile] = useState<File | null>(null)
+  const [isVideoCropOpen, setIsVideoCropOpen] = useState(false)
+
+  const refVideos = config.referenceVideos ?? []
+  const canAddMoreRefVideos = maxReferenceVideos > 0 && refVideos.length < maxReferenceVideos
+
+  /** File picker → open crop modal */
+  const handlePickRefVideo = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    if (!file.type.startsWith('video/')) {
+      toast({
+        title: 'Not a video file',
+        description: 'Please pick a video file (mp4, mov, webm).',
+        variant: 'destructive',
+      })
+      return
+    }
+    setPendingVideoFile(file)
+    setIsVideoCropOpen(true)
+  }, [])
+
+  const handleVideoCropConfirm = useCallback((video: ShotReferenceVideo) => {
+    const next: ShotReferenceVideo[] = [...(config.referenceVideos ?? []), video]
+    onUpdate({ ...config, referenceVideos: next.slice(0, Math.max(maxReferenceVideos, 1)) })
+  }, [config, onUpdate, maxReferenceVideos])
+
+  const handleRemoveRefVideo = useCallback((index: number) => {
+    const next = [...(config.referenceVideos ?? [])]
+    next.splice(index, 1)
+    onUpdate({ ...config, referenceVideos: next })
+  }, [config, onUpdate])
 
   /** Handle file picker for replacing the start frame image */
   const handleReplaceImage = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -598,6 +635,69 @@ const CompactShotCardComponent = ({
             </div>
           </div>
 
+          {/* Reference Videos (Seedance 2.0 only) */}
+          {maxReferenceVideos > 0 && (
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                  Reference Videos
+                </span>
+                <span className="text-[10px] text-muted-foreground">
+                  {refVideos.length}/{maxReferenceVideos}
+                </span>
+              </div>
+              {refVideos.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {refVideos.map((v, i) => (
+                    <div
+                      key={v.url}
+                      className="group/ref relative rounded border border-border bg-secondary/40 px-1.5 py-1 flex items-center gap-1 max-w-[120px]"
+                    >
+                      <VideoIcon className="w-3 h-3 text-primary shrink-0" />
+                      <span className="text-[10px] text-foreground truncate" title={v.filename}>
+                        {v.filename}
+                      </span>
+                      <span className="text-[9px] text-muted-foreground shrink-0">
+                        {v.duration.toFixed(1)}s
+                      </span>
+                      <button
+                        onClick={() => handleRemoveRefVideo(i)}
+                        className="ml-0.5 text-muted-foreground hover:text-destructive transition-colors"
+                        aria-label={`Remove ${v.filename}`}
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => refVideoInputRef.current?.click()}
+                disabled={!canAddMoreRefVideos}
+                className="min-h-[32px] h-8 px-2 w-full text-xs bg-secondary/50 hover:bg-secondary active:bg-muted text-primary border border-primary/30 touch-manipulation disabled:opacity-40"
+                aria-label="Add reference video"
+              >
+                <VideoIcon className="w-3 h-3 mr-1" />
+                <span>
+                  {refVideos.length === 0
+                    ? '+ Reference Video'
+                    : canAddMoreRefVideos
+                      ? '+ Another Clip'
+                      : 'Max reached'}
+                </span>
+              </Button>
+              <input
+                ref={refVideoInputRef}
+                type="file"
+                accept="video/mp4,video/quicktime,video/webm,video/x-matroska"
+                onChange={handlePickRefVideo}
+                className="hidden"
+              />
+            </div>
+          )}
+
           {/* Generated Videos */}
           {config.generatedVideos && config.generatedVideos.length > 0 && (
             <div className="mt-2">
@@ -618,6 +718,14 @@ const CompactShotCardComponent = ({
         open={isFullscreenOpen}
         onOpenChange={setIsFullscreenOpen}
         onAnnotationComplete={handleAnnotationComplete}
+      />
+
+      {/* Reference Video Trim Modal */}
+      <VideoCropModal
+        isOpen={isVideoCropOpen}
+        onClose={() => { setIsVideoCropOpen(false); setPendingVideoFile(null) }}
+        file={pendingVideoFile}
+        onConfirm={handleVideoCropConfirm}
       />
     </>
   )
@@ -647,9 +755,11 @@ export const CompactShotCard = memo(CompactShotCardComponent, (prevProps, nextPr
     prevProps.config.imageUrl === nextProps.config.imageUrl &&
     prevProps.config.imageModel === nextProps.config.imageModel &&
     prevProps.config.referenceImages.length === nextProps.config.referenceImages.length &&
+    (prevProps.config.referenceVideos?.length ?? 0) === (nextProps.config.referenceVideos?.length ?? 0) &&
     videosEqual(prevProps.config.generatedVideos, nextProps.config.generatedVideos) &&
     prevProps.config.lastFrameImage === nextProps.config.lastFrameImage &&
     prevProps.maxReferenceImages === nextProps.maxReferenceImages &&
+    prevProps.maxReferenceVideos === nextProps.maxReferenceVideos &&
     prevProps.supportsLastFrame === nextProps.supportsLastFrame &&
     prevProps.selectedModel === nextProps.selectedModel &&
     prevProps.currentModelSettings?.generateAudio === nextProps.currentModelSettings?.generateAudio

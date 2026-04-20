@@ -60,6 +60,7 @@ export async function POST(request: NextRequest) {
       image,
       modelSettings,
       referenceImages,
+      referenceVideos,
       lastFrameImage,
       extraMetadata,
       // ✅ REMOVED: user_id from request body (now from authenticated session)
@@ -101,6 +102,7 @@ export async function POST(request: NextRequest) {
       image,
       modelSettings: modelSettings as ModelSettings,
       referenceImages,
+      referenceVideos,
       lastFrameImage,
     });
 
@@ -143,6 +145,7 @@ export async function POST(request: NextRequest) {
       image,
       modelSettings: modelSettings as ModelSettings,
       referenceImages,
+      referenceVideos,
       lastFrameImage,
     });
 
@@ -180,6 +183,7 @@ export async function POST(request: NextRequest) {
       image,
       modelSettings: modelSettings as ModelSettings,
       referenceImages,
+      referenceVideos,
       lastFrameImage,
     });
 

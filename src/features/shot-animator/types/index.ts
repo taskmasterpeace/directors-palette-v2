@@ -15,6 +15,17 @@ export type AnimationModel =
   | 'p-video'              // Fast video gen with audio + draft mode
   | 'seedance-pro'         // Legacy - keeping for backwards compatibility
 
+// A single reference video attached to a shot (Seedance 2.0 only).
+// Stored on R2 after being trimmed to ≤ 14.5s by /api/video/crop.
+export interface ShotReferenceVideo {
+  /** Public R2 URL of the trimmed clip. */
+  url: string
+  /** Duration of the trimmed clip in seconds (≤ 14.5). */
+  duration: number
+  /** Original filename, used for UI display and downloaded filename hints. */
+  filename: string
+}
+
 // Generated video entry for shot animator
 export interface ShotGeneratedVideo {
   galleryId: string
@@ -35,6 +46,11 @@ export interface ShotAnimationConfig {
   prompt: string
   originalPrompt?: string // Original prompt used to generate the image (for AI animation prompt generation)
   referenceImages: string[]
+  /**
+   * Reference video clips (Seedance 2.0 / 2.0 Fast only).
+   * Uploaded and trimmed to ≤ 14.5s before being attached — we only store R2 URLs here.
+   */
+  referenceVideos?: ShotReferenceVideo[]
   lastFrameImage?: string
   includeInBatch: boolean
   generatedVideos: ShotGeneratedVideo[] // Array of generated videos (supports multiple generations)
@@ -86,6 +102,8 @@ export interface ModelConfig {
   displayName: string
   description: string
   maxReferenceImages: number
+  /** Seedance 2.0 accepts short video clips as motion/style references. */
+  maxReferenceVideos?: number
   supportsLastFrame: boolean
   defaultResolution: '480p' | '720p' | '1080p'
   maxDuration: number // Max duration in seconds
@@ -159,6 +177,8 @@ export interface VideoGenerationRequest {
   image: string
   modelSettings: ModelSettings
   referenceImages?: string[]
+  /** Seedance 2.0 only — R2 URLs of pre-trimmed reference clips. */
+  referenceVideos?: string[]
   lastFrameImage?: string
   extraMetadata?: Record<string, unknown>
   // Note: user_id removed - now extracted from session cookie server-side

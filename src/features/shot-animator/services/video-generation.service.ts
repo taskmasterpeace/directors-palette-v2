@@ -13,6 +13,7 @@ export interface VideoGenerationInput {
   image?: string // Base image URL (optional for seedance-1.5-pro text-to-video)
   modelSettings: ModelSettings
   referenceImages?: string[] // Only for seedance-lite (1-4 images)
+  referenceVideos?: string[] // Only for Seedance 2.0 (pre-trimmed R2 URLs)
   lastFrameImage?: string
 }
 
@@ -27,6 +28,7 @@ export interface ReplicateVideoInput {
   seed?: number
   generate_audio?: boolean
   reference_images?: string[]
+  reference_videos?: string[]
   last_frame_image?: string
   draft_mode?: boolean
   audio?: string
@@ -77,6 +79,16 @@ export class VideoGenerationService {
         errors.push(`${config.displayName} does not support reference images`)
       } else if (input.referenceImages.length > config.maxReferenceImages) {
         errors.push(`${config.displayName} supports max ${config.maxReferenceImages} reference images`)
+      }
+    }
+
+    // Validate reference videos (Seedance 2.0 only)
+    if (input.referenceVideos && input.referenceVideos.length > 0) {
+      const maxRefVideos = config.maxReferenceVideos ?? 0
+      if (maxRefVideos === 0) {
+        errors.push(`${config.displayName} does not support reference videos`)
+      } else if (input.referenceVideos.length > maxRefVideos) {
+        errors.push(`${config.displayName} supports max ${maxRefVideos} reference videos`)
       }
     }
 
@@ -201,6 +213,15 @@ export class VideoGenerationService {
       replicateInput.reference_images = input.referenceImages
     }
 
+    // Add reference videos (Seedance 2.0 / 2.0 Fast only)
+    if (
+      (input.model === 'seedance-2.0' || input.model === 'seedance-2.0-fast') &&
+      input.referenceVideos &&
+      input.referenceVideos.length > 0
+    ) {
+      replicateInput.reference_videos = input.referenceVideos
+    }
+
     // Add last frame image
     if (input.lastFrameImage) {
       replicateInput.last_frame_image = input.lastFrameImage
@@ -278,6 +299,8 @@ export class VideoGenerationService {
       seed: input.modelSettings.seed,
       has_reference_images: input.referenceImages && input.referenceImages.length > 0,
       reference_images_count: input.referenceImages?.length || 0,
+      has_reference_videos: input.referenceVideos && input.referenceVideos.length > 0,
+      reference_videos_count: input.referenceVideos?.length || 0,
       has_last_frame: !!input.lastFrameImage,
     }
   }

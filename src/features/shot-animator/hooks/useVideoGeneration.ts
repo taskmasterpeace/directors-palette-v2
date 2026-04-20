@@ -121,6 +121,18 @@ export function useVideoGeneration(): UseVideoGenerationReturn {
         )
       }
 
+      // Reference videos are already R2 URLs (uploaded through /api/video/crop),
+      // so they pass through uploadFileToReplicate as no-ops. We still gate on
+      // the model supporting them so switching to a non-2.0 model doesn't
+      // leak refs through the validator.
+      const maxRefVideos = ANIMATION_MODELS[model]?.maxReferenceVideos ?? 0
+      let finalReferenceVideos: string[] | undefined
+      if (shot.referenceVideos && shot.referenceVideos.length > 0 && maxRefVideos > 0) {
+        finalReferenceVideos = shot.referenceVideos
+          .slice(0, maxRefVideos)
+          .map((ref) => ref.url)
+      }
+
       // Seedance Lite doesn't support using both reference images and last frame image
       // Prioritize last frame image over reference images
       let finalReferenceImages = uploadedReferenceImages
@@ -139,6 +151,7 @@ export function useVideoGeneration(): UseVideoGenerationReturn {
         image: uploadedImageUrl,
         modelSettings,
         referenceImages: finalReferenceImages,
+        referenceVideos: finalReferenceVideos,
         lastFrameImage: finalLastFrameImage,
         extraMetadata: {
           source: 'shot-animator',
