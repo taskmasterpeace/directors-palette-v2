@@ -57,3 +57,4 @@ playwright-out.txt
 nul
 vercel-deploy.log
 .superpowers/
+backups/
