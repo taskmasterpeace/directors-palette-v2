@@ -1,11 +1,21 @@
 'use client'
 
-import React, { useCallback, useRef } from 'react'
-import { Upload, ImageIcon, Search, VideoIcon } from 'lucide-react'
+import React, { useCallback, useRef, useState } from 'react'
+import { Upload, ImageIcon, Search, VideoIcon, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { ModelSettingsModal } from './ModelSettingsModal'
 import {
   AnimationModel,
@@ -27,36 +37,32 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { toast } from '@/hooks/use-toast'
 import { ALLOWED_IMAGE_TYPES, GALLERY_IMAGE_MIME_TYPE, GalleryImageDragPayload } from '../constants/drag-drop.constants'
+import { filesToShotConfigs, findOversizedFiles } from '../utils/files-to-shot-configs'
 import type { ShotAnimationConfig } from '../types'
 
-/** Convert an array of image Files into ShotAnimationConfig objects (base64). */
-function filesToShotConfigs(files: File[]): Promise<ShotAnimationConfig[]> {
-  return Promise.all(
-    files.map(
-      (file) =>
-        new Promise<ShotAnimationConfig>((resolve) => {
-          const reader = new FileReader()
-          reader.onload = (event) => {
-            resolve({
-              id: `shot-${Date.now()}-${Math.random()}`,
-              imageUrl: event.target?.result as string,
-              imageName: file.name,
-              prompt: '',
-              referenceImages: [],
-              includeInBatch: true,
-              generatedVideos: [],
-            })
-          }
-          reader.readAsDataURL(file)
-        })
-    )
-  )
+/**
+ * Drop/upload/paste paths all end up reading files as base64 for immediate
+ * preview. The Zustand store strips `data:` URLs on persist, so large shots
+ * silently disappear on refresh. Warn once per batch when any file crosses
+ * the threshold so the disappearance isn't surprising. Module-scoped so the
+ * drop useCallback's dep list stays clean.
+ */
+function warnIfOversized(files: File[]) {
+  const oversized = findOversizedFiles(files)
+  if (oversized.length === 0) return
+  const preview = oversized.slice(0, 2).join(', ')
+  const extra = oversized.length > 2 ? `, +${oversized.length - 2} more` : ''
+  toast({
+    title: 'Large image — won\'t persist on refresh',
+    description: `${preview}${extra} exceeds 3MB. The shot will generate fine, but reload the page and it'll be gone unless you pick it from the gallery instead.`,
+  })
 }
 
 interface AnimatorControlsProps {
   selectedModel: AnimationModel
   modelSettings: AnimatorSettings
   selectedCount: number
+  totalShotCount: number
   searchQuery: string
   showOnlySelected: boolean
   onModelChange: (model: AnimationModel) => void
@@ -64,6 +70,7 @@ interface AnimatorControlsProps {
   onShowOnlySelectedChange: (show: boolean) => void
   onSelectAll: () => void
   onDeselectAll: () => void
+  onClearAll: () => void
   onSaveModelSettings: (settings: AnimatorSettings) => Promise<void>
   onOpenGalleryModal: () => void
   onOpenVideoModal: () => void
@@ -74,6 +81,7 @@ export function AnimatorControls({
   selectedModel,
   modelSettings,
   selectedCount,
+  totalShotCount,
   searchQuery,
   showOnlySelected,
   onModelChange,
@@ -81,6 +89,7 @@ export function AnimatorControls({
   onShowOnlySelectedChange,
   onSelectAll,
   onDeselectAll,
+  onClearAll,
   onSaveModelSettings,
   onOpenGalleryModal,
   onOpenVideoModal,
@@ -88,6 +97,7 @@ export function AnimatorControls({
 }: AnimatorControlsProps) {
   const toolbarDragCounterRef = useRef(0)
   const [isToolbarDragOver, setIsToolbarDragOver] = React.useState(false)
+  const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false)
 
   const currentModelConfig = ANIMATION_MODELS[selectedModel] || ANIMATION_MODELS['seedance-1.5-pro']
 
@@ -119,6 +129,7 @@ export function AnimatorControls({
       return
     }
 
+    warnIfOversized(validFiles)
     const newConfigs = await filesToShotConfigs(validFiles)
     addShotConfigs(newConfigs)
     e.target.value = ""
@@ -176,6 +187,7 @@ export function AnimatorControls({
     if (!files || files.length === 0) return
     const validFiles = Array.from(files).filter((f) => ALLOWED_IMAGE_TYPES.includes(f.type))
     if (validFiles.length === 0) return
+    warnIfOversized(validFiles)
     const newConfigs = await filesToShotConfigs(validFiles)
     addShotConfigs(newConfigs)
   }, [addShotConfigs])
@@ -201,12 +213,19 @@ export function AnimatorControls({
           <SelectContent className="bg-card border-border">
             {ACTIVE_VIDEO_MODELS.map((modelId) => {
               const config = ANIMATION_MODELS[modelId]
+              const pricing = VIDEO_MODEL_PRICING[modelId]
               const tierLabel = MODEL_TIER_LABELS[modelId]
+              // Mobile has no room for full "pts/sec" copy — use a compact "· N pts" suffix
+              // so tier + price still both show without wrapping.
+              const compactPrice = config.pricingType === 'per-video'
+                ? `${pricing['720p']} pts`
+                : `${pricing['720p']}/s`
               return (
                 <SelectItem key={modelId} value={modelId} className="cursor-pointer text-sm">
                   <div className="flex items-center gap-1">
                     <span>{config.displayName}</span>
                     <Badge variant="outline" className="text-[9px] px-1 py-0">{tierLabel}</Badge>
+                    <span className="text-muted-foreground text-[10px]">{compactPrice}</span>
                   </div>
                 </SelectItem>
               )
@@ -371,6 +390,19 @@ export function AnimatorControls({
               </Label>
             </div>
           </div>
+          {/* Clear-all — destructive, disabled when there's nothing to wipe.
+              Kept visually quieter than Generate so users aren't magnet-pulled here. */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsClearConfirmOpen(true)}
+            disabled={totalShotCount === 0}
+            className="h-7 text-xs text-muted-foreground hover:text-destructive disabled:opacity-40"
+            title="Remove all shots from the list (keeps gallery videos)"
+          >
+            <Trash2 className="w-3 h-3 mr-1" />
+            Clear All
+          </Button>
         </div>
       </div>
 
@@ -382,6 +414,31 @@ export function AnimatorControls({
         onChange={handleFileUpload}
         className="hidden"
       />
+
+      <AlertDialog open={isClearConfirmOpen} onOpenChange={setIsClearConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear all shots?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This removes all {totalShotCount} shot{totalShotCount === 1 ? '' : 's'} from the list,
+              including prompts, references, and last frames. Videos you&apos;ve already generated
+              stay in your gallery.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                onClearAll()
+                setIsClearConfirmOpen(false)
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Clear all
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

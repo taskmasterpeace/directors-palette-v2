@@ -25,35 +25,13 @@ import {
   DEFAULT_MODEL_SETTINGS,
   ACTIVE_VIDEO_MODELS,
   DEFAULT_ACTIVE_MODEL,
+  COST_CONFIRM_THRESHOLD_PTS,
 } from '../config/models.config'
 import { VIDEO_MODEL_PRICING } from '../types'
 import { toast } from '@/hooks/use-toast'
 import { ALLOWED_IMAGE_TYPES, GALLERY_IMAGE_MIME_TYPE, GalleryImageDragPayload } from '../constants/drag-drop.constants'
+import { filesToShotConfigs, findOversizedFiles } from '../utils/files-to-shot-configs'
 import { logger } from '@/lib/logger'
-
-/** Convert an array of image Files into ShotAnimationConfig objects (base64). */
-function filesToShotConfigs(files: File[]): Promise<ShotAnimationConfig[]> {
-  return Promise.all(
-    files.map(
-      (file) =>
-        new Promise<ShotAnimationConfig>((resolve) => {
-          const reader = new FileReader()
-          reader.onload = (event) => {
-            resolve({
-              id: `shot-${Date.now()}-${Math.random()}`,
-              imageUrl: event.target?.result as string,
-              imageName: file.name,
-              prompt: '',
-              referenceImages: [],
-              includeInBatch: true,
-              generatedVideos: [],
-            })
-          }
-          reader.readAsDataURL(file)
-        })
-    )
-  )
-}
 
 export function ShotAnimatorView() {
   // Auth and hooks
@@ -63,7 +41,7 @@ export function ShotAnimatorView() {
   const { shotAnimator, updateShotAnimatorSettings } = useSettings()
 
   // Shot Animator Store
-  const { shotConfigs, setShotConfigs, addShotConfigs, updateShotConfig, removeShotConfig } = useShotAnimatorStore()
+  const { shotConfigs, setShotConfigs, addShotConfigs, updateShotConfig, removeShotConfig, clearShotConfigs, moveShotConfig } = useShotAnimatorStore()
   const [mobileGalleryOpen, setMobileGalleryOpen] = useState(false)
 
   // State — restore last-used model from settings, falling back to the curated default.
@@ -139,9 +117,20 @@ export function ShotAnimatorView() {
   // Gallery panel state
   const [galleryCollapsed, setGalleryCollapsed] = useState(false)
 
-  // Clipboard paste — Ctrl+V anywhere adds images as new shots
+  // Clipboard paste — Ctrl+V adds images as new shots, but only when the
+  // user isn't typing into an input/textarea/contenteditable. Without this
+  // guard, pasting an image while focused inside the prompt textarea would
+  // both steal the text paste and add an orphan shot.
   useEffect(() => {
+    const isEditableTarget = (el: EventTarget | null): boolean => {
+      if (!(el instanceof HTMLElement)) return false
+      if (el.isContentEditable) return true
+      const tag = el.tagName
+      return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT'
+    }
+
     const handlePaste = async (e: ClipboardEvent) => {
+      if (isEditableTarget(e.target) || isEditableTarget(document.activeElement)) return
       const items = e.clipboardData?.items
       if (!items) return
       const imageFiles: File[] = []
@@ -153,13 +142,42 @@ export function ShotAnimatorView() {
       }
       if (imageFiles.length === 0) return
       e.preventDefault()
+      const oversized = findOversizedFiles(imageFiles)
       const newConfigs = await filesToShotConfigs(imageFiles)
       addShotConfigs(newConfigs)
-      toast({ title: 'Image Pasted', description: `Added ${newConfigs.length} image${newConfigs.length > 1 ? 's' : ''} from clipboard.` })
+      if (oversized.length > 0) {
+        toast({
+          title: 'Large pasted image — won\'t persist on refresh',
+          description: `${oversized[0]} exceeds 3MB. Ships fine to Replicate, but won't survive a reload.`,
+        })
+      } else {
+        toast({ title: 'Image Pasted', description: `Added ${newConfigs.length} image${newConfigs.length > 1 ? 's' : ''} from clipboard.` })
+      }
     }
     window.addEventListener('paste', handlePaste)
     return () => window.removeEventListener('paste', handlePaste)
   }, [addShotConfigs])
+
+  // Alt+ArrowUp / Alt+ArrowDown — reorder the shot card under the user's focus.
+  // We resolve the target card by walking up from document.activeElement to the
+  // nearest [data-shot-id], which lets users focus any interactive element
+  // inside a card (checkbox, prompt box, button) and still reorder.
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!e.altKey) return
+      if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return
+      const active = document.activeElement
+      if (!(active instanceof HTMLElement)) return
+      const card = active.closest('[data-shot-id]') as HTMLElement | null
+      if (!card) return
+      const id = card.getAttribute('data-shot-id')
+      if (!id) return
+      e.preventDefault()
+      moveShotConfig(id, e.key === 'ArrowUp' ? -1 : 1)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [moveShotConfig])
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('')
@@ -425,6 +443,16 @@ export function ShotAnimatorView() {
     )
     if (validFiles.length === 0) return
 
+    const oversized = findOversizedFiles(validFiles)
+    if (oversized.length > 0) {
+      const preview = oversized.slice(0, 2).join(', ')
+      const extra = oversized.length > 2 ? `, +${oversized.length - 2} more` : ''
+      toast({
+        title: 'Large image — won\'t persist on refresh',
+        description: `${preview}${extra} exceeds 3MB. The shot will generate fine, but reload the page and it'll be gone unless you pick it from the gallery instead.`,
+      })
+    }
+
     const newConfigs = await filesToShotConfigs(validFiles)
     addShotConfigs(newConfigs)
   }, [addShotConfigs])
@@ -490,7 +518,7 @@ export function ShotAnimatorView() {
       return
     }
 
-    if (estimatedCost > 100) {
+    if (estimatedCost > COST_CONFIRM_THRESHOLD_PTS) {
       setShowCostConfirm(true)
       return
     }
@@ -592,6 +620,7 @@ export function ShotAnimatorView() {
         selectedModel={selectedModel}
         modelSettings={modelSettings}
         selectedCount={selectedCount}
+        totalShotCount={shotConfigs.length}
         searchQuery={searchQuery}
         showOnlySelected={showOnlySelected}
         onModelChange={handleModelChange}
@@ -599,6 +628,7 @@ export function ShotAnimatorView() {
         onShowOnlySelectedChange={setShowOnlySelected}
         onSelectAll={handleSelectAll}
         onDeselectAll={handleDeselectAll}
+        onClearAll={clearShotConfigs}
         onSaveModelSettings={handleSaveModelSettings}
         onOpenGalleryModal={() => setIsGalleryModalOpen(true)}
         onOpenVideoModal={() => setIsVideoModalOpen(true)}

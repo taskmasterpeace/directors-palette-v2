@@ -27,6 +27,8 @@ interface ShotAnimatorStore {
   removeShotConfig: (id: string) => void
   setShotConfigs: (configs: ShotAnimationConfig[]) => void
   clearShotConfigs: () => void
+  /** Swap the shot with `id` by `direction` slots. No-op at list boundaries. */
+  moveShotConfig: (id: string, direction: -1 | 1) => void
 }
 
 export const useShotAnimatorStore = create<ShotAnimatorStore>()(
@@ -66,6 +68,18 @@ export const useShotAnimatorStore = create<ShotAnimatorStore>()(
 
       clearShotConfigs: () =>
         set({ shotConfigs: [] }),
+
+      moveShotConfig: (id, direction) =>
+        set((state) => {
+          const index = state.shotConfigs.findIndex((c) => c.id === id)
+          if (index === -1) return state
+          const targetIndex = index + direction
+          if (targetIndex < 0 || targetIndex >= state.shotConfigs.length) return state
+          const next = state.shotConfigs.slice()
+          const [moved] = next.splice(index, 1)
+          next.splice(targetIndex, 0, moved)
+          return { shotConfigs: next }
+        }),
     }),
     {
       name: 'shot-animator-store',

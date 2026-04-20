@@ -11,7 +11,6 @@ import { Badge } from '@/components/ui/badge'
 import { ShotAnimationConfig, ShotGeneratedVideo, AnimationModel, ModelSettings, ShotReferenceVideo } from '../types'
 import { VideoCropModal } from './VideoCropModal'
 import { Textarea } from "@/components/ui/textarea"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { CompactVideoCard } from './CompactVideoCard'
 import { FullscreenImageViewModal } from './FullscreenImageViewModal'
 import { VideoGalleryService } from '@/lib/services/gallery.service'
@@ -57,7 +56,11 @@ const CompactShotCardComponent = ({
   onDropLastFrame,
 }: CompactShotCardProps) => {
   const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false)
-  const [multiShotMode, setMultiShotMode] = useState(false)
+  // Persisted per-shot on the config so each shot can independently opt into
+  // multi-shot prompts. Falls back to false when the config doesn't have the
+  // flag yet (older shots in persisted storage from before this change).
+  const multiShotMode = config.multiShotMode ?? false
+  const setMultiShotMode = (next: boolean) => onUpdate({ ...config, multiShotMode: next })
   const [showTips, setShowTips] = useState(false)
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false)
   const [dropZoneSide, setDropZoneSide] = useState<DropZoneSide>(null)
@@ -303,6 +306,7 @@ const CompactShotCardComponent = ({
   return (
     <>
       <Card
+        data-shot-id={config.id}
         className={`h-full flex flex-col bg-card/50 border-2 transition-all touch-manipulation ${
           missingPrompt
             ? 'border-destructive hover:border-destructive'
@@ -555,28 +559,27 @@ const CompactShotCardComponent = ({
                 Multi-Shot
               </Button>
             )}
-            {/* Tips toggle */}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setShowTips(!showTips)}
-                    className={`h-6 w-6 p-0 ${showTips ? 'text-primary' : 'text-muted-foreground hover:text-white'}`}
-                  >
-                    <Info className="w-3 h-3" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="max-w-[250px] text-xs">
-                  <p>Prompt tips for better video generation</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            {/* Tips toggle — labeled rather than an Info-icon-only button so
+                users actually find it. Tips are high-value enough to warrant
+                a persistent affordance next to the prompt. */}
+            <Button
+              size="sm"
+              variant={showTips ? 'default' : 'ghost'}
+              onClick={() => setShowTips(!showTips)}
+              className={`h-6 px-2 text-[10px] ${showTips ? 'bg-primary text-white' : 'text-muted-foreground hover:text-white bg-secondary/50'}`}
+              aria-expanded={showTips}
+              aria-controls={`prompt-tips-${config.id}`}
+            >
+              <Info className="w-3 h-3 mr-1" />
+              {showTips ? 'Hide Tips' : 'Prompt Tips'}
+            </Button>
           </div>
           {/* Prompt Tips Panel */}
           {showTips && (
-            <div className="bg-secondary/50 border border-border/50 rounded p-2 text-[10px] text-muted-foreground space-y-1">
+            <div
+              id={`prompt-tips-${config.id}`}
+              className="bg-secondary/50 border border-border/50 rounded p-2 text-[10px] text-muted-foreground space-y-1"
+            >
               <p className="font-medium text-foreground text-[11px]">Prompt Tips:</p>
               <p>• Describe <span className="text-primary">motion</span>, not what&apos;s already in the image</p>
               <p>• Use intensity adverbs: <span className="text-primary">slowly, rapidly, gently, powerfully</span></p>
@@ -758,6 +761,7 @@ export const CompactShotCard = memo(CompactShotCardComponent, (prevProps, nextPr
     (prevProps.config.referenceVideos?.length ?? 0) === (nextProps.config.referenceVideos?.length ?? 0) &&
     videosEqual(prevProps.config.generatedVideos, nextProps.config.generatedVideos) &&
     prevProps.config.lastFrameImage === nextProps.config.lastFrameImage &&
+    (prevProps.config.multiShotMode ?? false) === (nextProps.config.multiShotMode ?? false) &&
     prevProps.maxReferenceImages === nextProps.maxReferenceImages &&
     prevProps.maxReferenceVideos === nextProps.maxReferenceVideos &&
     prevProps.supportsLastFrame === nextProps.supportsLastFrame &&

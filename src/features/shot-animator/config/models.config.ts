@@ -274,6 +274,13 @@ export const DURATION_CONSTRAINTS = {
 }
 
 /**
+ * Show a cost-confirmation modal before starting a batch whose estimated
+ * cost exceeds this many pts. Keeps a single source of truth — the modal
+ * copy, the threshold check, and any future analytics all read from here.
+ */
+export const COST_CONFIRM_THRESHOLD_PTS = 100
+
+/**
  * Available resolutions
  */
 export const RESOLUTIONS = ['480p', '720p', '1080p'] as const

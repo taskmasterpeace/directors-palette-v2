@@ -53,6 +53,13 @@ export interface ShotAnimationConfig {
   referenceVideos?: ShotReferenceVideo[]
   lastFrameImage?: string
   includeInBatch: boolean
+  /**
+   * When true, the AI prompt generator writes a multi-shot sequence
+   * (with "camera switch" cuts) instead of a single continuous motion.
+   * Per-shot so users can mix single- and multi-shot prompts in the
+   * same batch. Only meaningful for models whose promptStyle is 'reasoning'.
+   */
+  multiShotMode?: boolean
   generatedVideos: ShotGeneratedVideo[] // Array of generated videos (supports multiple generations)
 }
 

@@ -283,12 +283,17 @@ export function useVideoGeneration(): UseVideoGenerationReturn {
     modelSettings: ModelSettings
   ): Promise<GenerationResult> => {
     setIsGenerating(true)
+    // Mirror the phase progression of the batch path so the UI shows
+    // upload → submit → done instead of staying stuck on 'idle' during retries.
+    setGenerationPhase('uploading')
 
     try {
       toast({
         title: 'Retrying Generation',
         description: `Retrying video generation for ${shot.imageName}`,
       })
+
+      setGenerationPhase('submitting')
 
       // Generate the video using existing logic
       const result = await generateSingleVideo(shot, model, modelSettings)
