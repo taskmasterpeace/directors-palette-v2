@@ -1,6 +1,6 @@
 'use client'
 
-import { X, Plus, Check, FlaskConical, Layers, Star } from 'lucide-react'
+import { X, Plus, Check, FlaskConical, Layers, Star, Image as ImageIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { CatalogRecipe } from '../../types/recipe-core.types'
 import { parseStageTemplate } from '../../types/recipe-utils'
@@ -20,6 +20,9 @@ export function RecipeCatalogDetail({ recipe, onClose, onAdd, isAdding }: Recipe
   const uniqueFields = allFields.filter(
     (field, idx, arr) => arr.findIndex(f => f.name === field.name) === idx
   )
+
+  // Collect all baked-in reference images from every stage (for preview)
+  const allReferenceImages = stages.flatMap(s => s.referenceImages || [])
 
   return (
     <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
@@ -104,6 +107,38 @@ export function RecipeCatalogDetail({ recipe, onClose, onAdd, isAdding }: Recipe
                     </div>
                     {idx < stages.length - 1 && (
                       <span className="text-muted-foreground">→</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Baked-in reference images */}
+          {allReferenceImages.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                <ImageIcon className="w-4 h-4 text-cyan-400" />
+                Reference Images ({allReferenceImages.length})
+              </h3>
+              <p className="text-xs text-muted-foreground mb-3">
+                These images ship with the recipe and are automatically attached to every generation.
+              </p>
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                {allReferenceImages.map((ref, i) => (
+                  <div
+                    key={ref.id || i}
+                    className="relative aspect-square rounded-lg overflow-hidden border border-border bg-muted/20"
+                  >
+                    <img
+                      src={ref.url}
+                      alt={ref.name || `Reference ${i + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                    {ref.name && (
+                      <div className="absolute bottom-0 inset-x-0 bg-black/70 px-1.5 py-0.5 text-[9px] text-white/80 truncate">
+                        {ref.name}
+                      </div>
                     )}
                   </div>
                 ))}

@@ -482,27 +482,54 @@ export function RecipeFormInline() {
 
           {/* Recipe switcher dropdown */}
           {showRecipeSwitch && (
-            <div className="absolute top-full left-0 mt-1 z-50 w-80 max-h-[360px] overflow-y-auto bg-popover border border-amber-500/20 rounded-lg shadow-xl">
-              {recipes.map(r => (
-                <button
-                  key={r.id}
-                  onClick={() => {
-                    setActiveRecipe(r.id)
-                    setShowRecipeSwitch(false)
-                  }}
-                  className={cn(
-                    'w-full text-left px-3 py-2.5 transition-colors border-b border-border/50 last:border-0',
-                    r.id === activeRecipeId
-                      ? 'bg-amber-500/15 text-amber-400'
-                      : 'text-foreground/80 hover:bg-amber-500/5'
-                  )}
-                >
-                  <div className="text-sm font-medium">{r.name}</div>
-                  {r.description && (
-                    <div className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">{r.description}</div>
-                  )}
-                </button>
-              ))}
+            <div className="absolute top-full left-0 mt-1 z-50 w-72 max-h-[420px] overflow-y-auto bg-popover border border-amber-500/20 rounded-lg shadow-xl">
+              {recipes.map(r => {
+                // Collect up to 3 ref image URLs from the recipe's stages for a preview strip
+                const refThumbs: string[] = []
+                for (const stage of r.stages ?? []) {
+                  for (const ref of stage.referenceImages ?? []) {
+                    if (ref.url && !refThumbs.includes(ref.url)) {
+                      refThumbs.push(ref.url)
+                      if (refThumbs.length >= 3) break
+                    }
+                  }
+                  if (refThumbs.length >= 3) break
+                }
+                return (
+                  <button
+                    key={r.id}
+                    onClick={() => {
+                      setActiveRecipe(r.id)
+                      setShowRecipeSwitch(false)
+                    }}
+                    className={cn(
+                      'w-full text-left px-3 py-2 transition-colors border-b border-border/50 last:border-0 flex gap-2 items-start',
+                      r.id === activeRecipeId
+                        ? 'bg-amber-500/15 text-amber-400'
+                        : 'text-foreground/80 hover:bg-amber-500/5'
+                    )}
+                  >
+                    {refThumbs.length > 0 && (
+                      <div className="flex gap-0.5 shrink-0 mt-0.5">
+                        {refThumbs.map((url, i) => (
+                          <img
+                            key={i}
+                            src={url}
+                            alt=""
+                            className="w-8 h-8 object-cover rounded-sm border border-border/40"
+                          />
+                        ))}
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium truncate">{r.name}</div>
+                      {r.description && (
+                        <div className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">{r.description}</div>
+                      )}
+                    </div>
+                  </button>
+                )
+              })}
             </div>
           )}
         </div>
