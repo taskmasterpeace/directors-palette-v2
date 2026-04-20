@@ -163,6 +163,22 @@ Fixes 1+3+4 together should fully satisfy the acceptance criteria. Fix 2 is poli
 
 Same as WR 001: AIOBR ships a battle scene weekly and every one needs real character identity. Until character refs inject properly, we still can't use the Battle Rap recipe for production — we'd have to hand-describe every character's outfit/hair via the OUTFIT_A/HAIR_A/OUTFIT_B/HAIR_B fields on every single shot, which defeats the "set them once, reuse forever" value promised by the recipe_note.
 
+## Catalog-wide scope — this is not Battle-Rap-only
+
+After filing the four bugs above, I ran a static audit of all 68 recipes currently visible to our account (`node D:/git/aiobr/scripts/audit_all_recipes.js`, full JSON at `D:/git/aiobr/stories/_pending/recipe_audit.json`). Three recipes share the same bug class because they all have ≥2 character-reference slots and the endpoint only accepts singular `reference_image`:
+
+| Recipe | ID | Character slots | Visibility |
+|---|---|---|---|
+| Battle Rap | `16c2b9cc-ff46-4f0c-a251-8c4d2aac1101` | PERSON_A, PERSON_B | created (my private fork) |
+| Battle Rap | `4a87c961-038b-4050-9974-4a60d9210ac0` | PERSON_A, PERSON_B | system (public template) |
+| AIOBR | `a0756c96-81bb-4479-8099-359a95484557` | WHO, SUPPORTING_1, SUPPORTING_2 | created (my thumbnail generator) |
+
+AIOBR is particularly painful — it's the thumbnail recipe for every video I ship (weekly cadence, 225K views/month). When I pass a main artist plus two supporting characters, only one character gets an identity-locked ref image; the other two are invented from the @tag alone, which means the supporting characters on thumbnails routinely look nothing like the real person. Same root cause as Battle Rap (Bugs 3+4). Bug 1 (double @) is unverified for AIOBR until someone pulls its actual prompt — I can't inspect the template via v2 API.
+
+**Bug 6 (new, catalog-wide):** `GET /api/v2/recipes` returns recipe metadata (name, fields, stages, recipe_note) but not `prompt_template`. And `GET /api/v2/recipes/<id>` returns 404. This means recipe audits can't be done statically — the bugs in WR 002 required scraping the UI to see the actual prompt. Please expose `prompt_template` on the recipe detail endpoint (or on each stage) so future Claude audits are self-serve instead of human-dependent.
+
+**Acceptance criteria update:** fixes 1–4 should apply to the interpolator/binding logic at the recipe-engine level (not per-recipe), so all three affected recipes benefit from one patch. Template-level language updates (Bug 3's "use reference image 1 for PERSON A…") will need per-recipe edits since each recipe has its own field names.
+
 ## Contact
 
-Robert @ AIOBR. All scripts, full job dumps, and head-to-head images in `D:/git/aiobr/stories/_pending/recipe_tests/`. Same test account + recipe as WR 001. Happy to re-run once any of the fixes land.
+Robert @ AIOBR. All scripts, full job dumps, and head-to-head images in `D:/git/aiobr/stories/_pending/recipe_tests/`. Catalog-wide audit at `D:/git/aiobr/stories/_pending/recipe_audit.json` + `D:/git/aiobr/scripts/audit_all_recipes.js`. Same test account + recipe as WR 001. Happy to re-run once any of the fixes land.

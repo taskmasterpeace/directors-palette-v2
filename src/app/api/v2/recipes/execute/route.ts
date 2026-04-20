@@ -146,6 +146,32 @@ export async function POST(request: NextRequest) {
       return errors.internal('Failed to create job')
     }
 
+    // WR 002 Bug 4: normalize reference_images into the per-stage string[][] shape
+    // that executeRecipe expects. Callers are allowed to pass any of:
+    //   - reference_images: [url1, url2]       → flat array, applied to stage 0
+    //   - reference_images: [[url1, url2]]     → already nested (advanced use)
+    //   - reference_image: url                 → singular legacy field
+    // Without this, a flat array was assigned directly to stageReferenceImages
+    // (type string[][]) and consumed as string[0][i]=url, silently dropping refs.
+    let normalizedStageRefs: string[][] = []
+    if (Array.isArray(reference_images)) {
+      if (reference_images.length === 0) {
+        normalizedStageRefs = []
+      } else if (reference_images.every((x: unknown) => typeof x === 'string')) {
+        // Flat array → all refs go to stage 0
+        normalizedStageRefs = [reference_images as string[]]
+      } else if (reference_images.every((x: unknown) => Array.isArray(x))) {
+        // Already per-stage nested
+        normalizedStageRefs = reference_images as string[][]
+      } else {
+        return errors.validation(
+          'reference_images must be an array of URLs (string[]) or a per-stage array (string[][])'
+        )
+      }
+    } else if (reference_image && typeof reference_image === 'string') {
+      normalizedStageRefs = [[reference_image]]
+    }
+
     // Execute recipe in background using Next.js after() to keep the function alive
     after(async () => {
       try {
@@ -153,7 +179,7 @@ export async function POST(request: NextRequest) {
         const result = await executeRecipe({
           recipe: dbRow as Parameters<typeof executeRecipe>[0]['recipe'],
           fieldValues: fields as RecipeFieldValues,
-          stageReferenceImages: reference_images || (reference_image ? [[reference_image]] : []),
+          stageReferenceImages: normalizedStageRefs,
           model: modelId,
           aspectRatio: aspect_ratio || dbRow.suggested_aspect_ratio || dbRow.suggestedAspectRatio,
           extraMetadata: { source: 'api_v2', api_job_id: job.id },
@@ -166,7 +192,16 @@ export async function POST(request: NextRequest) {
         if (result.success) {
           await updateJobById(job.id, {
             status: 'completed',
-            result: { image_urls: result.imageUrls, final_image_url: result.finalImageUrl },
+            result: {
+              image_urls: result.imageUrls,
+              final_image_url: result.finalImageUrl,
+              // WR 002 Bug 5: audit trail so callers can debug ref-injection
+              // regressions without having to scrape the UI for the prompt.
+              metadata: {
+                resolved_prompts: result.resolvedPrompts,
+                reference_images_used: result.stageReferencesUsed,
+              },
+            },
             completedAt: new Date().toISOString(),
           })
         } else {

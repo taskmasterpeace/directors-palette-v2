@@ -24,6 +24,7 @@ import { createLogger } from '@/lib/logger'
 import {
   STYLE_REFERENCE_DIRECTIVE,
   STYLE_PROMPT_DIRECTIVE,
+  REFERENCE_IDENTITY_DIRECTIVE,
 } from '@/features/shared/constants/style-guards'
 
 
@@ -59,6 +60,12 @@ export interface RecipeExecutionResult {
   finalImageUrl?: string   // Last stage output (first image if multi-output)
   finalImageUrls?: string[] // Last stage outputs (for multi-output stages like grid-split)
   error?: string
+  // WR 002 Bug 5: audit trail for debugging recipe executions from the caller side.
+  // resolvedPrompts is what actually reached the model for each stage.
+  // stageReferencesUsed is the per-stage reference image URLs after all injection
+  // (styleOverride, recipeReferenceImages, ref-binding, etc).
+  resolvedPrompts?: string[]
+  stageReferencesUsed?: string[][]
 }
 
 /**
@@ -729,6 +736,21 @@ export async function executeRecipe(options: RecipeExecutionOptions): Promise<Re
           outputFormat: 'png',
         }
 
+        // WR 002 Bug 3: when a generation stage has reference images AND the
+        // prompt references named people (via @tag tokens or PERSON/CHARACTER/
+        // SUBJECT labels), append the identity-binding directive so the model
+        // treats refs as identity locks rather than loose mood hints. Without
+        // this, a red-durag character sheet bleeds only the durag through and
+        // the rest of the identity is invented.
+        const hasPersonLabels = /\b(?:PERSON|CHARACTER|SUBJECT|MODEL)\s*[A-Z]?\b/.test(stagePrompt) ||
+          /@[a-zA-Z0-9_-]+/.test(stagePrompt) ||
+          /\(REF:IMG_\d+\)/.test(stagePrompt)
+        if ((inputImages?.length ?? 0) > 0 && hasPersonLabels) {
+          stagePrompt = `${stagePrompt.replace(/\.?\s*$/, '')}. ${REFERENCE_IDENTITY_DIRECTIVE}`
+          prompts[i] = stagePrompt // reflect in audit trail
+          log.info('[Recipe Execution] Appended identity-binding directive', { stage: i + 1 })
+        }
+
         const request: ImageGenerationRequest = {
           model,
           prompt: stagePrompt,
@@ -935,6 +957,8 @@ export async function executeRecipe(options: RecipeExecutionOptions): Promise<Re
       imageUrls,
       finalImageUrl,
       finalImageUrls,
+      resolvedPrompts: prompts,
+      stageReferencesUsed: stageReferenceImages.map(refs => [...(refs || [])]),
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Recipe execution failed'

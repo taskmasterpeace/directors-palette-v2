@@ -243,6 +243,21 @@ export function buildStagePrompt(
     return value;
   });
 
+  // WR 002 Bug 2: remove "bare label" lines left behind when an optional
+  // field is unset. Templates like "PERSON A OUTFIT: <<OUTFIT_A:text>>" leave
+  // "PERSON A OUTFIT:" with no value, which reads as noise or ambiguity to the
+  // model and in the Battle Rap case gave the model nothing to bind identity
+  // to. Match "LABEL:" (one or more ALL-CAPS words) followed only by whitespace
+  // or trailing punctuation up to a newline or end-of-string.
+  result = result
+    .split('\n')
+    .filter(line => {
+      const trimmed = line.trim();
+      if (!trimmed) return true;
+      return !/^[A-Z][A-Z0-9 _]*:\s*[.,;]*\s*$/.test(trimmed);
+    })
+    .join('\n');
+
   // Clean up orphaned punctuation and extra spaces
   // Remove ", ," patterns
   result = result.replace(/,\s*,/g, ',');
