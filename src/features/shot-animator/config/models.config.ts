@@ -93,6 +93,44 @@ export const ANIMATION_MODELS: Record<AnimationModel, ModelConfig> = {
       'Last frame requires start frame image'
     ]
   },
+  'seedance-2.0-fast': {
+    id: 'seedance-2.0-fast',
+    displayName: 'Seedance 2.0 Fast',
+    description: 'Seedance 2.0 Fast — supports video references ([Video1] tokens in prompt), last frame, up to 4 clips max 15s each.',
+    maxReferenceImages: 0,
+    maxReferenceVideos: 4,
+    supportsLastFrame: true,
+    defaultResolution: '720p',
+    maxDuration: 12,
+    supportedResolutions: ['480p', '720p', '1080p'],
+    supportedAspectRatios: ['16:9', '4:3', '1:1', '3:4', '9:16', '21:9', '9:21'],
+    pricingType: 'per-second',
+    promptStyle: 'reasoning',
+    aspectRatioIgnoredWithImage: true,
+    restrictions: [
+      'Reference videos must be ≤ 15 seconds each',
+      'Max 4 reference videos'
+    ]
+  },
+  'seedance-2.0': {
+    id: 'seedance-2.0',
+    displayName: 'Seedance 2.0',
+    description: 'Seedance 2.0 premium — supports video references ([Video1] tokens in prompt), last frame, up to 4 clips max 15s each.',
+    maxReferenceImages: 0,
+    maxReferenceVideos: 4,
+    supportsLastFrame: true,
+    defaultResolution: '720p',
+    maxDuration: 12,
+    supportedResolutions: ['480p', '720p', '1080p'],
+    supportedAspectRatios: ['16:9', '4:3', '1:1', '3:4', '9:16', '21:9', '9:21'],
+    pricingType: 'per-second',
+    promptStyle: 'reasoning',
+    aspectRatioIgnoredWithImage: true,
+    restrictions: [
+      'Reference videos must be ≤ 15 seconds each',
+      'Max 4 reference videos'
+    ]
+  },
   'kling-2.5-turbo-pro': {
     id: 'kling-2.5-turbo-pro',
     displayName: 'Kling 2.5 Turbo Pro',
@@ -188,6 +226,20 @@ export const DEFAULT_MODEL_SETTINGS: Record<AnimationModel, ModelSettings> = {
     cameraFixed: false,
     generateAudio: true
   },
+  'seedance-2.0-fast': {
+    duration: 5,
+    resolution: '720p',
+    aspectRatio: '16:9',
+    fps: 24,
+    cameraFixed: false
+  },
+  'seedance-2.0': {
+    duration: 5,
+    resolution: '720p',
+    aspectRatio: '16:9',
+    fps: 24,
+    cameraFixed: false
+  },
   'kling-2.5-turbo-pro': {
     duration: 5,
     resolution: '720p',
@@ -222,6 +274,13 @@ export const DURATION_CONSTRAINTS = {
 }
 
 /**
+ * Show a cost-confirmation modal before starting a batch whose estimated
+ * cost exceeds this many pts. Keeps a single source of truth — the modal
+ * copy, the threshold check, and any future analytics all read from here.
+ */
+export const COST_CONFIRM_THRESHOLD_PTS = 100
+
+/**
  * Available resolutions
  */
 export const RESOLUTIONS = ['480p', '720p', '1080p'] as const
@@ -240,18 +299,22 @@ export const ASPECT_RATIOS = [
 ] as const
 
 /**
- * Active models for UI display (ordered by price tier)
- * Excludes legacy seedance-pro model
+ * Active models shown in the Shot Animator UI dropdown (curated, ordered cheapest → premium).
+ * Other model definitions remain in ANIMATION_MODELS for backwards compatibility with
+ * storyboard, brand-studio, and v2 API consumers, but they're hidden from this feature.
  */
 export const ACTIVE_VIDEO_MODELS: AnimationModel[] = [
-  'wan-2.2-5b-fast',      // Ultra Budget - 4 pts/video
-  'wan-2.2-i2v-fast',     // Budget+ - 16 pts/video (has last frame)
-  'seedance-pro-fast',    // Standard - 4 pts/sec
-  'seedance-lite',        // Value - 5 pts/sec (has last frame + ref images)
-  'seedance-1.5-pro',     // Featured - last frame + high quality (DEFAULT)
-  'p-video',              // Free - fast video with audio input
-  'kling-2.5-turbo-pro',  // Premium - 10 pts/sec
+  'seedance-1.5-pro',     // Cheapest - audio + last frame
+  'seedance-2.0-fast',    // Balanced - video refs + last frame (DEFAULT)
+  'seedance-2.0',         // Premium - video refs + last frame
 ]
+
+/**
+ * Default model for this feature. Referenced by the settings hook when no
+ * persisted selection exists, and used as the migration target for shots
+ * whose selected model has been dropped from the curated list.
+ */
+export const DEFAULT_ACTIVE_MODEL: AnimationModel = 'seedance-2.0-fast'
 
 /**
  * Model tier labels for UI
@@ -261,7 +324,9 @@ export const MODEL_TIER_LABELS: Record<AnimationModel, string> = {
   'wan-2.2-i2v-fast': 'Budget+',
   'seedance-pro-fast': 'Standard',
   'seedance-lite': 'Value',
-  'seedance-1.5-pro': 'Featured',
+  'seedance-1.5-pro': 'Cheapest',
+  'seedance-2.0-fast': 'Balanced',
+  'seedance-2.0': 'Premium',
   'kling-2.5-turbo-pro': 'Premium',
   'p-video': 'Budget',
   'seedance-pro': 'Legacy',
@@ -276,6 +341,8 @@ export const VIDEO_MODEL_ICONS: Record<AnimationModel, string> = {
   'seedance-pro-fast': '⚡',
   'seedance-lite': '🌱',
   'seedance-1.5-pro': '🎯',
+  'seedance-2.0-fast': '🚀',
+  'seedance-2.0': '💎',
   'kling-2.5-turbo-pro': '👑',
   'p-video': '🎬',
   'seedance-pro': '🎬',

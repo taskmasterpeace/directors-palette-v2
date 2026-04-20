@@ -23,35 +23,15 @@ import {
 import {
   ANIMATION_MODELS,
   DEFAULT_MODEL_SETTINGS,
+  ACTIVE_VIDEO_MODELS,
+  DEFAULT_ACTIVE_MODEL,
+  COST_CONFIRM_THRESHOLD_PTS,
 } from '../config/models.config'
 import { VIDEO_MODEL_PRICING } from '../types'
 import { toast } from '@/hooks/use-toast'
 import { ALLOWED_IMAGE_TYPES, GALLERY_IMAGE_MIME_TYPE, GalleryImageDragPayload } from '../constants/drag-drop.constants'
+import { filesToShotConfigs, findOversizedFiles } from '../utils/files-to-shot-configs'
 import { logger } from '@/lib/logger'
-
-/** Convert an array of image Files into ShotAnimationConfig objects (base64). */
-function filesToShotConfigs(files: File[]): Promise<ShotAnimationConfig[]> {
-  return Promise.all(
-    files.map(
-      (file) =>
-        new Promise<ShotAnimationConfig>((resolve) => {
-          const reader = new FileReader()
-          reader.onload = (event) => {
-            resolve({
-              id: `shot-${Date.now()}-${Math.random()}`,
-              imageUrl: event.target?.result as string,
-              imageName: file.name,
-              prompt: '',
-              referenceImages: [],
-              includeInBatch: true,
-              generatedVideos: [],
-            })
-          }
-          reader.readAsDataURL(file)
-        })
-    )
-  )
-}
 
 export function ShotAnimatorView() {
   // Auth and hooks
@@ -61,20 +41,45 @@ export function ShotAnimatorView() {
   const { shotAnimator, updateShotAnimatorSettings } = useSettings()
 
   // Shot Animator Store
-  const { shotConfigs, setShotConfigs, addShotConfigs, updateShotConfig, removeShotConfig } = useShotAnimatorStore()
+  const { shotConfigs, setShotConfigs, addShotConfigs, updateShotConfig, removeShotConfig, clearShotConfigs, moveShotConfig } = useShotAnimatorStore()
   const [mobileGalleryOpen, setMobileGalleryOpen] = useState(false)
 
-  // State — restore last-used model from settings, default to seedance-1.5-pro
+  // State — restore last-used model from settings, falling back to the curated default.
+  // A saved model that's no longer in ACTIVE_VIDEO_MODELS (old Seedance Lite, Kling, WAN, etc.)
+  // is migrated to DEFAULT_ACTIVE_MODEL so the dropdown always matches selectedModel.
   const savedModel = shotAnimator.selectedModel as AnimationModel | undefined
   const [selectedModel, setSelectedModel] = useState<AnimationModel>(
-    savedModel && ANIMATION_MODELS[savedModel] ? savedModel : 'seedance-1.5-pro'
+    savedModel && ACTIVE_VIDEO_MODELS.includes(savedModel)
+      ? savedModel
+      : DEFAULT_ACTIVE_MODEL
   )
 
-  // Sync local state when settings load from database (async)
+  // Show the migration toast exactly once per session if we bumped a legacy model.
+  const migrationToastShownRef = useRef(false)
+
+  // Sync local state when settings load from database (async). If the persisted
+  // value is a legacy model, migrate to DEFAULT_ACTIVE_MODEL and persist the change
+  // so the next session starts clean.
   useEffect(() => {
     const persisted = shotAnimator.selectedModel as AnimationModel | undefined
-    if (persisted && ANIMATION_MODELS[persisted] && persisted !== selectedModel) {
-      setSelectedModel(persisted)
+    if (!persisted) return
+
+    if (ACTIVE_VIDEO_MODELS.includes(persisted)) {
+      if (persisted !== selectedModel) setSelectedModel(persisted)
+      return
+    }
+
+    // Legacy model — migrate and notify once.
+    const legacyConfig = ANIMATION_MODELS[persisted]
+    const legacyName = legacyConfig?.displayName ?? persisted
+    setSelectedModel(DEFAULT_ACTIVE_MODEL)
+    updateShotAnimatorSettings({ selectedModel: DEFAULT_ACTIVE_MODEL })
+    if (!migrationToastShownRef.current) {
+      migrationToastShownRef.current = true
+      toast({
+        title: 'Model updated',
+        description: `${legacyName} has been retired. Shot Animator now uses Seedance 1.5 Pro, 2.0 Fast, and 2.0. Switched you to ${ANIMATION_MODELS[DEFAULT_ACTIVE_MODEL].displayName}.`,
+      })
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps -- Only re-sync when the persisted value changes
   }, [shotAnimator.selectedModel])
@@ -112,9 +117,20 @@ export function ShotAnimatorView() {
   // Gallery panel state
   const [galleryCollapsed, setGalleryCollapsed] = useState(false)
 
-  // Clipboard paste — Ctrl+V anywhere adds images as new shots
+  // Clipboard paste — Ctrl+V adds images as new shots, but only when the
+  // user isn't typing into an input/textarea/contenteditable. Without this
+  // guard, pasting an image while focused inside the prompt textarea would
+  // both steal the text paste and add an orphan shot.
   useEffect(() => {
+    const isEditableTarget = (el: EventTarget | null): boolean => {
+      if (!(el instanceof HTMLElement)) return false
+      if (el.isContentEditable) return true
+      const tag = el.tagName
+      return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT'
+    }
+
     const handlePaste = async (e: ClipboardEvent) => {
+      if (isEditableTarget(e.target) || isEditableTarget(document.activeElement)) return
       const items = e.clipboardData?.items
       if (!items) return
       const imageFiles: File[] = []
@@ -126,13 +142,42 @@ export function ShotAnimatorView() {
       }
       if (imageFiles.length === 0) return
       e.preventDefault()
+      const oversized = findOversizedFiles(imageFiles)
       const newConfigs = await filesToShotConfigs(imageFiles)
       addShotConfigs(newConfigs)
-      toast({ title: 'Image Pasted', description: `Added ${newConfigs.length} image${newConfigs.length > 1 ? 's' : ''} from clipboard.` })
+      if (oversized.length > 0) {
+        toast({
+          title: 'Large pasted image — won\'t persist on refresh',
+          description: `${oversized[0]} exceeds 3MB. Ships fine to Replicate, but won't survive a reload.`,
+        })
+      } else {
+        toast({ title: 'Image Pasted', description: `Added ${newConfigs.length} image${newConfigs.length > 1 ? 's' : ''} from clipboard.` })
+      }
     }
     window.addEventListener('paste', handlePaste)
     return () => window.removeEventListener('paste', handlePaste)
   }, [addShotConfigs])
+
+  // Alt+ArrowUp / Alt+ArrowDown — reorder the shot card under the user's focus.
+  // We resolve the target card by walking up from document.activeElement to the
+  // nearest [data-shot-id], which lets users focus any interactive element
+  // inside a card (checkbox, prompt box, button) and still reorder.
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!e.altKey) return
+      if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return
+      const active = document.activeElement
+      if (!(active instanceof HTMLElement)) return
+      const card = active.closest('[data-shot-id]') as HTMLElement | null
+      if (!card) return
+      const id = card.getAttribute('data-shot-id')
+      if (!id) return
+      e.preventDefault()
+      moveShotConfig(id, e.key === 'ArrowUp' ? -1 : 1)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [moveShotConfig])
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('')
@@ -140,11 +185,16 @@ export function ShotAnimatorView() {
 
   const currentModelConfig = ANIMATION_MODELS[selectedModel] || ANIMATION_MODELS['seedance-1.5-pro']
 
-  // Filtered shots
+  // Filtered shots — search matches both imageName and prompt (case-insensitive OR).
   const filteredShots = shotConfigs
     .filter((shot) => {
       if (showOnlySelected && !shot.includeInBatch) return false
-      if (searchQuery && !shot.imageName.toLowerCase().includes(searchQuery.toLowerCase())) return false
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase()
+        const inName = shot.imageName.toLowerCase().includes(q)
+        const inPrompt = (shot.prompt ?? '').toLowerCase().includes(q)
+        if (!inName && !inPrompt) return false
+      }
       return true
     })
 
@@ -259,28 +309,23 @@ export function ShotAnimatorView() {
     enabled: !!user,
   })
 
-  // Clear last frame images when switching to a model that doesn't support it
+  // Notify (don't wipe) when switching to a model that doesn't support last frame.
+  // The lastFrameImage stays on each shot so switching back restores it.
+  // Generation-time filtering in useVideoGeneration skips the field for unsupported models.
   useEffect(() => {
-    if (!currentModelConfig.supportsLastFrame) {
-      const shotsWithLastFrame = shotConfigs.filter(shot => shot.lastFrameImage)
+    if (currentModelConfig.supportsLastFrame) return
+    const shotsWithLastFrame = shotConfigs.filter(shot => shot.lastFrameImage).length
+    if (shotsWithLastFrame === 0) return
 
-      if (shotsWithLastFrame.length > 0) {
-        const updatedConfigs = shotConfigs.map(shot => ({
-          ...shot,
-          lastFrameImage: undefined
-        }))
-        setShotConfigs(updatedConfigs)
-
-        toast({
-          title: 'Last Frame Removed',
-          description: `${currentModelConfig.displayName} doesn't support last frame. Last frame images have been removed from ${shotsWithLastFrame.length} shot(s).`,
-        })
-      }
-    }
+    toast({
+      title: 'Last frame will be ignored',
+      description: `${currentModelConfig.displayName} doesn't support last frame control. ${shotsWithLastFrame} shot${shotsWithLastFrame > 1 ? 's' : ''} will generate without it. Your images are preserved — switch back to restore.`,
+    })
   // eslint-disable-next-line react-hooks/exhaustive-deps -- Only trigger on model change
   }, [selectedModel, currentModelConfig.supportsLastFrame, currentModelConfig.displayName])
 
-  // Reset aspect ratio when switching to a model that doesn't support the current ratio
+  // Adjust aspect ratio only when the stored per-model ratio is no longer valid
+  // for that model (defensive: this can only happen after a model config change).
   useEffect(() => {
     const currentSettings = modelSettings[selectedModel]
     if (!currentSettings) return
@@ -301,8 +346,8 @@ export function ShotAnimatorView() {
       })
 
       toast({
-        title: 'Aspect Ratio Changed',
-        description: `${currentModelConfig.displayName} doesn't support ${currentAspectRatio}. Changed to ${newRatio}.`,
+        title: 'Aspect ratio adjusted',
+        description: `${currentModelConfig.displayName} doesn't support ${currentAspectRatio}. Using ${newRatio} instead.`,
       })
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps -- Only trigger on model change
@@ -398,6 +443,16 @@ export function ShotAnimatorView() {
     )
     if (validFiles.length === 0) return
 
+    const oversized = findOversizedFiles(validFiles)
+    if (oversized.length > 0) {
+      const preview = oversized.slice(0, 2).join(', ')
+      const extra = oversized.length > 2 ? `, +${oversized.length - 2} more` : ''
+      toast({
+        title: 'Large image — won\'t persist on refresh',
+        description: `${preview}${extra} exceeds 3MB. The shot will generate fine, but reload the page and it'll be gone unless you pick it from the gallery instead.`,
+      })
+    }
+
     const newConfigs = await filesToShotConfigs(validFiles)
     addShotConfigs(newConfigs)
   }, [addShotConfigs])
@@ -463,7 +518,7 @@ export function ShotAnimatorView() {
       return
     }
 
-    if (estimatedCost > 100) {
+    if (estimatedCost > COST_CONFIRM_THRESHOLD_PTS) {
       setShowCostConfirm(true)
       return
     }
@@ -485,16 +540,6 @@ export function ShotAnimatorView() {
       return config
     })
     setShotConfigs(updatedConfigs)
-  }
-
-  const handleDownloadVideo = (videoUrl: string) => {
-    const a = document.createElement('a')
-    a.href = videoUrl
-    a.download = ''
-    a.target = '_blank'
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
   }
 
   const handleSaveModelSettings = async (newSettings: AnimatorSettingsType) => {
@@ -575,6 +620,7 @@ export function ShotAnimatorView() {
         selectedModel={selectedModel}
         modelSettings={modelSettings}
         selectedCount={selectedCount}
+        totalShotCount={shotConfigs.length}
         searchQuery={searchQuery}
         showOnlySelected={showOnlySelected}
         onModelChange={handleModelChange}
@@ -582,6 +628,7 @@ export function ShotAnimatorView() {
         onShowOnlySelectedChange={setShowOnlySelected}
         onSelectAll={handleSelectAll}
         onDeselectAll={handleDeselectAll}
+        onClearAll={clearShotConfigs}
         onSaveModelSettings={handleSaveModelSettings}
         onOpenGalleryModal={() => setIsGalleryModalOpen(true)}
         onOpenVideoModal={() => setIsVideoModalOpen(true)}
@@ -609,7 +656,6 @@ export function ShotAnimatorView() {
         onDropStartFrame={(configId, imageUrl, imageName) => updateShotConfig(configId, { imageUrl, imageName: imageName || shotConfigs.find(c => c.id === configId)?.imageName || '' })}
         onDropLastFrame={(configId, imageUrl) => updateShotConfig(configId, { lastFrameImage: imageUrl })}
         onDeleteVideo={handleDeleteVideo}
-        onDownloadVideo={handleDownloadVideo}
         onToggleGalleryCollapsed={() => setGalleryCollapsed(!galleryCollapsed)}
         onSetMobileGalleryOpen={setMobileGalleryOpen}
         onOpenGalleryModal={() => setIsGalleryModalOpen(true)}
