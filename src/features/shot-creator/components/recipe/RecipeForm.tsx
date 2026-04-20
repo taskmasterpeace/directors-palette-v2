@@ -206,9 +206,14 @@ export function RecipeForm({
                   <div className="text-xs space-y-1">
                     <p><strong>Multi-stage recipes:</strong> Each stage runs sequentially.</p>
                     <p>Previous stage output becomes reference for next stage.</p>
-                    <p><strong>Field Syntax:</strong> {`<<FIELD_NAME:type!>>`}</p>
-                    <p><strong>Types:</strong> name (small), text (large), select(opt1,opt2)</p>
-                    <p><strong>!</strong> at end = required field</p>
+                    <p><strong>Field Syntax:</strong> {`<<FIELD_NAME:type[!][:annotation]>>`}</p>
+                    <p><strong>Types:</strong> name, text, select(opt1,opt2), wildcard(name,browse|random)</p>
+                    <p><strong>!</strong> after type = required field</p>
+                    <p><strong>Layout annotations</strong> (optional, opt-in per field):</p>
+                    <p>• <code>:rowN</code> pairs same-row fields into 2 columns (e.g. <code>:row1</code>)</p>
+                    <p>• <code>:collapsed</code> hides optional fields in a collapsible section</p>
+                    <p>Annotations stack: <code>{`<<FOO:text:collapsed:row2>>`}</code></p>
+                    <p className="text-muted-foreground">See docs/recipe-template-syntax.md</p>
                   </div>
                 </TooltipContent>
               </Tooltip>

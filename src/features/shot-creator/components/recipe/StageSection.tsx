@@ -226,7 +226,7 @@ export function StageSection({
               <Textarea
                 value={stage.template}
                 onChange={(e) => onTemplateChange(e.target.value)}
-                placeholder={`<<SHOT_TYPE:select(CU,MS,WS)!>> of <<SUBJECT:text!>>...`}
+                placeholder={`<<SHOT_TYPE:select(CU,MS,WS)!>> of <<SUBJECT:text!>>...\n\nOptional annotations:\n  :row1   pair fields into 2-col row (shared row number)\n  :collapsed   hide optional field in collapsible section\nExample: <<TAGLINE:text:collapsed>>`}
                 className="min-h-[80px] font-mono text-sm"
               />
 
@@ -293,6 +293,12 @@ export function StageSection({
                       >
                         {field.label} ({field.type})
                         {field.required && '!'}
+                        {field.row !== undefined && (
+                          <span className="ml-1 text-cyan-400">· row{field.row}</span>
+                        )}
+                        {field.collapsed && (
+                          <span className="ml-1 text-purple-400">· collapsed</span>
+                        )}
                       </Badge>
                     ))}
                   </div>
