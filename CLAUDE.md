@@ -30,6 +30,17 @@ cd D:/git/directors-palette-v2 && node node_modules/next/dist/bin/next dev --por
 - Use `node` directly (not `npm run dev`)
 - Verify with `curl http://localhost:3002`
 
+## Supabase Storage URLs: NEVER hardcode
+**Never inline a `https://...supabase.co/storage/...` URL as a string literal in code or DB seed data.** Route every system-template asset through `SYSTEM_TEMPLATE_URLS` in `src/features/shot-creator/types/recipe-constants.ts` (or an equivalent central constants module for that feature). Reasons:
+- When Storage gets reorganized (bucket renames, path moves), hardcoded URLs silently break — no grep catches the string because it's scattered.
+- DB rows storing baked-in URLs (e.g. `user_recipes.stages[].referenceImages[].url`) drift out of sync when code-side constants change, because seed scripts insert-only. This caused the 2026-04-20 Character Sheet outage (fix: `6a3ce6f4`).
+
+**Rules when adding/changing a Storage-backed asset:**
+1. Define the URL in a central constants file, never inline.
+2. If the URL gets persisted into DB rows (recipes, brand guides, style guides, announcements, etc.), the seed script for that table MUST support upsert-on-URL-change, not just insert. Otherwise existing rows will drift.
+3. Before a Storage reorg, run `scripts/audit-all-storage-urls.js` to enumerate every URL the DB depends on, then write a migration that updates DB rows in lockstep with Storage changes.
+4. After any suspected drift, `scripts/audit-all-storage-urls.js` HEAD-probes every Storage URL across 17 tables — use it as a smoke test.
+
 ---
 
 # Project Overview
