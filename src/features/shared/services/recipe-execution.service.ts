@@ -21,6 +21,10 @@ import { imageGenerationService } from '@/features/shot-creator/services/image-g
 import { uploadImageToStorage } from '@/features/shot-creator/helpers/image-resize.helper'
 import type { ImageModel, ImageModelSettings, ImageGenerationRequest } from '@/features/shot-creator/types/image-generation.types'
 import { createLogger } from '@/lib/logger'
+import {
+  STYLE_REFERENCE_DIRECTIVE,
+  STYLE_PROMPT_DIRECTIVE,
+} from '@/features/shared/constants/style-guards'
 
 
 const log = createLogger('Shared')
@@ -40,6 +44,13 @@ export interface RecipeExecutionOptions {
   // Reference tagging: auto-tag final image with a reference name
   referenceTag?: string
   referenceCategory?: string
+  // Style override: resolved from admin style_guides library (API v2 callers)
+  // — applied BEFORE prompt building so <<STYLE>> template fields get populated
+  // and AFTER so prompts without a STYLE field still get the directive appended.
+  styleOverride?: {
+    prompt: string       // style_prompt from style_guides, or raw passthrough
+    imageUrl?: string    // absolute URL; prepended to stage 0 refs when present
+  }
 }
 
 export interface RecipeExecutionResult {
@@ -482,7 +493,7 @@ function substituteAnalysisVariables(template: string, variables: AnalysisVariab
 export async function executeRecipe(options: RecipeExecutionOptions): Promise<RecipeExecutionResult> {
   const {
     recipe,
-    fieldValues,
+    fieldValues: inputFieldValues,
     stageReferenceImages,
     recipeReferenceImages,
     model = 'nano-banana-2' as ImageModel,
@@ -493,7 +504,12 @@ export async function executeRecipe(options: RecipeExecutionOptions): Promise<Re
     userId,
     referenceTag,
     referenceCategory = 'people',
+    styleOverride,
   } = options
+
+  // Non-destructive copy so we can inject styleOverride into STYLE field
+  // without mutating the caller's fieldValues object.
+  const fieldValues: RecipeFieldValues = { ...inputFieldValues }
 
   try {
     // Initialize Supabase client — use service role for API v2 (no user cookies)
@@ -506,10 +522,57 @@ export async function executeRecipe(options: RecipeExecutionOptions): Promise<Re
       }
     }
 
+    // Apply styleOverride: if the recipe exposes a <<STYLE>> template field and
+    // the caller didn't already set it, inject the resolved style_prompt so the
+    // template's STYLE slot gets a real value instead of the select's first
+    // option. Templates without a STYLE field get the directive appended post-
+    // build (below).
+    const recipeHasStyleField = recipe.stages.some(s =>
+      (s.fields || []).some(f => f.name === 'STYLE')
+    )
+    if (styleOverride?.prompt && recipeHasStyleField && !fieldValues.STYLE) {
+      fieldValues.STYLE = styleOverride.prompt
+      log.info('Injected styleOverride into fieldValues.STYLE', {
+        styleLen: styleOverride.prompt.length,
+      })
+    }
+
+    // Prepend styleOverride reference image to stage 0's refs so the first
+    // generation stage has the style image available for transfer.
+    if (styleOverride?.imageUrl) {
+      if (!stageReferenceImages[0]) stageReferenceImages[0] = []
+      if (!stageReferenceImages[0].includes(styleOverride.imageUrl)) {
+        stageReferenceImages[0] = [styleOverride.imageUrl, ...stageReferenceImages[0]]
+      }
+      log.info('Prepended styleOverride image to stage 0 refs', {
+        imageUrl: styleOverride.imageUrl,
+      })
+    }
+
     // Build prompts for all stages
     const promptResult = buildRecipePrompts(recipe.stages, fieldValues)
     const { prompts } = promptResult
     const totalStages = prompts.length
+
+    // If the recipe has no <<STYLE>> field, append the style directive to every
+    // generation stage prompt so the caller's style_id is still honored. This
+    // is the belt-and-suspenders fix for legacy recipes whose templates hardcode
+    // photoreal/cinematic language (per AIOBR work request 001).
+    if (styleOverride?.prompt && !recipeHasStyleField) {
+      const directive = styleOverride.imageUrl
+        ? STYLE_REFERENCE_DIRECTIVE
+        : STYLE_PROMPT_DIRECTIVE
+      const styleText = `${styleOverride.prompt}. ${directive}`
+      for (let i = 0; i < prompts.length; i++) {
+        const stage = recipe.stages[i]
+        if (stage.type === 'tool' || stage.type === 'analysis') continue
+        prompts[i] = prompts[i] ? `${prompts[i]}, ${styleText}` : styleText
+      }
+      log.info('Appended style directive to generation prompts', {
+        stages: prompts.length,
+        withImage: Boolean(styleOverride.imageUrl),
+      })
+    }
 
     // Resolve @tags from recipe reference images into (REF:IMG_N) tokens
     if (recipeReferenceImages && Object.keys(recipeReferenceImages).length > 0) {

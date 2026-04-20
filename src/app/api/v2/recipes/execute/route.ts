@@ -10,6 +10,7 @@ import type { RecipeFieldValues } from '@/features/shot-creator/types/recipe.typ
 import { parseStageTemplate } from '@/features/shot-creator/types/recipe.types'
 import type { RecipeField } from '@/features/shot-creator/types/recipe-field.types'
 import { createLogger } from '@/lib/logger'
+import { isUuid } from '@/features/shared/constants/style-guards'
 
 export const maxDuration = 300
 
@@ -30,7 +31,20 @@ export async function POST(request: NextRequest) {
     if (!isAuthContext(auth)) return auth
 
     const body = await request.json()
-    const { recipe_id, fields, model, aspect_ratio, reference_images, reference_image, reference_tag, reference_category, webhook_url } = body
+    const {
+      recipe_id,
+      fields,
+      model,
+      aspect_ratio,
+      reference_images,
+      reference_image,
+      reference_tag,
+      reference_category,
+      webhook_url,
+      style_id,
+      style,
+      style_prompt,
+    } = body
 
     if (!recipe_id || !fields) {
       return errors.validation('recipe_id and fields are required')
@@ -38,6 +52,44 @@ export async function POST(request: NextRequest) {
 
     // Fetch recipe from DB
     const supabase = getSupabase()
+
+    // Resolve style override (by UUID, name, or raw prompt) — mirrors /api/v2/images/generate
+    let styleOverride: { prompt: string; imageUrl?: string } | undefined
+    const styleRef = style_id || style
+    if (styleRef) {
+      const query = supabase
+        .from('style_guides')
+        .select('id, name, style_prompt, image_url')
+        .eq('is_system', true)
+        .limit(1)
+      const { data: styles } = isUuid(styleRef)
+        ? await query.eq('id', styleRef)
+        : await query.ilike('name', styleRef)
+      const matched = styles?.[0]
+      if (!matched) {
+        return errors.validation(
+          `Style not found: ${styleRef}. List available styles via GET /api/v2/styles`
+        )
+      }
+      let absoluteImageUrl: string | undefined
+      if (matched.image_url) {
+        const base =
+          process.env.NEXT_PUBLIC_SITE_URL ||
+          process.env.WEBHOOK_URL ||
+          'https://directorspalette.com'
+        absoluteImageUrl = matched.image_url.startsWith('http')
+          ? matched.image_url
+          : `${base.replace(/\/$/, '')}${matched.image_url.startsWith('/') ? '' : '/'}${matched.image_url}`
+      }
+      styleOverride = {
+        prompt: matched.style_prompt || '',
+        imageUrl: absoluteImageUrl,
+      }
+    } else if (typeof style_prompt === 'string' && style_prompt.trim()) {
+      // Raw prompt passthrough — no image
+      styleOverride = { prompt: style_prompt.trim() }
+    }
+
     const { data: recipeData, error: recipeError } = await supabase
       .from('user_recipes')
       .select('*')
@@ -108,6 +160,7 @@ export async function POST(request: NextRequest) {
           userId: auth.userId,
           referenceTag: reference_tag,
           referenceCategory: reference_category,
+          styleOverride,
         })
 
         if (result.success) {
