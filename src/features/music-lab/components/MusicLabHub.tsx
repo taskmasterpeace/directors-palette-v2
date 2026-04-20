@@ -1,6 +1,6 @@
 'use client'
 
-import { Dna, PenTool, Music, MessageCircle, Headphones } from 'lucide-react'
+import { Dna, PenTool, Music, MessageCircle, Headphones, Package } from 'lucide-react'
 import { useLayoutStore } from '@/store/layout.store'
 import type { MusicLabSubTab } from '@/store/layout.store'
 import { ArtistDnaPage } from './artist-dna/ArtistDnaPage'
@@ -8,6 +8,7 @@ import { WritingStudioPage } from './WritingStudioPage'
 import { ChatPage } from './artist-chat/ChatPage'
 import { SoundStudioPage } from './sound-studio/SoundStudioPage'
 import MusicVideoPage from '@/app/(app)/music-lab/page'
+import { ExportKitTab } from './export-kit/ExportKitTab'
 import { cn } from '@/utils/utils'
 
 interface MusicLabHubProps {
@@ -20,6 +21,7 @@ const SUB_TABS: { id: MusicLabSubTab; label: string; icon: React.ComponentType<{
   { id: 'writing-studio', label: 'Writing Studio', icon: PenTool },
   { id: 'sound-studio', label: 'Sound Studio', icon: Headphones },
   { id: 'music-video', label: 'Music Video', icon: Music },
+  { id: 'export-kit', label: 'Export Kit', icon: Package },
 ]
 
 export function MusicLabHub({ userId }: MusicLabHubProps) {
@@ -77,6 +79,9 @@ export function MusicLabHub({ userId }: MusicLabHubProps) {
           <div className="h-full p-2 sm:p-4 overflow-y-auto">
             <MusicVideoPage />
           </div>
+        )}
+        {musicLabSubTab === 'export-kit' && (
+          <ExportKitTab userId={userId} />
         )}
       </div>
     </div>

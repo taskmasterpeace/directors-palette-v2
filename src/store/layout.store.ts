@@ -2,7 +2,7 @@ import { create } from 'zustand'
 
 export type TabValue = 'shot-creator' | 'shot-animator' | 'layout-annotation' | 'node-workflow' | 'storyboard' | 'storybook' | 'music-lab' | 'brand-studio' | 'figurine-studio' | 'merch-lab' | 'prompt-tools' | 'gallery' | 'community' | 'help'
 
-export type MusicLabSubTab = 'artist-lab' | 'artist-chat' | 'writing-studio' | 'sound-studio' | 'music-video'
+export type MusicLabSubTab = 'artist-lab' | 'artist-chat' | 'writing-studio' | 'sound-studio' | 'music-video' | 'export-kit'
 
 interface LayoutStore {
   activeTab: TabValue
