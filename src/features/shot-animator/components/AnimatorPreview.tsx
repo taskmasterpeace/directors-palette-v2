@@ -30,7 +30,6 @@ interface AnimatorPreviewProps {
   onDropStartFrame: (configId: string, imageUrl: string, imageName?: string) => void
   onDropLastFrame: (configId: string, imageUrl: string) => void
   onDeleteVideo: (galleryId: string) => void
-  onDownloadVideo: (videoUrl: string) => void
   onToggleGalleryCollapsed: () => void
   onSetMobileGalleryOpen: (open: boolean) => void
   onOpenGalleryModal: () => void
@@ -56,7 +55,6 @@ export function AnimatorPreview({
   onDropStartFrame,
   onDropLastFrame,
   onDeleteVideo,
-  onDownloadVideo,
   onToggleGalleryCollapsed,
   onSetMobileGalleryOpen,
   onOpenGalleryModal,
@@ -131,7 +129,6 @@ export function AnimatorPreview({
           <AnimatorUnifiedGallery
             shotConfigs={shotConfigs}
             onDelete={onDeleteVideo}
-            onDownload={onDownloadVideo}
           />
         </div>
       )}
@@ -174,7 +171,6 @@ export function AnimatorPreview({
             <AnimatorUnifiedGallery
               shotConfigs={shotConfigs}
               onDelete={onDeleteVideo}
-              onDownload={onDownloadVideo}
             />
           </div>
         </SheetContent>

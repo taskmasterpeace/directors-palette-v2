@@ -303,7 +303,7 @@ export function AnimatorControls({
             <div className="relative w-auto">
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               <Input
-                placeholder="Search images..."
+                placeholder="Search name or prompt..."
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
                 className="pl-8 h-8 w-48 bg-card border-border text-white text-sm"

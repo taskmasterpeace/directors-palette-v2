@@ -2,7 +2,7 @@
 
 import React, { memo, useState, useRef, useCallback } from 'react'
 import Image from 'next/image'
-import { Image as ImageIcon, Film, Trash2, Wand2, ZoomIn, Replace, Clapperboard, Info } from 'lucide-react'
+import { Image as ImageIcon, Film, Trash2, Wand2, ZoomIn, Replace, Clapperboard, Info, AlertTriangle } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -259,11 +259,20 @@ const CompactShotCardComponent = ({
     onUpdate({ ...config, ...updates })
   }
 
+  // Flag shots that are queued for batch generation but have no prompt — these
+  // will be rejected by the validator, so highlight them before the user hits Generate.
+  const missingPrompt = config.includeInBatch && !config.prompt?.trim()
+
   return (
     <>
       <Card
-        className={`h-full flex flex-col bg-card/50 border-2 transition-all hover:border-border touch-manipulation ${config.includeInBatch ? 'border-primary' : 'border-border'
-          }`}
+        className={`h-full flex flex-col bg-card/50 border-2 transition-all touch-manipulation ${
+          missingPrompt
+            ? 'border-destructive hover:border-destructive'
+            : config.includeInBatch
+              ? 'border-primary hover:border-border'
+              : 'border-border hover:border-border'
+        }`}
       >
         {/* Image with Checkbox Overlay - Constrained height on mobile */}
         <div
@@ -467,8 +476,16 @@ const CompactShotCardComponent = ({
                 ? "Describe a multi-shot sequence... Use 'camera switch' between shots."
                 : "Describe the animation motion..."
               }
-              className={`bg-secondary text-white text-sm sm:text-xs ${multiShotMode ? 'min-h-[120px] sm:min-h-[140px]' : 'min-h-[80px] sm:min-h-[100px]'} resize-none touch-manipulation focus:ring-2 focus:ring-ring transition-shadow p-2 pr-10`}
+              className={`bg-secondary text-white text-sm sm:text-xs ${multiShotMode ? 'min-h-[120px] sm:min-h-[140px]' : 'min-h-[80px] sm:min-h-[100px]'} resize-none touch-manipulation focus:ring-2 focus:ring-ring transition-shadow p-2 pr-10 ${
+                missingPrompt ? 'ring-2 ring-destructive/60 focus:ring-destructive' : ''
+              }`}
             />
+            {missingPrompt && (
+              <div className="absolute -top-2 left-2 flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-destructive text-destructive-foreground text-[10px] font-medium pointer-events-none">
+                <AlertTriangle className="w-3 h-3" />
+                Missing prompt
+              </div>
+            )}
             {/* AI Generate/Enhance Button - Always visible */}
             <Button
               size="icon"

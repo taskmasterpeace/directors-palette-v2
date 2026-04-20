@@ -23,6 +23,8 @@ import {
 import {
   ANIMATION_MODELS,
   DEFAULT_MODEL_SETTINGS,
+  ACTIVE_VIDEO_MODELS,
+  DEFAULT_ACTIVE_MODEL,
 } from '../config/models.config'
 import { VIDEO_MODEL_PRICING } from '../types'
 import { toast } from '@/hooks/use-toast'
@@ -64,17 +66,42 @@ export function ShotAnimatorView() {
   const { shotConfigs, setShotConfigs, addShotConfigs, updateShotConfig, removeShotConfig } = useShotAnimatorStore()
   const [mobileGalleryOpen, setMobileGalleryOpen] = useState(false)
 
-  // State — restore last-used model from settings, default to seedance-1.5-pro
+  // State — restore last-used model from settings, falling back to the curated default.
+  // A saved model that's no longer in ACTIVE_VIDEO_MODELS (old Seedance Lite, Kling, WAN, etc.)
+  // is migrated to DEFAULT_ACTIVE_MODEL so the dropdown always matches selectedModel.
   const savedModel = shotAnimator.selectedModel as AnimationModel | undefined
   const [selectedModel, setSelectedModel] = useState<AnimationModel>(
-    savedModel && ANIMATION_MODELS[savedModel] ? savedModel : 'seedance-1.5-pro'
+    savedModel && ACTIVE_VIDEO_MODELS.includes(savedModel)
+      ? savedModel
+      : DEFAULT_ACTIVE_MODEL
   )
 
-  // Sync local state when settings load from database (async)
+  // Show the migration toast exactly once per session if we bumped a legacy model.
+  const migrationToastShownRef = useRef(false)
+
+  // Sync local state when settings load from database (async). If the persisted
+  // value is a legacy model, migrate to DEFAULT_ACTIVE_MODEL and persist the change
+  // so the next session starts clean.
   useEffect(() => {
     const persisted = shotAnimator.selectedModel as AnimationModel | undefined
-    if (persisted && ANIMATION_MODELS[persisted] && persisted !== selectedModel) {
-      setSelectedModel(persisted)
+    if (!persisted) return
+
+    if (ACTIVE_VIDEO_MODELS.includes(persisted)) {
+      if (persisted !== selectedModel) setSelectedModel(persisted)
+      return
+    }
+
+    // Legacy model — migrate and notify once.
+    const legacyConfig = ANIMATION_MODELS[persisted]
+    const legacyName = legacyConfig?.displayName ?? persisted
+    setSelectedModel(DEFAULT_ACTIVE_MODEL)
+    updateShotAnimatorSettings({ selectedModel: DEFAULT_ACTIVE_MODEL })
+    if (!migrationToastShownRef.current) {
+      migrationToastShownRef.current = true
+      toast({
+        title: 'Model updated',
+        description: `${legacyName} has been retired. Shot Animator now uses Seedance 1.5 Pro, 2.0 Fast, and 2.0. Switched you to ${ANIMATION_MODELS[DEFAULT_ACTIVE_MODEL].displayName}.`,
+      })
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps -- Only re-sync when the persisted value changes
   }, [shotAnimator.selectedModel])
@@ -140,11 +167,16 @@ export function ShotAnimatorView() {
 
   const currentModelConfig = ANIMATION_MODELS[selectedModel] || ANIMATION_MODELS['seedance-1.5-pro']
 
-  // Filtered shots
+  // Filtered shots — search matches both imageName and prompt (case-insensitive OR).
   const filteredShots = shotConfigs
     .filter((shot) => {
       if (showOnlySelected && !shot.includeInBatch) return false
-      if (searchQuery && !shot.imageName.toLowerCase().includes(searchQuery.toLowerCase())) return false
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase()
+        const inName = shot.imageName.toLowerCase().includes(q)
+        const inPrompt = (shot.prompt ?? '').toLowerCase().includes(q)
+        if (!inName && !inPrompt) return false
+      }
       return true
     })
 
@@ -259,28 +291,23 @@ export function ShotAnimatorView() {
     enabled: !!user,
   })
 
-  // Clear last frame images when switching to a model that doesn't support it
+  // Notify (don't wipe) when switching to a model that doesn't support last frame.
+  // The lastFrameImage stays on each shot so switching back restores it.
+  // Generation-time filtering in useVideoGeneration skips the field for unsupported models.
   useEffect(() => {
-    if (!currentModelConfig.supportsLastFrame) {
-      const shotsWithLastFrame = shotConfigs.filter(shot => shot.lastFrameImage)
+    if (currentModelConfig.supportsLastFrame) return
+    const shotsWithLastFrame = shotConfigs.filter(shot => shot.lastFrameImage).length
+    if (shotsWithLastFrame === 0) return
 
-      if (shotsWithLastFrame.length > 0) {
-        const updatedConfigs = shotConfigs.map(shot => ({
-          ...shot,
-          lastFrameImage: undefined
-        }))
-        setShotConfigs(updatedConfigs)
-
-        toast({
-          title: 'Last Frame Removed',
-          description: `${currentModelConfig.displayName} doesn't support last frame. Last frame images have been removed from ${shotsWithLastFrame.length} shot(s).`,
-        })
-      }
-    }
+    toast({
+      title: 'Last frame will be ignored',
+      description: `${currentModelConfig.displayName} doesn't support last frame control. ${shotsWithLastFrame} shot${shotsWithLastFrame > 1 ? 's' : ''} will generate without it. Your images are preserved — switch back to restore.`,
+    })
   // eslint-disable-next-line react-hooks/exhaustive-deps -- Only trigger on model change
   }, [selectedModel, currentModelConfig.supportsLastFrame, currentModelConfig.displayName])
 
-  // Reset aspect ratio when switching to a model that doesn't support the current ratio
+  // Adjust aspect ratio only when the stored per-model ratio is no longer valid
+  // for that model (defensive: this can only happen after a model config change).
   useEffect(() => {
     const currentSettings = modelSettings[selectedModel]
     if (!currentSettings) return
@@ -301,8 +328,8 @@ export function ShotAnimatorView() {
       })
 
       toast({
-        title: 'Aspect Ratio Changed',
-        description: `${currentModelConfig.displayName} doesn't support ${currentAspectRatio}. Changed to ${newRatio}.`,
+        title: 'Aspect ratio adjusted',
+        description: `${currentModelConfig.displayName} doesn't support ${currentAspectRatio}. Using ${newRatio} instead.`,
       })
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps -- Only trigger on model change
@@ -487,16 +514,6 @@ export function ShotAnimatorView() {
     setShotConfigs(updatedConfigs)
   }
 
-  const handleDownloadVideo = (videoUrl: string) => {
-    const a = document.createElement('a')
-    a.href = videoUrl
-    a.download = ''
-    a.target = '_blank'
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-  }
-
   const handleSaveModelSettings = async (newSettings: AnimatorSettingsType) => {
     await updateShotAnimatorSettings({ modelSettings: newSettings })
   }
@@ -609,7 +626,6 @@ export function ShotAnimatorView() {
         onDropStartFrame={(configId, imageUrl, imageName) => updateShotConfig(configId, { imageUrl, imageName: imageName || shotConfigs.find(c => c.id === configId)?.imageName || '' })}
         onDropLastFrame={(configId, imageUrl) => updateShotConfig(configId, { lastFrameImage: imageUrl })}
         onDeleteVideo={handleDeleteVideo}
-        onDownloadVideo={handleDownloadVideo}
         onToggleGalleryCollapsed={() => setGalleryCollapsed(!galleryCollapsed)}
         onSetMobileGalleryOpen={setMobileGalleryOpen}
         onOpenGalleryModal={() => setIsGalleryModalOpen(true)}

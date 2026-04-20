@@ -5,14 +5,16 @@ import { Download, Trash2, Film, Maximize2, X } from 'lucide-react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import type { ShotAnimationConfig } from '../types'
+import type { ShotAnimationConfig, AnimationModel } from '../types'
 import { getVideoModelIcon } from '../config/models.config'
+import { videoDownloadFilename } from '../utils/filenames'
 import { toast } from 'sonner'
 
 interface DerivedVideo {
   galleryId: string
   videoUrl: string
   shotName: string
+  prompt: string
   createdAt: Date
   model?: string
 }
@@ -20,13 +22,11 @@ interface DerivedVideo {
 interface AnimatorUnifiedGalleryProps {
   shotConfigs: ShotAnimationConfig[]
   onDelete?: (galleryId: string) => void
-  onDownload?: (videoUrl: string) => void
 }
 
 export function AnimatorUnifiedGallery({
   shotConfigs,
   onDelete,
-  onDownload
 }: AnimatorUnifiedGalleryProps) {
   const [fullscreenVideo, setFullscreenVideo] = useState<DerivedVideo | null>(null)
   const [showControls, setShowControls] = useState(true)
@@ -42,6 +42,7 @@ export function AnimatorUnifiedGallery({
           galleryId: video.galleryId,
           videoUrl: video.videoUrl,
           shotName: config.imageName,
+          prompt: config.prompt ?? '',
           createdAt: video.createdAt instanceof Date ? video.createdAt : new Date(video.createdAt),
           model: video.model,
         })
@@ -95,14 +96,18 @@ export function AnimatorUnifiedGallery({
     }
   }, [fullscreenVideo, closeFullscreen, resetHideTimer])
 
-  const handleDownloadBlob = async (videoUrl: string) => {
+  const handleDownloadBlob = async (video: DerivedVideo) => {
     try {
-      const response = await fetch(videoUrl)
+      const response = await fetch(video.videoUrl)
       const blob = await response.blob()
       const blobUrl = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = blobUrl
-      link.download = `video_${Date.now()}.mp4`
+      link.download = videoDownloadFilename({
+        shotName: video.shotName,
+        model: video.model as AnimationModel | undefined,
+        prompt: video.prompt,
+      })
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
@@ -173,17 +178,15 @@ export function AnimatorUnifiedGallery({
 
                     {/* Action Buttons */}
                     <div className="flex gap-1">
-                      {onDownload && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => onDownload(video.videoUrl)}
-                          className="h-7 w-7 text-muted-foreground hover:text-white hover:bg-white/10"
-                          title="Download"
-                        >
-                          <Download className="w-3.5 h-3.5" />
-                        </Button>
-                      )}
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => handleDownloadBlob(video)}
+                        className="h-7 w-7 text-muted-foreground hover:text-white hover:bg-white/10"
+                        title="Download"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                      </Button>
 
                       <Button
                         size="icon"
@@ -247,13 +250,7 @@ export function AnimatorUnifiedGallery({
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => {
-                  if (onDownload) {
-                    onDownload(fullscreenVideo.videoUrl)
-                  } else {
-                    handleDownloadBlob(fullscreenVideo.videoUrl)
-                  }
-                }}
+                onClick={() => handleDownloadBlob(fullscreenVideo)}
                 className="h-9 w-9 rounded-full bg-white/[0.08] backdrop-blur-md border border-white/[0.08] text-white/70 hover:text-white hover:bg-white/[0.15] hover:border-white/[0.15] transition-all duration-200"
                 title="Download"
               >

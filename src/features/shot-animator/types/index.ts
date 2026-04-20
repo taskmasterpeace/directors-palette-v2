@@ -8,7 +8,9 @@ export type AnimationModel =
   | 'wan-2.2-i2v-fast'     // Budget+, 5s max, start + last frame
   | 'seedance-pro-fast'    // Standard, 12s max, start frame only
   | 'seedance-lite'        // Featured, 12s max, start + last + ref images
-  | 'seedance-1.5-pro'     // Pro, 480p, start + last frame
+  | 'seedance-1.5-pro'     // Pro, cheapest curated, start + last frame + audio
+  | 'seedance-2.0-fast'    // Seedance 2.0 Fast, video refs, 480p/720p
+  | 'seedance-2.0'         // Seedance 2.0, video refs, 480p/720p, premium
   | 'kling-2.5-turbo-pro'  // Premium, 10s max, best motion
   | 'p-video'              // Fast video gen with audio + draft mode
   | 'seedance-pro'         // Legacy - keeping for backwards compatibility
@@ -58,6 +60,8 @@ export interface AnimatorSettings {
   'seedance-pro-fast': ModelSettings
   'seedance-lite': ModelSettings
   'seedance-1.5-pro': ModelSettings
+  'seedance-2.0-fast': ModelSettings
+  'seedance-2.0': ModelSettings
   'kling-2.5-turbo-pro': ModelSettings
   'p-video': ModelSettings
   'seedance-pro': ModelSettings // Legacy
@@ -107,7 +111,9 @@ export const VIDEO_MODEL_PRICING: Record<AnimationModel, VideoPricing> = {
   'wan-2.2-i2v-fast': { '480p': 2, '720p': 3 },          // Per video (5s)
   'seedance-pro-fast': { '480p': 2, '720p': 4, '1080p': 9 },   // Per second
   'seedance-lite': { '480p': 3, '720p': 5, '1080p': 11 },      // Per second
-  'seedance-1.5-pro': { '480p': 5, '720p': 8 },                // Per second
+  'seedance-1.5-pro': { '480p': 5, '720p': 8 },                // Per second — cheapest curated option
+  'seedance-2.0-fast': { '480p': 7, '720p': 10, '1080p': 17 }, // Per second — supports video refs
+  'seedance-2.0': { '480p': 8, '720p': 11, '1080p': 19 },      // Per second — premium + video refs
   'kling-2.5-turbo-pro': { '480p': 10, '720p': 10 },           // Per second
   'p-video': { '480p': 1, '720p': 2 },                          // Minimal cost to prevent abuse
   'seedance-pro': { '480p': 4, '720p': 6, '1080p': 15 },       // Per second (legacy)

@@ -12,6 +12,8 @@ import type {
   VideoGenerationError,
 } from '../types'
 import { ANIMATION_MODELS } from '../config/models.config'
+// ANIMATION_MODELS provides per-model `supportsLastFrame` used to strip
+// incompatible fields at generation time without mutating shot state.
 import { logger } from '@/lib/logger'
 
 interface GenerationResult {
@@ -107,9 +109,12 @@ export function useVideoGeneration(): UseVideoGenerationReturn {
         )
       }
 
-      // Upload last frame image to Replicate
+      // Upload last frame image to Replicate — only if the selected model supports it.
+      // We keep lastFrameImage on the shot config so switching models preserves data;
+      // generation-time filtering drops it for models that don't support last frame.
+      const modelSupportsLastFrame = ANIMATION_MODELS[model]?.supportsLastFrame ?? false
       let uploadedLastFrameImage: string | undefined
-      if (shot.lastFrameImage) {
+      if (shot.lastFrameImage && modelSupportsLastFrame) {
         uploadedLastFrameImage = await uploadFileToReplicate(
           shot.lastFrameImage,
           `lastframe-${shot.imageName}`
@@ -196,9 +201,17 @@ export function useVideoGeneration(): UseVideoGenerationReturn {
       // Validate that selected shots have prompts
       const shotsWithoutPrompt = selectedShots.filter((shot) => !shot.prompt?.trim())
       if (shotsWithoutPrompt.length > 0) {
+        // Surface the first few shot names so the user knows exactly where to look.
+        const names = shotsWithoutPrompt.slice(0, 3).map((s) => s.imageName)
+        const extra = shotsWithoutPrompt.length - names.length
+        const joined = extra > 0
+          ? `${names.join(', ')}, and ${extra} more`
+          : names.length > 1
+            ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1]
+            : names[0]
         toast({
-          title: 'Missing Prompts',
-          description: `${shotsWithoutPrompt.length} shot(s) are missing prompts. Please add prompts before generating.`,
+          title: 'Missing prompts',
+          description: `${joined} ${shotsWithoutPrompt.length === 1 ? 'is' : 'are'} missing prompts. Add prompts (or deselect those shots) before generating.`,
           variant: 'destructive',
         })
         return []

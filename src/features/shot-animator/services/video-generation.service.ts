@@ -229,6 +229,8 @@ export class VideoGenerationService {
       'seedance-pro-fast': 'bytedance/seedance-1-pro-fast',
       'seedance-lite': 'bytedance/seedance-1-lite',
       'seedance-1.5-pro': 'bytedance/seedance-1.5-pro',
+      'seedance-2.0-fast': 'bytedance/seedance-2.0-fast',
+      'seedance-2.0': 'bytedance/seedance-2.0',
       'kling-2.5-turbo-pro': 'kwaivgi/kling-v2.5-turbo-pro',
       'p-video': 'prunaai/p-video',
       'seedance-pro': 'bytedance/seedance-1-pro',
