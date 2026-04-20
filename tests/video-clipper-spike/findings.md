@@ -285,3 +285,54 @@ Out of scope for v1:
 - AIOBR narrator migration (already has a narrator, per project memory)
 - Custom face-tracking Cog model (start with center-crop, upgrade later if users ask)
 - Multi-language — Gemini TTS supports it but v1 ships en-US only
+
+
+## Test 10 — Local face detection (no Replicate)
+
+Local face detection via `@vladmandic/face-api` (SsdMobilenetv1, no Replicate, no Cog).
+
+| Slot | Frames | Hits | Hit rate | Avg jitter | Max jitter | ms/frame |
+|------|-------:|-----:|---------:|-----------:|-----------:|---------:|
+| keynote | 48 | 29 | 60% | 50.3px (7.9%) | 20.7% | 310 |
+| music_event | 58 | 30 | 52% | 108.6px (17.0%) | 57.9% | 332 |
+| podcast | 68 | 0 | 0% | 0.0px (0.0%) | 0.0% | 333 |
+| tutorial | 22 | 22 | 100% | 4.2px (0.7%) | 1.6% | 412 |
+| vlog | 84 | 57 | 68% | 58.5px (9.1%) | 30.3% | 419 |
+
+Interpretation:
+- **Hit rate** — % of sampled frames with ≥1 face. Talking-head should be near 100%.
+- **Avg jitter** — how much the largest face's center moves between consecutive frames.
+  Under ~3% of frame width means the crop window will be stable with light smoothing.
+- **ms/frame** — inference speed. At 2 fps sampling, we scan 1 min of video per
+  (30 frames × ms/frame)ms.
+
+Per-frame bboxes saved to `outputs/<slot>.face-track-local.json`.
+
+### Verdict: **face-aware crop is viable — no Cog needed.**
+
+| Slot | What the numbers mean | Production plan |
+|------|----------------------|-----------------|
+| **tutorial** | 100% / 0.7% jitter | ✅ Rock-solid. Crop window barely moves. Face-aware crop would look **better than manual edit**. |
+| **keynote** | 60% / 7.9% jitter | ✅ Viable. 40% miss rate is cutaways to slides/audience, not detector failure. Hold last bbox across misses + ease crop toward new face on re-detection. |
+| **vlog** | 68% / 9.1% jitter | ✅ Viable. Moving camera jitter is real but smoothable with a rolling-average window (1-2s). |
+| **music_event** | 52% / 17% jitter | ⚠️ Marginal. Many small faces in crowds, detector locks onto different ones per frame. Fall back to Pan & Scan when `max_face_area / frame_area < 5%`. |
+| **podcast** | 0% | ✅ Correct detection. Screen-recording with no speaker on camera → automatically routes to Pan & Scan. |
+
+**The detector's failure mode IS the dispatcher.** Hit rate + face size together tell us which framing strategy to use:
+- ≥80% hit rate + face >10% of frame → **Face-aware crop** with smoothing
+- <50% hit rate OR face <5% of frame → **Pan & Scan** on source
+- 50-80% → **Face-aware with generous fallback** (hold last bbox, wider crop window)
+
+### Performance
+
+- WASM backend on Windows/Node 25: **~300-400ms/frame** (spike conditions)
+- Production with native `@tensorflow/tfjs-node` on Linux server: **expected ~30-50ms/frame** (10× faster)
+- 30-second clip at 2 fps = 60 frames. Spike time: ~21s. Production estimate: ~2-3s.
+- Entirely local, no Replicate cost, no external API.
+
+### What to wire up next
+
+1. Face detection service: `src/features/video-clipper/services/face-detect.service.ts` wrapping `@vladmandic/face-api`.
+2. Bbox smoother: rolling-window median on (cx, cy, w, h) with last-known fallback for misses.
+3. ffmpeg crop path generator: emit a dynamic `crop=` filter expression OR pre-render with sendcmd. (Simpler: generate per-second keyframe crops and let ffmpeg interpolate.)
+4. Content router: inspect detection stats to pick Face-aware vs Pan & Scan.

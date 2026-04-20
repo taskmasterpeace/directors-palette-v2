@@ -16,6 +16,10 @@
     "09": "node 09-pipeline-b-manual.mjs"
   },
   "dependencies": {
+    "@tensorflow/tfjs": "^4.22.0",
+    "@tensorflow/tfjs-backend-wasm": "^4.22.0",
+    "@vladmandic/face-api": "^1.7.15",
+    "canvas": "^3.2.3",
     "youtube-dl-exec": "^3.0.22"
   }
 }
