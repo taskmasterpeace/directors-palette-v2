@@ -25,7 +25,21 @@
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: Inter, system-ui, -apple-system, Segoe UI, sans-serif; font-size: 14px; letter-spacing: -0.005em; }
   .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-  .app { display: grid; grid-template-columns: 300px 1fr 360px; gap: 12px; padding: 12px; height: 100vh; }
+  .shell { display: flex; flex-direction: column; height: 100vh; }
+  .app { display: grid; grid-template-columns: 300px 1fr 360px; gap: 12px; padding: 12px; flex: 1; overflow: hidden; }
+  .phase0-banner {
+    background: linear-gradient(90deg, oklch(0.32 0.09 75) 0%, oklch(0.28 0.06 340) 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 14px; font-size: 12px; display: flex; gap: 12px; align-items: center; line-height: 1.4;
+  }
+  .phase0-banner .badge {
+    background: oklch(0.18 0.02 290); color: var(--warn); padding: 2px 8px; border-radius: 4px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em; border: 1px solid var(--warn);
+    white-space: nowrap;
+  }
+  .phase0-banner .txt { color: oklch(0.96 0.01 290); }
+  .phase0-banner .txt strong { color: var(--warn); }
+  .phase0-banner a { color: var(--cyan); text-decoration: none; border-bottom: 1px dashed var(--cyan); }
   .col { background: var(--panel); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; display: flex; flex-direction: column; }
   .hdr { padding: 10px 12px; border-bottom: 1px solid var(--border); font-weight: 600; letter-spacing: -0.025em; display: flex; justify-content: space-between; align-items: center; }
   .hdr .tag { font-size: 10px; color: var(--muted); font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; }
@@ -152,6 +166,18 @@
 </style>
 </head>
 <body>
+<div class="shell">
+
+<div class="phase0-banner">
+  <div class="badge">PHASE 0 FINDING</div>
+  <div class="txt">
+    Seedance 2.0 <strong>rejects any reference image containing a face</strong> (E005 input filter, 2&ndash;10s fast-fail).
+    Text-only mode is the only reliable path &mdash; DNA-driven prompts carried a full 15s music-video shot without a face ref.
+    Artist / Wardrobe refs are kept as <strong>LLM context only</strong> (describe the artist in prompt); they are not sent to Seedance.
+    See <a href="../research/2026-04-19-seedance-2.0-phase0-findings.md">Phase 0 findings</a>.
+  </div>
+</div>
+
 <div class="app">
 
   <!-- ================= LEFT: INPUTS ================= -->
@@ -201,6 +227,17 @@
           <div class="pill dance" data-v="dance">Dance</div>
         </div>
         <div id="intentHint" style="font-size:11px;color:var(--muted);margin-top:6px;line-height:1.4"></div>
+      </div>
+
+      <div class="group">
+        <h4>Engine mode <span class="chip-tiny ok" id="modeChip">text-only</span></h4>
+        <div style="display:flex;gap:8px;align-items:flex-start;background:var(--panel-2);padding:8px 10px;border-radius:var(--r);border:1px solid var(--border)">
+          <input type="checkbox" id="textOnly" checked style="accent-color:var(--cyan);margin-top:3px" />
+          <label for="textOnly" style="margin:0;line-height:1.4">
+            <strong style="color:var(--text);font-weight:600">Text-only mode</strong><br>
+            <span style="font-size:11px">Phase 0 default. Image refs stripped from payload &mdash; DNA drives identity via prompt text. Disable only if you have filter-safe refs (non-face objects, landscapes, motion video).</span>
+          </label>
+        </div>
       </div>
 
       <div class="group">
@@ -292,24 +329,29 @@
 
       <!-- Reference groups -->
       <div class="ref-groups">
+        <div style="grid-column: 1 / -1; font-size:11px; color:var(--muted); line-height:1.5; padding:8px 10px; background:var(--panel); border-radius:6px; border:1px solid var(--border)">
+          <strong style="color:var(--text)">LLM context</strong> (not sent to Seedance) &mdash; used to enrich the text prompt with identity/wardrobe detail.
+          <strong style="color:var(--warn)">Filter-safe</strong> refs can go to Seedance in non-text-only mode but only if they contain no faces.
+        </div>
         <div class="ref-group">
-          <h5>Artist sheets <span class="count" id="artistCount">0/3</span></h5>
+          <h5>Artist sheets <span class="chip-tiny warn">E005 risk</span> <span class="count" id="artistCount">0/3</span></h5>
+          <div style="font-size:10.5px;color:var(--muted);margin-bottom:6px;line-height:1.3">LLM context only &mdash; face refs trigger E005.</div>
           <div class="ref-grid" id="gridArtist"></div>
         </div>
         <div class="ref-group">
-          <h5>Wardrobe <span class="count" id="wardrobeCount">0/2</span></h5>
+          <h5>Wardrobe <span class="chip-tiny warn">E005 risk if face visible</span> <span class="count" id="wardrobeCount">0/2</span></h5>
+          <div style="font-size:10.5px;color:var(--muted);margin-bottom:6px;line-height:1.3">Close-ups of garments/props without face = filter-safe.</div>
           <div class="ref-grid" id="gridWardrobe"></div>
         </div>
         <div class="ref-group">
-          <h5>Location <span class="count" id="locationCount">0/2</span></h5>
+          <h5>Location <span class="chip-tiny ok">filter-safe</span> <span class="count" id="locationCount">0/2</span></h5>
+          <div style="font-size:10.5px;color:var(--muted);margin-bottom:6px;line-height:1.3">Landscape/environment stills with no people.</div>
           <div class="ref-grid" id="gridLocation"></div>
         </div>
         <div class="ref-group">
-          <h5>Motion reference <span class="count" id="motionCount">0/3</span></h5>
+          <h5>Motion reference <span class="chip-tiny ok">filter-safe</span> <span class="count" id="motionCount">0/3</span></h5>
+          <div style="font-size:10.5px;color:var(--muted);margin-bottom:6px;line-height:1.3">Video refs transfer camera moves + physical dynamics. Face identity is not transferred.</div>
           <div class="ref-grid" id="gridMotion"></div>
-          <div style="font-size:10.5px;color:var(--muted);margin-top:6px;line-height:1.4">
-            Video refs transfer camera moves + physical dynamics (not faces). Use for dance sync, parkour, crowd energy.
-          </div>
         </div>
       </div>
 
@@ -399,6 +441,7 @@
   </div>
 
 </div>
+</div><!-- /shell -->
 
 <div class="toast" id="toast">Copied!</div>
 
@@ -447,11 +490,12 @@ const DEFAULTS = {
   director: 'hype', artist: 'marcus', song: 'demo1',
   startS: 12, endS: 22, genAudio: true, timeCoded: false, continuity: false,
   intelligentDuration: false,
+  textOnly: true, // Phase 0: E005 filter rejects face refs
 };
 
 const state = {
   ...DEFAULTS,
-  singlePrompt: 'Medium shot on [Image1] performing into the camera, neon-lit alley from [Image6], handheld rhythmic motion. Artist sings "started from the bottom now we runnin it back" with confident delivery.',
+  singlePrompt: 'Medium shot on the artist performing into the camera on a dusty Texas roadside at golden hour, handheld rhythmic motion, cracked asphalt stretching to the horizon. Artist sings "started from the bottom now we runnin it back" with confident delivery.',
   shots: [
     { t0: 0, t1: 5, text: 'Wide establishing on [Image3]. Camera drifts in slowly.' },
     { t0: 5, t1: 10, text: 'Medium of [Image1] performing. Match motion of [Video1].' },
@@ -474,6 +518,7 @@ const songSel = $('songSel'), artistSel = $('artistSel'), directorSel = $('direc
 const intentPills = $('intentPills'), resSel = $('resSel'), aspectSel = $('aspectSel');
 const durRange = $('durRange'), durLabel = $('durLabel');
 const genAudio = $('genAudio'), tcToggle = $('tcToggle'), contToggle = $('contToggle');
+const textOnlyEl = $('textOnly'), modeChip = $('modeChip'), intelligentDurEl = $('intelligentDur');
 const lyricsEl = $('lyrics'), lyricCountChip = $('lyricCountChip'), lyricStrip = $('lyricStrip');
 const waveCanvas = $('waveCanvas'), waveEl = $('wave'), selEl = $('sel'), beatsEl = $('beats');
 const playheadEl = $('playhead'), timeDisp = $('timeDisp'), bpmDisp = $('bpmDisp');
@@ -955,6 +1000,14 @@ function lint() {
     items.push({ type: 'warn', text: `Performance with audio gen on — put sung lyrics in "double quotes" inside the prompt so Seedance drives lip-sync natively.` });
   }
 
+  // Phase 0: E005 risk when face-ref groups are filled AND text-only is OFF
+  if (!state.textOnly) {
+    const hasArtistRefs = state.refs.artist.some(r => r.filled);
+    if (hasArtistRefs) {
+      items.push({ type: 'err', text: `E005 RISK: artist sheets contain faces and will be rejected by Seedance 2.0 input filter (2–10s fail). Enable text-only mode or remove artist refs.` });
+    }
+  }
+
   if (!items.length) items.push({ type: 'ok', text: 'All checks pass. Ready to generate.' });
   return items;
 }
@@ -1014,6 +1067,12 @@ function buildApiPayload() {
   const video_refs = items.filter(r => r.tag.startsWith('Video')).map(r => `https://.../refs/${r.tag}.mp4`);
   const audio_refs = items.filter(r => r.tag.startsWith('Audio')).map(r => `https://.../refs/${r.tag}.wav`);
   const durationValue = state.intelligentDuration ? -1 : state.duration;
+
+  // Text-only mode strips all refs — Phase 0 filter workaround.
+  const sendImages = !state.textOnly && image_refs.length > 0;
+  const sendVideos = !state.textOnly && video_refs.length > 0;
+  const sendAudios = !state.textOnly && audio_refs.length > 0;
+
   return {
     model: 'bytedance/seedance-2.0',
     input: {
@@ -1022,11 +1081,12 @@ function buildApiPayload() {
       resolution: state.resolution,
       aspect_ratio: state.aspect,
       generate_audio: state.genAudio,
-      ...(image_refs.length ? { reference_images: image_refs } : {}),
-      ...(video_refs.length ? { reference_videos: video_refs } : {}),
-      ...(audio_refs.length ? { reference_audios: audio_refs } : {}),
+      ...(sendImages ? { reference_images: image_refs } : {}),
+      ...(sendVideos ? { reference_videos: video_refs } : {}),
+      ...(sendAudios ? { reference_audios: audio_refs } : {}),
     },
     _notes: {
+      mode: state.textOnly ? 'TEXT-ONLY (Phase 0 — refs stripped to avoid E005)' : 'REFS-ENABLED (caller asserts no face refs)',
       mutex: 'reference_images cannot be combined with image/last_frame_image',
       audioRefRequiresImageOrVideo: true,
       dialogueHint: 'Put lyrics in "double quotes" inside prompt for native lip-sync',
@@ -1051,6 +1111,11 @@ function renderAll() {
   bpmDisp.textContent = `${DEMOS[state.song].bpm} BPM · 4/4`;
   directorHint.textContent = DIRECTORS[state.director].boost || 'No director boost applied.';
   intentHint.textContent = INTENT_HINTS[state.intent];
+  if (modeChip) {
+    modeChip.textContent = state.textOnly ? 'text-only' : 'refs enabled';
+    modeChip.classList.toggle('ok', state.textOnly);
+    modeChip.classList.toggle('warn', !state.textOnly);
+  }
   drawWave(); drawBeats(); drawSelection();
   renderShotRows();
   renderRefGrids();
@@ -1077,6 +1142,7 @@ genAudio.onchange = e => { state.genAudio = e.target.checked; renderAll(); };
 tcToggle.onchange = e => { state.timeCoded = e.target.checked; renderAll(); };
 contToggle.onchange = e => { state.continuity = e.target.checked; renderAll(); };
 $('intelligentDur').onchange = e => { state.intelligentDuration = e.target.checked; renderAll(); };
+textOnlyEl.onchange = e => { state.textOnly = e.target.checked; renderAll(); };
 lyricsEl.oninput = e => { state.lyrics = e.target.value; renderLyricStrip(); renderRight(); };
 singlePrompt.oninput = e => { state.singlePrompt = e.target.value; renderRight(); };
 
