@@ -43,33 +43,38 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await getAdminClient()
 
-    // Get names of existing system recipes
+    // Upsert mode: update existing rows by name instead of skipping. Prevents
+    // DB drift when SAMPLE_RECIPES changes (e.g. URL migrations, new fields,
+    // template fixes). Passed via ?upsert=true or JSON body { upsert: true }.
+    const url = new URL(request.url)
+    const upsertQuery = url.searchParams.get('upsert') === 'true'
+    let upsertBody = false
+    try {
+      const body = await request.clone().json().catch(() => ({}))
+      upsertBody = Boolean((body as { upsert?: boolean })?.upsert)
+    } catch { /* no body */ }
+    const upsert = upsertQuery || upsertBody
+
+    // Get existing system recipes (id + name for update targeting)
     const { data: existing } = await supabase
       .from('user_recipes')
-      .select('name')
+      .select('id, name')
       .eq('is_system', true)
 
-    const existingNames = new Set((existing || []).map((r: { name: string }) => r.name))
+    const existingByName = new Map(
+      (existing || []).map((r: { id: string; name: string }) => [r.name, r.id])
+    )
 
-    // Filter to only recipes that don't already exist
-    const newRecipes = SAMPLE_RECIPES.filter(sample => !existingNames.has(sample.name))
+    logger.api.info('Seeding', {
+      totalSamples: SAMPLE_RECIPES.length,
+      existing: existingByName.size,
+      mode: upsert ? 'upsert' : 'insert-only',
+    })
 
-    if (newRecipes.length === 0) {
-      // Even if all user_recipes exist, still sync community_items
-      const communityCount = await seedCommunityItems(supabase)
-      return NextResponse.json({
-        success: true,
-        message: `All ${SAMPLE_RECIPES.length} system recipes already exist. Synced ${communityCount} to community.`,
-        count: 0,
-        existing: existingNames.size,
-        communitySeeded: communityCount,
-      })
-    }
-
-    logger.api.info('Seeding', { newRecipes: newRecipes.length, existingNames: existingNames.size })
     let insertedCount = 0
+    let updatedCount = 0
 
-    for (const sample of newRecipes) {
+    for (const sample of SAMPLE_RECIPES) {
       const dbRecipe = {
         user_id: null, // System recipes have no owner
         name: sample.name,
@@ -94,27 +99,49 @@ export async function POST(request: NextRequest) {
         is_system_only: sample.isSystemOnly || false,
       }
 
-      const { error } = await supabase
-        .from('user_recipes')
-        .insert(dbRecipe)
+      const existingId = existingByName.get(sample.name)
 
-      if (error) {
-        logger.api.error('Error inserting recipe', { name: sample.name, error: error instanceof Error ? error.message : String(error) })
+      if (existingId) {
+        if (!upsert) continue // insert-only mode — skip existing
+        // Update mutable fields; leave id and created_at alone
+        const { user_id: _uid, ...updatePayload } = dbRecipe
+        void _uid
+        const { error } = await supabase
+          .from('user_recipes')
+          .update({ ...updatePayload, updated_at: new Date().toISOString() })
+          .eq('id', existingId)
+        if (error) {
+          logger.api.error('Error updating recipe', { name: sample.name, error: error instanceof Error ? error.message : String(error) })
+        } else {
+          logger.api.info('Updated recipe', { name: sample.name, id: existingId })
+          updatedCount++
+        }
       } else {
-        logger.api.info('Inserted recipe', { name: sample.name })
-        insertedCount++
+        const { error } = await supabase
+          .from('user_recipes')
+          .insert(dbRecipe)
+        if (error) {
+          logger.api.error('Error inserting recipe', { name: sample.name, error: error instanceof Error ? error.message : String(error) })
+        } else {
+          logger.api.info('Inserted recipe', { name: sample.name })
+          insertedCount++
+        }
       }
     }
 
-    // Seed community_items with non-system-only recipes
-    const communityCount = await seedCommunityItems(supabase)
+    // Seed community_items with non-system-only recipes (same upsert mode)
+    const { seeded: communityCount, updated: communityUpdated } =
+      await seedCommunityItems(supabase, upsert)
 
     return NextResponse.json({
       success: true,
-      message: `Seeded ${insertedCount} new system recipes (${existingNames.size} already existed). Synced ${communityCount} to community.`,
+      message: `user_recipes: ${insertedCount} inserted, ${updatedCount} updated. community_items: ${communityCount} inserted, ${communityUpdated} updated.`,
       count: insertedCount,
-      existing: existingNames.size,
+      updated: updatedCount,
+      existing: existingByName.size,
       communitySeeded: communityCount,
+      communityUpdated,
+      upsert,
     })
   } catch (error) {
     logger.api.error('Error seeding recipes', { error: error instanceof Error ? error.message : String(error) })
@@ -128,81 +155,99 @@ export async function POST(request: NextRequest) {
 
 /**
  * Seed non-system-only recipes into community_items as pre-approved items.
- * Skips recipes that already exist in community_items (matched by type + name).
+ * In upsert mode, updates existing rows by name instead of skipping.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function seedCommunityItems(supabase: any): Promise<number> {
-  // Get existing community recipe names to avoid duplicates
+async function seedCommunityItems(supabase: any, upsert: boolean = false): Promise<{ seeded: number; updated: number }> {
+  // Get existing community recipes (id + name for update targeting)
   const { data: existingCommunity } = await supabase
     .from('community_items')
-    .select('name')
+    .select('id, name')
     .eq('type', 'recipe')
 
-  const existingCommunityNames = new Set(
-    (existingCommunity || []).map((r: { name: string }) => r.name)
+  const existingByName = new Map(
+    (existingCommunity || []).map((r: { id: string; name: string }) => [r.name, r.id])
   )
 
-  // Filter: skip isSystemOnly and already-existing community items
-  const communityRecipes = SAMPLE_RECIPES.filter(
-    sample => !sample.isSystemOnly && !existingCommunityNames.has(sample.name)
-  )
-
-  if (communityRecipes.length === 0) {
-    logger.api.info('All eligible recipes already in community_items')
-    return 0
-  }
+  const eligibleRecipes = SAMPLE_RECIPES.filter(sample => !sample.isSystemOnly)
 
   let seededCount = 0
+  let updatedCount = 0
   const now = new Date().toISOString()
 
-  for (const sample of communityRecipes) {
-    const communityItem = {
-      type: 'recipe' as const,
-      name: sample.name,
-      description: sample.description || null,
-      category: mapCategoryToCommunity(sample.categoryId),
-      tags: ['system'],
-      content: {
-        stages: sample.stages.map(stage => ({
-          id: stage.id,
-          order: stage.order,
-          template: stage.template,
-          fields: [],
-          referenceImages: stage.referenceImages || [],
-          ...(stage.type && { type: stage.type }),
-          ...(stage.analysisId && { analysisId: stage.analysisId }),
-        })),
-        suggestedAspectRatio: sample.suggestedAspectRatio || undefined,
-        recipeNote: sample.recipeNote || undefined,
-        referenceImages: [],
-      },
-      submitted_by: null,
-      submitted_by_name: 'System',
-      status: 'approved' as const,
-      approved_at: now,
-      is_featured: false,
+  for (const sample of eligibleRecipes) {
+    const communityContent = {
+      stages: sample.stages.map(stage => ({
+        id: stage.id,
+        order: stage.order,
+        template: stage.template,
+        fields: [],
+        referenceImages: stage.referenceImages || [],
+        ...(stage.type && { type: stage.type }),
+        ...(stage.analysisId && { analysisId: stage.analysisId }),
+      })),
+      suggestedAspectRatio: sample.suggestedAspectRatio || undefined,
+      recipeNote: sample.recipeNote || undefined,
+      referenceImages: [],
     }
 
-    const { error } = await supabase
-      .from('community_items')
-      .insert(communityItem)
+    const existingId = existingByName.get(sample.name)
 
-    if (error) {
-      logger.api.error('Error inserting community recipe', {
-        name: sample.name,
-        error: error instanceof Error ? error.message : String(error),
-      })
+    if (existingId) {
+      if (!upsert) continue
+      const { error } = await supabase
+        .from('community_items')
+        .update({
+          description: sample.description || null,
+          category: mapCategoryToCommunity(sample.categoryId),
+          tags: ['system'],
+          content: communityContent,
+          status: 'approved' as const,
+        })
+        .eq('id', existingId)
+      if (error) {
+        logger.api.error('Error updating community recipe', {
+          name: sample.name,
+          error: error instanceof Error ? error.message : String(error),
+        })
+      } else {
+        updatedCount++
+      }
     } else {
-      seededCount++
+      const communityItem = {
+        type: 'recipe' as const,
+        name: sample.name,
+        description: sample.description || null,
+        category: mapCategoryToCommunity(sample.categoryId),
+        tags: ['system'],
+        content: communityContent,
+        submitted_by: null,
+        submitted_by_name: 'System',
+        status: 'approved' as const,
+        approved_at: now,
+        is_featured: false,
+      }
+      const { error } = await supabase
+        .from('community_items')
+        .insert(communityItem)
+      if (error) {
+        logger.api.error('Error inserting community recipe', {
+          name: sample.name,
+          error: error instanceof Error ? error.message : String(error),
+        })
+      } else {
+        seededCount++
+      }
     }
   }
 
   logger.api.info('Community recipes seeded', {
     seeded: seededCount,
-    skipped: existingCommunityNames.size,
+    updated: updatedCount,
+    existing: existingByName.size,
   })
 
-  return seededCount
+  return { seeded: seededCount, updated: updatedCount }
 }
 
 export async function GET(request: NextRequest) {
