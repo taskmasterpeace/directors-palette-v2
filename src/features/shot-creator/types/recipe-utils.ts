@@ -207,7 +207,7 @@ export function buildStagePrompt(
 
   // Replace each field placeholder
   const fieldRegex = /<<([A-Z_0-9]+):([^>]+)>>/g;
-  result = result.replace(fieldRegex, (_match, name, typeSpec) => {
+  result = result.replace(fieldRegex, (_match, name, typeSpec, offset: number, fullStr: string) => {
     const fieldData = valueByName.get(name);
     let value = fieldData?.value || '';
     // Strip layout annotations (:rowN, :collapsed) — these are form-layout hints,
@@ -230,6 +230,14 @@ export function buildStagePrompt(
     // If optional and empty, return empty string to remove placeholder
     if (!value && !isRequired) {
       return '';
+    }
+
+    // WR 002 Bug 1: strip leading @ from name-type values when the template
+    // already hardcodes @ immediately before the placeholder. Without this,
+    // template "@<<PERSON_A:name!>>" + user value "@king" produces "@@king",
+    // which matches no gallery tag and breaks character reference resolution.
+    if (cleanType === 'name' && value.startsWith('@') && offset > 0 && fullStr[offset - 1] === '@') {
+      value = value.slice(1);
     }
 
     return value;

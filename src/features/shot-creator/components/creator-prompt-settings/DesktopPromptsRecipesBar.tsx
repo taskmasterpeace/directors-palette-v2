@@ -8,7 +8,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { ChevronLeft, ChevronDown, ChevronUp, BookOpen, FlaskConical, Save, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
+import { ChevronLeft, ChevronDown, ChevronUp, BookOpen, FlaskConical, Save, MoreHorizontal, Pencil, Trash2, Pin } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import { useRecipes } from '../../hooks/useRecipes'
 import { usePromptLibraryStore } from '../../store/prompt-library-store'
@@ -94,8 +94,20 @@ export function DesktopPromptsRecipesBar({
         .filter((item) => item.type === 'recipe' && item.recipeId)
         .sort((a, b) => a.order - b.order)
 
-    // All visible recipes (user-owned + system, excluding system-only)
-    const allRecipes = recipes.filter(r => !r.isSystemOnly)
+    // All visible recipes (user-owned + system, excluding system-only).
+    // Pinned recipes float to the front so pinning has a visible effect in the bar.
+    const pinnedOrder = new Map(quickAccessRecipes.map((q, i) => [q.recipeId, i]))
+    const allRecipes = recipes
+        .filter(r => !r.isSystemOnly)
+        .slice()
+        .sort((a, b) => {
+            const aPinned = pinnedOrder.has(a.id)
+            const bPinned = pinnedOrder.has(b.id)
+            if (aPinned && !bPinned) return -1
+            if (!aPinned && bPinned) return 1
+            if (aPinned && bPinned) return (pinnedOrder.get(a.id)! - pinnedOrder.get(b.id)!)
+            return 0
+        })
 
     // Prompt library store
     const { prompts, categories, addPrompt, updatePrompt, deletePrompt } = usePromptLibraryStore()
@@ -425,10 +437,14 @@ export function DesktopPromptsRecipesBar({
                                                                 className={cn(
                                                                     'h-10 lg:h-8 px-4 lg:px-3 pr-8 lg:pr-7 text-sm lg:text-xs whitespace-nowrap',
                                                                     'bg-card hover:bg-amber-500/20 border-border',
-                                                                    qaItem ? 'border-l-2 border-l-amber-500' : 'border-l-2 border-l-transparent',
-                                                                    recipe.isSystem && !recipe.categoryId ? 'opacity-70' : ''
+                                                                    qaItem ? 'border-l-2 border-l-amber-500 bg-amber-500/10' : 'border-l-2 border-l-transparent',
+                                                                    recipe.isSystem && !recipe.categoryId ? 'opacity-70' : '',
+                                                                    'flex items-center gap-1.5'
                                                                 )}
                                                             >
+                                                                {qaItem && (
+                                                                    <Pin className="w-3 h-3 text-amber-500 fill-amber-500 shrink-0" />
+                                                                )}
                                                                 {qaItem?.label || recipe.name}
                                                             </Button>
                                                             <DropdownMenu>

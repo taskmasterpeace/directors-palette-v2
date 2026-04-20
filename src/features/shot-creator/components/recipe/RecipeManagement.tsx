@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Pencil, Trash2, Pin, PinOff, Copy, FlaskConical } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { useRecipeStore } from '../../store/recipe.store'
 import { cn } from '@/utils/utils'
@@ -43,10 +44,19 @@ export function RecipeManagement({ isOpen, onEditRecipe, onClose }: RecipeManage
   const handleTogglePin = async (recipe: typeof userRecipes[0]) => {
     if (isQuickAccess(recipe.id)) {
       const qaId = getQuickAccessId(recipe.id)
-      if (qaId) await removeFromQuickAccess(qaId)
+      if (qaId) {
+        await removeFromQuickAccess(qaId)
+        toast.success(`Unpinned "${recipe.name}" from quick access`)
+      }
     } else {
       const label = recipe.quickAccessLabel || recipe.name.substring(0, 10)
-      await addToQuickAccess(recipe.id, label)
+      const ok = await addToQuickAccess(recipe.id, label)
+      if (ok) {
+        toast.success(`Pinned "${recipe.name}" to quick access bar`)
+      } else {
+        // addToQuickAccess returns false when at the 9-item cap or on DB error
+        toast.error('Quick access bar is full (max 9). Unpin one first.')
+      }
     }
   }
 
