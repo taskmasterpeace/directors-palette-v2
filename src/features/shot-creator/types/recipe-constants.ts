@@ -44,4 +44,8 @@ export const SYSTEM_TEMPLATE_URLS = {
   characterSheetV3: `${SUPABASE_URL}/storage/v1/object/public/templates/system/character-sheets/charactersheet-v3.jpg`,
   wardrobeGrid: `${SUPABASE_URL}/storage/v1/object/public/templates/system/grids/wardrobe-2x3.png`,
   styleGuide9Tile: `${SUPABASE_URL}/storage/v1/object/public/templates/system/grids/style-guide-9tile.png`,
+  // NOTE: brand-guide template lives in the legacy `directors-palette` bucket,
+  // not `templates`. Consider migrating to `templates/system/brand-guides/`
+  // alongside the others at next storage reorg.
+  brandGuideTemplate: `${SUPABASE_URL}/storage/v1/object/public/directors-palette/templates/system/brand-guides/brand-visual-guide-template.png`,
 };

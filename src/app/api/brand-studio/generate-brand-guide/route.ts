@@ -5,13 +5,13 @@ import { createLogger } from '@/lib/logger'
 import Replicate from 'replicate'
 import { createClient } from '@supabase/supabase-js'
 import { creditsService } from '@/features/credits/services/credits.service'
+import { SYSTEM_TEMPLATE_URLS } from '@/features/shot-creator/types/recipe-constants'
 
 export const maxDuration = 120
 
 const log = createLogger('BrandStudio')
 
-const BRAND_GUIDE_TEMPLATE_URL =
-  'https://tarohelkwuurakbxjyxm.supabase.co/storage/v1/object/public/directors-palette/templates/system/brand-guides/brand-visual-guide-template.png'
+const BRAND_GUIDE_TEMPLATE_URL = SYSTEM_TEMPLATE_URLS.brandGuideTemplate
 
 const STORAGE_BUCKET = 'directors-palette'
 
