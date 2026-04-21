@@ -92,6 +92,9 @@ export async function POST(request: NextRequest) {
         is_quick_access: false,
         category_id: itemData.category || null,
         is_system: false,
+        // Mark provenance so the UI shows "From catalog" instead of "Created by you".
+        // RecipeManagement.tsx switches on recipe.source to label origin.
+        source: 'catalog',
       }
 
       // Check if user already has this recipe

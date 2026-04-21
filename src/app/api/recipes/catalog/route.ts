@@ -150,6 +150,8 @@ export async function POST(request: NextRequest) {
         ...content,
         is_system: false,
         source_catalog_id: catalogItemId,
+        // Provenance tag — makes the My Recipes list show "From catalog" on this row.
+        source: 'catalog',
       })
       .select('id')
       .single()
