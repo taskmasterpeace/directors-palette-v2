@@ -3596,25 +3596,27 @@ All on-screen text renders as clean, modern, bold sans-serif (Impact / Anton / B
   },
 
   // AIOBR Title Card — documentary chapter title card creator.
-  // One LAYOUT_PRESET per project gives consistent theming across every chapter.
-  // 8 refs baked in: 6 layout-family examples + 2 existing AIOBR thumbs for brand continuity.
+  // LAYOUT is what this recipe controls. STYLE comes from the Shot Creator dropdown.
+  // Pick one LAYOUT per project for consistent theming across every chapter.
+  // 5 refs baked in (layout/composition only, style-neutral).
   {
     name: 'AIOBR Title Card',
-    description: 'Documentary chapter title card creator — pick one LAYOUT_PRESET and every chapter stays on theme. Five layout families: Text-First pulp, Cinematic photo, Atmospheric painterly, Diegetic sign, and Typographic poster. Illustration rendering is driven by the Shot Creator Style dropdown.',
-    recipeNote: 'Pick a LAYOUT_PRESET when you start your project and use it for EVERY chapter title card — that\'s how you keep a consistent theme across the whole documentary. The 8 attached images are layout/typography references from different unrelated content — the model uses them to learn composition and title hierarchy, NOT subject matter. Illustration rendering still comes from the Shot Creator Style dropdown.',
+    description: 'Documentary chapter title card creator. Pick ONE LAYOUT per project and use it for every chapter — consistency keeps the whole doc on theme. Visual style (painterly, cinematic, comic, 3D, etc.) comes from the Shot Creator Style dropdown — not baked in here.',
+    recipeNote: 'This recipe controls LAYOUT (where the title sits, how it relates to the image). STYLE (painterly, cinematic, comic, etc.) comes from the Shot Creator Style dropdown — pick whatever matches your project. Use the SAME layout across all chapter title cards for visual consistency. The 5 attached images are composition references from unrelated content — use only for layout hierarchy, not subject or style.',
     suggestedModel: 'nano-banana-2',
     suggestedAspectRatio: '16:9',
     stages: [{
       id: generateStageId(),
       order: 0,
-      template: `Design a cinematic documentary CHAPTER TITLE CARD.
+      template: `Design a documentary CHAPTER TITLE CARD.
 
 === REFERENCE IMAGES DIRECTIVE (READ FIRST) ===
-The 8 attached reference images are EXAMPLES OF TITLE CARDS AND THUMBNAILS from UNRELATED content and different genres. They feature DIFFERENT subjects, DIFFERENT stories, DIFFERENT text. DO NOT reproduce the people, clothing, backgrounds, or captions from them. USE THEM STRICTLY AS A GUIDE FOR:
+The attached reference images are LAYOUT examples from UNRELATED content. They feature different subjects, different stories, different text. DO NOT reproduce the people, clothing, backgrounds, or captions from them. DO NOT copy their visual style. USE THEM STRICTLY AS A GUIDE FOR:
 - Typographic hierarchy (title dominant, supporting text secondary)
-- Layout conventions (how title, subtitle, chapter number are arranged)
-- Compositional framing (negative space, balance, text placement)
-- Overall visual energy and punch
+- Text placement and negative-space balance
+- Overall compositional energy
+
+Visual rendering style (painterly, cinematic, comic, 3D, photographic, etc.) is controlled by the user's selected app-level style — NOT by these refs and NOT by this prompt.
 
 === THIS TITLE CARD ===
 CHAPTER NUMBER: "<<CHAPTER_NUMBER:text:row1>>"
@@ -3622,45 +3624,35 @@ CHAPTER TITLE (HERO — biggest text on screen): "<<CHAPTER_TITLE:text!:row1>>"
 SUBTITLE: "<<SUBTITLE:text:row2>>"
 MOOD: <<MOOD:select(Damning,Gritty,Cinematic,Triumphant,Ominous,Tragic,Defiant,Electric,Nostalgic,Somber)!>>
 
-=== LAYOUT PRESET: <<LAYOUT_PRESET:select(Text-First Pulp,Cinematic Photo,Atmospheric Painterly,Diegetic Sign,Typographic Poster)!>> ===
+=== LAYOUT: <<LAYOUT:select(Text Over Image,Text Only,Diegetic In-Scene,Full-Bleed Type)!>> ===
 
-ACTIVE STYLE RULES (apply ONLY the block matching the selected LAYOUT_PRESET above — ignore the others):
+ACTIVE LAYOUT RULES (apply ONLY the block matching the selected LAYOUT above — ignore the others):
 
-[IF LAYOUT_PRESET = "Text-First Pulp"]
-Render the card as a text-dominant pulp comic cover. Minimal or no illustration — the TYPE is the image.
-- Flat saturated color background (deep crimson, mustard yellow, or navy — pick per MOOD)
-- CHAPTER TITLE rendered as bold blocky geometric letterforms filling 60-70% of frame
-- Thick black or white outline on all text for legibility
-- Subtle comic-book halftone texture or ink spatter optional
-- NO photographic elements, NO atmospheric scenes
+[IF LAYOUT = "Text Over Image"]
+- The image fills the frame as the backdrop. Subject/environment is chosen to reinforce MOOD.
+- CHAPTER TITLE is overlaid ON TOP of the image — not integrated into the scene, not part of the world.
+- Use a clean bold sans-serif for legibility against the background (treatment adapts to selected style).
+- Add a subtle outline or drop shadow so the title stays readable against whatever is behind it.
+- Negative space: leave one clear zone where the title lives — don't fight the focal point of the image.
 
-[IF LAYOUT_PRESET = "Cinematic Photo"]
-Render the card as a cinematic establishing shot with title overlaid.
-- Atmospheric documentary-style backdrop (empty venue, dim interior, cityscape, alleyway — chosen to reinforce MOOD)
-- Backdrop photographed or rendered with cinematic color grading, dramatic lighting, 50mm feel
-- CHAPTER TITLE rendered as clean bold sans-serif (Impact / Anton / Bebas) overlaid on the backdrop
-- Thick white outline with subtle drop shadow for legibility against the photographic background
+[IF LAYOUT = "Text Only"]
+- NO illustration, NO photograph, NO scene. Pure typographic card.
+- Solid or gradient background chosen to reinforce MOOD (deep red for Damning, black for Ominous, cream for Nostalgic, etc.).
+- Title and supporting text rendered with expressive typography — weight, case, and graphic elements (rules, drop caps, pullquotes) can vary.
+- Think prestige-doc end card or a magazine article opener.
 
-[IF LAYOUT_PRESET = "Atmospheric Painterly"]
-Render the card as a moody painterly illustration — the title design is integrated into the atmosphere.
-- Painterly noir backdrop with dramatic chiaroscuro, deep shadows, muted cinematic palette
-- CHAPTER TITLE rendered in a custom stylized letterform that reinforces the mood (gothic, stenciled, broken, scratched)
-- Supporting elements may include a silhouette, a rain-slick street, a single dramatic light source
-- Think Batman: The Animated Series episode card — the type design CARRIES the mood
+[IF LAYOUT = "Diegetic In-Scene"]
+- CHAPTER TITLE appears as an ACTUAL OBJECT in the world — not an overlay.
+- Choose a surface that fits the MOOD: police evidence board, courtroom placard, wooden plaque, engraved stone, chalkboard, neon sign, weathered newspaper, manila tag, etched glass.
+- Title is physically ON that surface with correct perspective, lighting, and material texture.
+- Camera is framed on the object with environmental context visible around it.
+- Viewer reads the title as a thing they're looking at in the scene.
 
-[IF LAYOUT_PRESET = "Diegetic Sign"]
-Render the card so the title appears as an actual OBJECT in the scene — not an overlay.
-- Choose a surface that fits the MOOD: police evidence board / courtroom placard / wooden plaque / engraved stone / chalkboard / neon sign / weathered newspaper / manila paper tag
-- CHAPTER TITLE is physically ON that surface, with realistic lighting, perspective, and material texture
-- Camera framed on the object with environmental context visible around it
-- Viewer reads the title as a thing they're looking at in the world
-
-[IF LAYOUT_PRESET = "Typographic Poster"]
-Render the card as a pure typographic poster — no illustration at all.
-- Solid or gradient background chosen per MOOD (deep red for Damning, black for Ominous, cream for Nostalgic)
-- Title and supporting text rendered in expressive typography — can mix weights, cases, colors
-- Optional graphic elements: a horizontal rule, a drop cap, a pullquote treatment
-- Think prestige documentary end-card or a New Yorker article opener
+[IF LAYOUT = "Full-Bleed Type"]
+- Type IS the image. Title fills 60-70% of the frame as dominant geometric letterforms.
+- Minimal or no illustration. Background is a flat color or subtle gradient chosen per MOOD.
+- Thick outline on the letterforms for punch.
+- Supporting text (chapter number, subtitle) reads as small trim around the massive title.
 
 === UNIVERSAL COMPOSITION RULES ===
 - CHAPTER TITLE is the HERO text — biggest, highest contrast, dominant.
@@ -3676,14 +3668,11 @@ All rendered text must be SPELLED EXACTLY as specified — no typos, no characte
 <<NARRATIVE_CONTEXT:text:collapsed>>`,
       fields: [],
       referenceImages: [
-        { id: 'aiobr_tc_ref_1', url: 'https://tarohelkwuurakbxjyxm.supabase.co/storage/v1/object/public/templates/system/aiobr-title-cards/text-first-pulp-comic-grid.jpg', name: 'Text-First layout ref', isStatic: true },
-        { id: 'aiobr_tc_ref_2', url: 'https://tarohelkwuurakbxjyxm.supabase.co/storage/v1/object/public/templates/system/aiobr-title-cards/style-sheet-32bit-pixel.png', name: 'Style-sheet meta-pattern (32bit)', isStatic: true },
-        { id: 'aiobr_tc_ref_3', url: 'https://tarohelkwuurakbxjyxm.supabase.co/storage/v1/object/public/templates/system/aiobr-title-cards/style-sheet-action-figure.png', name: 'Style-sheet meta-pattern (action figure)', isStatic: true },
-        { id: 'aiobr_tc_ref_4', url: 'https://tarohelkwuurakbxjyxm.supabase.co/storage/v1/object/public/templates/system/aiobr-title-cards/atmospheric-painterly-noir.jpg', name: 'Atmospheric painterly layout ref', isStatic: true },
-        { id: 'aiobr_tc_ref_5', url: 'https://tarohelkwuurakbxjyxm.supabase.co/storage/v1/object/public/templates/system/aiobr-title-cards/diegetic-signs-in-scene.png', name: 'Diegetic-sign layout ref', isStatic: true },
-        { id: 'aiobr_tc_ref_6', url: 'https://tarohelkwuurakbxjyxm.supabase.co/storage/v1/object/public/templates/system/aiobr-title-cards/typographic-poster-grid.png', name: 'Typographic layout ref', isStatic: true },
-        { id: 'aiobr_tc_ref_7', url: 'https://tarohelkwuurakbxjyxm.supabase.co/storage/v1/object/public/templates/system/aiobr-thumbnails/drugz-the-crimes-against-him-oiwcztoke0.jpg', name: 'AIOBR brand-continuity ref 1', isStatic: true },
-        { id: 'aiobr_tc_ref_8', url: 'https://tarohelkwuurakbxjyxm.supabase.co/storage/v1/object/public/templates/system/aiobr-thumbnails/the-horrific-nightmare-of-hitman-holla-abdiqwjwtlu.jpg', name: 'AIOBR brand-continuity ref 2', isStatic: true },
+        { id: 'aiobr_tc_ref_1', url: SYSTEM_TEMPLATE_URLS.aiobrTitleCardTextFirst, name: 'Full-Bleed Type layout ref', isStatic: true },
+        { id: 'aiobr_tc_ref_2', url: SYSTEM_TEMPLATE_URLS.aiobrTitleCardDiegetic, name: 'Diegetic In-Scene layout ref', isStatic: true },
+        { id: 'aiobr_tc_ref_3', url: SYSTEM_TEMPLATE_URLS.aiobrTitleCardTypographic, name: 'Text Only layout ref', isStatic: true },
+        { id: 'aiobr_tc_ref_4', url: SYSTEM_TEMPLATE_URLS.aiobrThumbDrugz, name: 'Text Over Image layout ref (AIOBR)', isStatic: true },
+        { id: 'aiobr_tc_ref_5', url: SYSTEM_TEMPLATE_URLS.aiobrThumbHitmanHolla, name: 'Text Over Image layout ref (AIOBR)', isStatic: true },
       ],
     }],
     requiresImage: false,

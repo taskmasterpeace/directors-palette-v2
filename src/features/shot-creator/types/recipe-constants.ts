@@ -60,4 +60,9 @@ export const SYSTEM_TEMPLATE_URLS = {
   aiobrTitleCardAtmospheric: `${SUPABASE_URL}/storage/v1/object/public/templates/system/aiobr-title-cards/atmospheric-painterly-noir.jpg`,
   aiobrTitleCardDiegetic: `${SUPABASE_URL}/storage/v1/object/public/templates/system/aiobr-title-cards/diegetic-signs-in-scene.png`,
   aiobrTitleCardTypographic: `${SUPABASE_URL}/storage/v1/object/public/templates/system/aiobr-title-cards/typographic-poster-grid.png`,
+
+  // AIOBR brand-continuity refs (reused from the AIOBR Thumbnail recipe as
+  // layout refs for the Text Over Image title card layout).
+  aiobrThumbDrugz: `${SUPABASE_URL}/storage/v1/object/public/templates/system/aiobr-thumbnails/drugz-the-crimes-against-him-oiwcztoke0.jpg`,
+  aiobrThumbHitmanHolla: `${SUPABASE_URL}/storage/v1/object/public/templates/system/aiobr-thumbnails/the-horrific-nightmare-of-hitman-holla-abdiqwjwtlu.jpg`,
 };
