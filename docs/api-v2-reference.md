@@ -515,6 +515,8 @@ Generate a 3x3 cinematic camera angles grid from a reference image. The same sub
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `image_url` | string | Yes | URL of the reference image |
+| `skip_labels` | boolean | No | Strip all text/labels from the output so each cell is pure imagery. Use this when you plan to slice the 3x3 grid into individual cells for Seedance/Runway. Defaults to `false` (labels rendered) for backward compatibility. |
+| `clean` | boolean | No | Alias for `skip_labels`. |
 
 **Response (200):**
 
@@ -525,22 +527,110 @@ Generate a 3x3 cinematic camera angles grid from a reference image. The same sub
     "url": "https://storage.example.com/images/angles-abc123.jpg",
     "prediction_id": "abc123",
     "grid_type": "angles",
+    "skip_labels": false,
     "pts_used": 20
   }
 }
 ```
 
-**Example:**
+**Examples:**
 
 ```bash
+# Default — labels baked into each cell (contact-sheet aesthetic)
 curl -X POST https://directorspalette.com/api/v2/images/angles \
   -H "Authorization: Bearer dp_your_key_here" \
   -H "Content-Type: application/json" \
   -d '{ "image_url": "https://example.com/my-character.jpg" }'
+
+# Clean grid — no text anywhere, safe to slice into individual shots
+curl -X POST https://directorspalette.com/api/v2/images/angles \
+  -H "Authorization: Bearer dp_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{ "image_url": "https://example.com/my-character.jpg", "skip_labels": true }'
 ```
 
 **Errors:**
 - `422` -- Missing `image_url`
+- `402` -- Insufficient pts balance
+
+---
+
+### POST /api/v2/images/camera-angle
+
+Orbit the camera around the subject in a reference image while preserving identity and lighting. Same engine as the Shot Creator's 3D gizmo — produces matched coverage of a locked subject (e.g. two characters in a dialogue scene filmed from the same master, but with the camera rotated to cover each one).
+
+Backed by `qwen-image-edit` + a multi-angle LoRA that maps azimuth/elevation/distance values to camera-pose tokens the model understands.
+
+**Request Body:**
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `image_url` | string | Yes | — | URL of the reference image |
+| `azimuth` | number | No | `0` | Horizontal rotation in degrees (0–360). 0=front, 90=right, 180=back, 270=left |
+| `elevation` | number | No | `0` | Vertical tilt in degrees, -30 (low) to 60 (high) |
+| `distance` | number | No | `5` | 0=wide, 10=close-up |
+| `prompt` | string | No | — | Optional extra prompt appended after the camera tokens |
+| `lora_scale` | number | No | `1.25` | LoRA strength, 0–4. Higher = stronger camera-angle adherence |
+| `aspect_ratio` | string | No | `match_input_image` | One of `1:1`, `16:9`, `9:16`, `4:3`, `3:4`, `match_input_image` |
+| `output_format` | string | No | `webp` | `jpg`, `png`, or `webp` |
+
+Out-of-range numeric values are clamped, not rejected (matches Shot Creator slider behavior).
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "url": "https://storage.example.com/images/camera-angle-abc123.webp",
+    "prediction_id": "abc123",
+    "camera": {
+      "azimuth": 90,
+      "elevation": 0,
+      "distance": 5,
+      "description": "right side view, eye-level shot, medium shot",
+      "lora_scale": 1.25
+    },
+    "aspect_ratio": "match_input_image",
+    "output_format": "webp",
+    "pts_used": 5
+  }
+}
+```
+
+**Example — generate a 90° right-side view of a locked subject:**
+
+```bash
+curl -X POST https://directorspalette.com/api/v2/images/camera-angle \
+  -H "Authorization: Bearer dp_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "image_url": "https://example.com/master-shot.jpg",
+    "azimuth": 90,
+    "elevation": 0,
+    "distance": 5
+  }'
+```
+
+**Example — hero low angle at closer distance:**
+
+```bash
+curl -X POST https://directorspalette.com/api/v2/images/camera-angle \
+  -H "Authorization: Bearer dp_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "image_url": "https://example.com/character.jpg",
+    "azimuth": 30,
+    "elevation": -20,
+    "distance": 7,
+    "lora_scale": 1.5
+  }'
+```
+
+**Cost:** 5 pts per image.
+
+**Errors:**
+- `422` -- Missing `image_url` or non-numeric camera parameter
 - `402` -- Insufficient pts balance
 
 ---
@@ -921,15 +1011,72 @@ When complete, the job result contains:
 {
   "result": {
     "image_urls": ["https://...", "https://..."],
-    "final_image_url": "https://..."
+    "final_image_url": "https://...",
+    "metadata": {
+      "resolved_prompts": [
+        "Stage 1 fully-substituted prompt after fields + refs were injected...",
+        "Stage 2 fully-substituted prompt..."
+      ],
+      "reference_images_used": [
+        ["https://...stage1-ref1.jpg", "https://...stage1-ref2.jpg"],
+        ["https://...stage2-ref1.jpg"]
+      ]
+    }
   }
 }
 ```
+
+The `metadata` block is the audit trail for recipe execution — it's the source of truth when debugging why a recipe produced a given output. `resolved_prompts` is one entry per stage, in order. `reference_images_used` is a parallel array — one inner array per stage listing every reference image URL that was passed to the model for that stage (including images injected from the recipe's baked-in refs plus any you passed via `reference_images` / `reference_image`).
+
+If a recipe execution looks wrong, poll the job, inspect `result.metadata.resolved_prompts[n]` for stage `n`, and check `result.metadata.reference_images_used[n]` to see exactly what the model saw.
 
 **Errors:**
 - `422` -- Missing `recipe_id` or `fields`, missing required field values
 - `404` -- Recipe not found
 - `402` -- Insufficient pts (cost = number of generation stages x model cost)
+
+---
+
+### GET /api/v2/recipes/{id}
+
+Fetch a single recipe by ID. Returns the same shape as each entry in `GET /api/v2/recipes`, plus the full `stages` array (template + reference images) so you can inspect exactly what will be executed.
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "recipe": {
+      "id": "75e6701b-5ded-4f2e-8a5c-18b2c8acd78f",
+      "name": "AIOBR Title Card",
+      "description": "...",
+      "category": "scenes",
+      "source": "system",
+      "fields": [
+        { "name": "CHAPTER_TITLE", "label": "Chapter title", "type": "text", "required": true },
+        { "name": "LAYOUT", "label": "Layout", "type": "select", "required": true, "options": ["Text Over Image", "Text Only", "Diegetic In-Scene", "Full-Bleed Type"] }
+      ],
+      "suggested_model": "nano-banana-2",
+      "suggested_aspect_ratio": "16:9",
+      "recipe_note": "...",
+      "stages": [
+        {
+          "id": "stage_...",
+          "order": 0,
+          "template": "Design a documentary CHAPTER TITLE CARD...",
+          "reference_images": [
+            { "id": "aiobr_tc_ref_1", "name": "...", "url": "https://..." }
+          ]
+        }
+      ]
+    }
+  }
+}
+```
+
+**Errors:**
+- `404` -- Recipe not found (or caller is not the owner of a non-system recipe)
 
 ---
 

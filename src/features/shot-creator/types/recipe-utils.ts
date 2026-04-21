@@ -7,6 +7,32 @@ import type { RecipeField, RecipeFieldType, RecipeFieldValues } from './recipe-f
 import type { RecipeStage } from './recipe-stage.types';
 import { RECIPE_TOOLS, type RecipeToolId } from './recipe-tools.types';
 
+/**
+ * Extract the contents of a balanced parenthesized expression that starts
+ * with `prefix` (e.g. `select(` or `wildcard(`).
+ *
+ * Returns the string between the outer parens, or null if no balanced
+ * match is found. Supports nested parens so option labels like
+ * "Shocked (wide eyes)" work correctly.
+ */
+function extractBalancedParens(input: string, prefix: string): string | null {
+  const start = input.indexOf(prefix);
+  if (start === -1) return null;
+  let depth = 0;
+  let i = start + prefix.length - 1; // land on the opening `(`
+  for (; i < input.length; i++) {
+    const ch = input[i];
+    if (ch === '(') depth++;
+    else if (ch === ')') {
+      depth--;
+      if (depth === 0) {
+        return input.slice(start + prefix.length, i);
+      }
+    }
+  }
+  return null;
+}
+
 // Server-safe UUID generator (crypto.randomUUID() is not available on server during SSR)
 let uuidCounter = 0;
 export function generateStageId(): string {
@@ -75,9 +101,12 @@ export function parseStageTemplate(template: string, stageIndex: number): Recipe
       type = 'text';
     } else if (cleanTypeSpec.startsWith('select(')) {
       type = 'select';
-      const optionsMatch = cleanTypeSpec.match(/select\(([^)]+)\)/);
-      if (optionsMatch) {
-        options = optionsMatch[1].split(',').map(o => o.trim());
+      // Balanced-paren extraction: options may contain nested parens
+      // like "Shocked (wide eyes)" — a naive /select\(([^)]+)\)/ regex would
+      // stop at the first `)` and truncate the option list to the first entry.
+      const inner = extractBalancedParens(cleanTypeSpec, 'select(');
+      if (inner !== null) {
+        options = inner.split(',').map(o => o.trim()).filter(Boolean);
       }
     } else if (cleanTypeSpec.startsWith('wildcard(')) {
       type = 'wildcard' as RecipeFieldType;
