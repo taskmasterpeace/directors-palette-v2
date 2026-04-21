@@ -238,3 +238,31 @@ Both dropdowns contain exactly one option, each with a truncated open-paren that
 ## Bug 8 (minor) — `result.metadata` is nested, not top-level
 
 Not a correctness bug, a documentation/ergonomics one. The fix that resolved B5 put metadata at `job.result.metadata` rather than `job.metadata`. Easy to miss — I looked at the top-level keys first and concluded B5 was still open. Suggestion: either hoist a `metadata` alias to top-level on the job response, or explicitly document the nested path in the API reference. Low priority.
+
+## Request 9 — expose Qwen Camera Angle on the v2 public API
+
+**Filed 2026-04-21** alongside the angles-endpoint findings.
+
+The Shot Creator UI has a "Camera Angle" feature backed by the Qwen Image Edit (Camera Angle) model — a 3D gizmo with `cameraAzimuth` / `cameraElevation` / `cameraDistance` sliders that orbits the camera around a locked subject while preserving lighting, wardrobe, and scene. Code lives at `src/features/shot-creator/components/camera-angle/CameraAngleSection.tsx` and consumes these settings through `/api/generation/image` (v1, internal).
+
+There's no equivalent on `/api/v2`. `src/app/api/v2/images/` only has `angles` (3×3 grid, baked labels, single-subject), `broll`, `generate`, and `upload`.
+
+For AIOBR's battle-rap dialogue scenes this is the *real* solution to the multi-subject problem — instead of rerunning `/images/angles` against two different masters, we'd lock one master and orbit the camera to get close coverage of both K1NG and Yunus in the same scene with identical lighting. Angles endpoint cannot do this because its `GRID_PROMPT` forces single-subject.
+
+**Ask:** expose a v2 endpoint (e.g., `POST /api/v2/images/camera-angle` or a `camera_angle` input on `/images/generate`) that accepts:
+```
+{
+  image_url: string,
+  azimuth: number,     // degrees, horizontal orbit
+  elevation: number,   // degrees, vertical tilt
+  distance: number,    // zoom multiplier
+  model: "qwen-image-edit-camera-angle"  // or whatever's internal
+}
+```
+Returns a single image (not a grid) of the same subject/scene from the new camera angle. Cost whatever makes sense — this would replace multiple angles-endpoint calls, so even 15-20 pts per call is fine.
+
+**Why this is valuable for programmatic callers:**
+- Dialogue coverage for multi-subject scenes (our primary battle rap use case)
+- True A/B/C coverage for a single hero shot (instead of 9 locked cells)
+- Lighting continuity across cuts — Seedance/Runway love camera-move inputs that share lighting
+- UI has it, API doesn't — gap worth closing so external integrations aren't at a capability disadvantage.
