@@ -2,7 +2,9 @@
 
 import React, { memo, useState, useRef, useCallback } from 'react'
 import Image from 'next/image'
-import { Image as ImageIcon, Film, Trash2, Wand2, ZoomIn, Replace, Clapperboard, Info, AlertTriangle, Video as VideoIcon } from 'lucide-react'
+import { Image as ImageIcon, Film, Trash2, Wand2, ZoomIn, Replace, Clapperboard, Info, AlertTriangle, Video as VideoIcon, Grid3X3 } from 'lucide-react'
+import { ContactSheetGenerator, type ContactSheetMode } from './ContactSheetGenerator'
+import { useShotAnimatorStore } from '../store/shot-animator.store'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -56,6 +58,12 @@ const CompactShotCardComponent = ({
   onDropLastFrame,
 }: CompactShotCardProps) => {
   const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false)
+  // Contact-sheet generator (angles / b-roll) modal state. When set, the modal
+  // generates a 3x3 grid from this shot's start frame and — on send — adds a
+  // new ShotAnimationConfig to the store with the grid as its start frame and
+  // a prebuilt creative prompt.
+  const [contactSheetMode, setContactSheetMode] = useState<ContactSheetMode | null>(null)
+  const addShotConfig = useShotAnimatorStore((s) => s.addShotConfig)
   // Persisted per-shot on the config so each shot can independently opt into
   // multi-shot prompts. Falls back to false when the config doesn't have the
   // flag yet (older shots in persisted storage from before this change).
@@ -573,6 +581,29 @@ const CompactShotCardComponent = ({
               <Info className="w-3 h-3 mr-1" />
               {showTips ? 'Hide Tips' : 'Prompt Tips'}
             </Button>
+            {/* Angles / B-Roll contact sheet — generates a 3x3 grid from this
+                shot's start frame and sends it back into the animator as a
+                new shot with a prebuilt creative prompt. 20 pts each. */}
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setContactSheetMode('angles')}
+              className="h-6 px-2 text-[10px] text-muted-foreground hover:text-white bg-secondary/50"
+              title="Generate a 3x3 angles contact sheet (20 pts) and send it to a new animator shot"
+            >
+              <Grid3X3 className="w-3 h-3 mr-1" />
+              Angles
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setContactSheetMode('broll')}
+              className="h-6 px-2 text-[10px] text-muted-foreground hover:text-white bg-secondary/50"
+              title="Generate a 3x3 B-roll contact sheet (20 pts) and send it to a new animator shot"
+            >
+              <Film className="w-3 h-3 mr-1" />
+              B-Roll
+            </Button>
           </div>
           {/* Prompt Tips Panel */}
           {showTips && (
@@ -730,6 +761,32 @@ const CompactShotCardComponent = ({
         file={pendingVideoFile}
         onConfirm={handleVideoCropConfirm}
       />
+
+      {/* Contact Sheet Generator — Angles / B-Roll 3x3 grid → new shot */}
+      {contactSheetMode && (
+        <ContactSheetGenerator
+          open={contactSheetMode !== null}
+          onOpenChange={(next) => { if (!next) setContactSheetMode(null) }}
+          mode={contactSheetMode}
+          sourceImageUrl={config.imageUrl}
+          sourceImageName={config.imageName}
+          onSendToAnimator={(gridUrl, suggestedPrompt, suggestedName) => {
+            addShotConfig({
+              id: `shot-${Date.now()}-${Math.random()}`,
+              imageUrl: gridUrl,
+              imageName: suggestedName,
+              prompt: suggestedPrompt,
+              referenceImages: [],
+              includeInBatch: true,
+              generatedVideos: [],
+            })
+            toast({
+              title: 'Sent to animator',
+              description: `New shot "${suggestedName}" added with prebuilt prompt.`,
+            })
+          }}
+        />
+      )}
     </>
   )
 }
