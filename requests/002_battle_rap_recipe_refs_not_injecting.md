@@ -213,3 +213,28 @@ Visual match for the verification run: @king = right character, long dreads, bla
 **Angles has one caveat worth documenting:** the endpoint picks the most prominent subject from the master and generates 9 angles of that subject. In our 2-character master, K1NG (right, pointing, foreground) became the subject. The extreme-wide and wide cells preserve both characters, but medium-through-close-up cells only show K1NG — Yunus drops out of coverage.
 
 For battle/dialogue scenes that need both characters in close coverage, the workaround is running angles twice against two different masters (one K1NG-forward, one Yunus-forward). Not a bug per se, but might be worth either (a) documenting in the endpoint's response, (b) adding a `subject_index` or `multi_subject` flag, or (c) auto-detecting multi-subject masters and generating a 2×9 grid. Would be a nice-to-have, not urgent.
+
+**Further evidence (2026-04-21 second angles run, `09_f2f_angles.png`):** ran angles against a perfectly symmetrical 2-char master (face-to-face medium shot of @king + @yunus, both equally framed in profile, equal lighting). Result: 9 cells of K1NG only. Yunus absent from every cell including extreme wide. Model also hallucinated a label — titled the contact sheet `"JAYSON (DREADLOCKS/GREEN HOODIE)"` instead of using a provided name. The endpoint's hardcoded `GRID_PROMPT` contains `"All 9 cells show the EXACT SAME character/subject"`, which forces single-subject output regardless of master composition.
+
+Suggested fixes in priority order:
+1. **`skip_labels` / `labels: false` flag** — HIGHEST priority. The endpoint's hardcoded `GRID_PROMPT` asks nano-banana-2 to bake a contact-sheet header ("CONTACT SHEET - SHOT COMPOSITION VARIATIONS") + per-cell labels ("WIDE SHOT", "MEDIUM CLOSE-UP", etc.) into the output. That's useful for previewing, useless for production — sliced cells have the label text riding inside them and can't be dropped into Seedance/Runway without another crop pass. Please accept `skip_labels: true` (or `clean: true`) that strips the header directive + the `"label each cell"` clause from the internal prompt, so each cell is pure cinematography ready for animation. Same idea likely applies to `/images/broll` if it ever adds labeling — keep it off by default for programmatic callers.
+2. Accept `subject_hint` or `labels` array in the request body so callers can name each subject (`["K1NG", "Yunus"]`) and avoid the "JAYSON" hallucination (this is secondary to #1 — once labels are off entirely, the hallucinated name goes away).
+3. Accept `subjects` array → generate N×9 (or 2×9 side-by-side) so battle scenes get full coverage in one call.
+4. At minimum, document in the OpenAPI schema that angles is single-subject-only and recommend running twice for multi-subject masters.
+
+## Bug 7 — Viral Thumbnail recipe dropdowns are truncated/broken
+
+**Observed 2026-04-21** while auditing thumbnail-capable recipes.
+
+`GET /api/v2/recipes` returns Viral Thumbnail (`bcbf180a-56e5-451b-b8a7-93cce0149758`) with broken `select` options:
+
+```json
+"EMOTION": { "options": ["Shocked/Surprised (wide eyes open mouth"] },
+"STYLE":   { "options": ["YouTube Classic (bold text + face"] }
+```
+
+Both dropdowns contain exactly one option, each with a truncated open-paren that was never closed — looks like a regex or split that ate the rest of the list. Makes the recipe unusable. Probably a data-import regression.
+
+## Bug 8 (minor) — `result.metadata` is nested, not top-level
+
+Not a correctness bug, a documentation/ergonomics one. The fix that resolved B5 put metadata at `job.result.metadata` rather than `job.metadata`. Easy to miss — I looked at the top-level keys first and concluded B5 was still open. Suggestion: either hoist a `metadata` alias to top-level on the job response, or explicitly document the nested path in the API reference. Low priority.
