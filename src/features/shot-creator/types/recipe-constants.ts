@@ -48,4 +48,16 @@ export const SYSTEM_TEMPLATE_URLS = {
   // not `templates`. Consider migrating to `templates/system/brand-guides/`
   // alongside the others at next storage reorg.
   brandGuideTemplate: `${SUPABASE_URL}/storage/v1/object/public/directors-palette/templates/system/brand-guides/brand-visual-guide-template.png`,
+
+  // AIOBR Title Card layout references — 6 curated examples covering 5 style
+  // families (text-first, style-sheet meta, atmospheric, diegetic, typographic).
+  // These are LAYOUT/COMPOSITION refs only, never subject refs. Selected style
+  // family is driven by the LAYOUT_PRESET field in the recipe; illustration
+  // rendering is driven by the Shot Creator Style dropdown (app-level).
+  aiobrTitleCardTextFirst: `${SUPABASE_URL}/storage/v1/object/public/templates/system/aiobr-title-cards/text-first-pulp-comic-grid.jpg`,
+  aiobrTitleCardStyleSheet32bit: `${SUPABASE_URL}/storage/v1/object/public/templates/system/aiobr-title-cards/style-sheet-32bit-pixel.png`,
+  aiobrTitleCardStyleSheetActionFig: `${SUPABASE_URL}/storage/v1/object/public/templates/system/aiobr-title-cards/style-sheet-action-figure.png`,
+  aiobrTitleCardAtmospheric: `${SUPABASE_URL}/storage/v1/object/public/templates/system/aiobr-title-cards/atmospheric-painterly-noir.jpg`,
+  aiobrTitleCardDiegetic: `${SUPABASE_URL}/storage/v1/object/public/templates/system/aiobr-title-cards/diegetic-signs-in-scene.png`,
+  aiobrTitleCardTypographic: `${SUPABASE_URL}/storage/v1/object/public/templates/system/aiobr-title-cards/typographic-poster-grid.png`,
 };

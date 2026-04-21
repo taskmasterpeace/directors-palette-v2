@@ -109,4 +109,42 @@ Robert @ AIOBR. Scripts and test output are in the AIOBR repo at `scripts/test_j
 
 **Still outstanding:** proposed fix #2 (honor top-level `style_id` on `/recipes/execute`) was NOT implemented. The handler at `src/app/api/v2/recipes/execute/route.ts:33` doesn't destructure `style_id` or `style_prompt` — any top-level style params remain silent drops. This is a larger API-surface change that needs separate design work (decide: append-to-prompt vs. replace-STYLE-field vs. inject-via-reference-image). Filed as follow-up work, not blocking AIOBR.
 
+---
+
+## Verification (2026-04-20, AIOBR side)
+
+**Status:** FULLY RESOLVED. Re-ran all four shapes after the DP team's second pass. All four produce non-photoreal output. Battle Rap recipe is unblocked for AIOBR.
+
+**Recipe schema fetch confirms new STYLE field:**
+```
+fields: CAMERA_ANGLE, PERSON_A, ACTION_A, OUTFIT_A, HAIR_A, PERSON_B, ACTION_B, OUTFIT_B, HAIR_B, LOCATION, STAGE_BANNER, STYLE, LIGHTING_STYLE
+STYLE options:
+  - Match character reference style
+  - Photoreal cinematic realism
+  - Documentary photography 35mm grain
+  - Boondocks-style cel-shaded animation with bold black outlines and flat colors
+  - Saturday-morning cartoon flat colors with thick outlines
+  - Comic book illustration with halftone dots and ink lines
+  - Anime illustration
+  - Pixar-style 3D rendered
+```
+
+**Head-to-head evidence URLs (same fields, Coondocks selected via each shape):**
+- Shape A (top-level `style_id` UUID): https://tarohelkwuurakbxjyxm.supabase.co/storage/v1/object/public/directors-palette/generations/d3a01f94-671e-483a-89f6-0284f7aaaf85/d5ts80dq1drmt0cxngg8pt56g4.png
+- Shape B (top-level `style` by name): https://tarohelkwuurakbxjyxm.supabase.co/storage/v1/object/public/directors-palette/generations/d3a01f94-671e-483a-89f6-0284f7aaaf85/tb3rda8r4xrmt0cxnggrrq1xfm.png
+- Shape C (top-level `style_prompt` raw): https://tarohelkwuurakbxjyxm.supabase.co/storage/v1/object/public/directors-palette/generations/d3a01f94-671e-483a-89f6-0284f7aaaf85/rsdf2n4k91rmy0cxnggr67abhr.png
+- Shape D (`fields.STYLE`): https://tarohelkwuurakbxjyxm.supabase.co/storage/v1/object/public/directors-palette/generations/d3a01f94-671e-483a-89f6-0284f7aaaf85/6xt66ptgy1rmw0cxnghazmyzpg.png
+
+**Observations:**
+- All four now animated. Core fix confirmed.
+- Shape D (STYLE field) produces the richest composition: new `OUTFIT_A/B`, `HAIR_A/B`, `STAGE_BANNER` fields are clearly pulling weight. Shape D has "The Battleground / twitch.tv" banner, "The Crown Battle" shirt on K1NG, Yunus 019 hoodie. Best of the four.
+- Shape B and D best preserve @king identity (dreads from sheet carry through).
+- Character identity from `@king`/`@yunus` refs is not 100% locked — Shape A gave Yunus curly hair instead of his sheet's red durag. Likely fixed by populating `OUTFIT_B`/`HAIR_B` fields or passing `@yunus` as a second reference. Separate concern from the style fix, not blocking.
+
+**Naming drift to note:** Styles library still has `Coondocks` (id `d30f79de-...`); the recipe STYLE dropdown uses "Boondocks-style cel-shaded..." as the option label. Small alignment opportunity, not blocking.
+
+**Cost of re-verification:** 120 pts (4 runs at 10 pts, no re-uploads needed).
+
+**AIOBR next step:** Battle Rap recipe is now the default path for battle scene generation. Will standardize on Shape D (STYLE as a field) for readability and also leverage the new OUTFIT/HAIR/STAGE_BANNER fields.
+
 **Structural fix needed:** this is the second drift incident in one day. CLAUDE.md now carries a rule requiring centralized URLs + upsert-capable seed scripts (commit `e2b2bea0`). The seed-recipes script should get an upsert mode so future `SAMPLE_RECIPES` updates propagate to existing DB rows automatically.

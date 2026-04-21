@@ -182,3 +182,34 @@ AIOBR is particularly painful — it's the thumbnail recipe for every video I sh
 ## Contact
 
 Robert @ AIOBR. All scripts, full job dumps, and head-to-head images in `D:/git/aiobr/stories/_pending/recipe_tests/`. Catalog-wide audit at `D:/git/aiobr/stories/_pending/recipe_audit.json` + `D:/git/aiobr/scripts/audit_all_recipes.js`. Same test account + recipe as WR 001. Happy to re-run once any of the fixes land.
+
+---
+
+## Verification 2026-04-21 (post-fix pass)
+
+Re-ran full verification with `scripts/verify_wr002_full.js` after DP team's claimed fixes. Balance topped up (140 → 2140), re-uploaded @king and @yunus sheets (gallery was purged), fired one full-stack recipe run with all fields populated + `reference_images: [kingUrl, yunusUrl]`. Cost 30 pts (2 uploads + 1 recipe run). Evidence: `stories/_pending/recipe_tests/07_fullstack_verify.png` + `07_fullstack_verify.job.json`.
+
+| Bug | Status | Evidence |
+|---|---|---|
+| B1 Double `@@` | **FIXED** | Verified earlier via `06_P1_post_bug1.png` after commit 5a94c24c |
+| B2 Empty OUTFIT/HAIR lines | **FIXED** | Confirmed via `resolved_prompts[0]` in job metadata (see B5) — all field values interpolated, zero bare-colon lines. |
+| B3 No binding language | **FIXED** | Resolved prompt now appends: *"Use the attached reference image(s) to drive the identity of each named person in the prompt: match their face, skin tone, hair, and outfit exactly to the references. When multiple references are attached, each subsequent reference maps to the next named person in prompt order (first reference → first person, second reference → second person, and so on). Treat the references as identity locks, not style or mood hints — do not invent generic features."* Exactly what WR 002 asked for. |
+| B4 `reference_images` plural array dropped | **FIXED** | Both URLs preserved end-to-end. `result.metadata.reference_images_used[0]` contains both uploaded sheet URLs in order. Generated image shows @king + @yunus rendering correctly against their own sheets simultaneously. |
+| B5 No job metadata / resolved_prompt | **FIXED** (nested, not top-level) | Correction: metadata is present, just at `job.result.metadata` instead of `job.metadata`. Contains `resolved_prompts` (plural array) AND `reference_images_used` (plural array). `/recipes/execute` runs can now be fully audited post-hoc — this is how I confirmed B2/B3/B4 for this verification. Suggestion (optional): either hoist to top-level `job.metadata` or document the nested path so callers don't miss it. |
+| B6 `GET /recipes/<id>` exposes prompt_template | **STILL OPEN** | `GET /api/v2/recipes/16c2b9cc-…` returns 404. Still no way to pull a recipe's template via v2 API. Post-run `resolved_prompts` helps, but catalog audits still need pre-run template access. |
+
+**Bottom line:** 5 of 6 bugs FIXED. Only B6 (`GET /recipes/<id>` 404) remains, and it's observability-only — doesn't block production. Battle Rap recipe is cleared for AIOBR weekly battle shots. The AIOBR thumbnail recipe (`a0756c96-81bb-4479-8099-359a95484557`) should benefit from the same engine-level fix for supporting-character identity — we want to verify independently before the next AIOBR launch but are confident given the Battle Rap evidence.
+
+Visual match for the verification run: @king = right character, long dreads, black Nike hoodie, dark pants, pointing aggressively ✓; @yunus = left character, red durag, black hoodie ✓; BATTLE RAP banner ✓; SOCIAL SKY CLUB signage ✓; Twitch rig on tripod foreground ✓; Boondocks cel-shaded style ✓.
+
+---
+
+## Adjacent finding — angles + B-roll endpoints work great, one limitation worth mentioning
+
+`POST /api/v2/images/angles` and `POST /api/v2/images/broll` both tested against the verified master (`07_fullstack_verify.png`). 20 pts each, 9-cell grids returned clean. Evidence: `stories/_pending/recipe_tests/08_angles_grid.png` + `08_broll_grid.png`.
+
+**B-roll is flawless** — 9 complementary cutaways that inherit the master's palette, cel-shading, and banners (BATTLE RAP + SOCIAL SKY CLUB visible in the establishing cell). Perfect for chapter B-roll coverage.
+
+**Angles has one caveat worth documenting:** the endpoint picks the most prominent subject from the master and generates 9 angles of that subject. In our 2-character master, K1NG (right, pointing, foreground) became the subject. The extreme-wide and wide cells preserve both characters, but medium-through-close-up cells only show K1NG — Yunus drops out of coverage.
+
+For battle/dialogue scenes that need both characters in close coverage, the workaround is running angles twice against two different masters (one K1NG-forward, one Yunus-forward). Not a bug per se, but might be worth either (a) documenting in the endpoint's response, (b) adding a `subject_index` or `multi_subject` flag, or (c) auto-detecting multi-subject masters and generating a 2×9 grid. Would be a nice-to-have, not urgent.
