@@ -146,6 +146,85 @@ const BasicSettings = () => {
             {selectedModel === 'qwen-image-edit' && (
                 <CameraAngleSection />
             )}
+
+            {/* GPT Image 2 specific controls */}
+            {selectedModel === 'gpt-image-2' && (
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-3">
+                    {/* Quality (pricing tier) */}
+                    <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">
+                            Quality
+                            <span className="ml-1 text-amber-400">
+                                ({Math.round(getModelCost(selectedModel as ModelId, shotCreatorSettings.gptImageQuality || 'medium') * 100)} pts)
+                            </span>
+                        </Label>
+                        <Select
+                            value={shotCreatorSettings.gptImageQuality || 'medium'}
+                            onValueChange={(value) => updateSettings({ gptImageQuality: value as 'low' | 'medium' })}
+                        >
+                            <SelectTrigger className="bg-card border-border text-white h-9 text-sm">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="low">Low (2 pts)</SelectItem>
+                                <SelectItem value="medium">Medium (8 pts)</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* Background */}
+                    <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">Background</Label>
+                        <Select
+                            value={shotCreatorSettings.gptImageBackground || 'auto'}
+                            onValueChange={(value) => updateSettings({ gptImageBackground: value as 'auto' | 'opaque' })}
+                        >
+                            <SelectTrigger className="bg-card border-border text-white h-9 text-sm">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="auto">Auto</SelectItem>
+                                <SelectItem value="opaque">Opaque</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* Moderation */}
+                    <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">Moderation</Label>
+                        <Select
+                            value={shotCreatorSettings.gptImageModeration || 'auto'}
+                            onValueChange={(value) => updateSettings({ gptImageModeration: value as 'auto' | 'low' })}
+                        >
+                            <SelectTrigger className="bg-card border-border text-white h-9 text-sm">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="auto">Auto</SelectItem>
+                                <SelectItem value="low">Low</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* Number of images */}
+                    <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground"># Images</Label>
+                        <Select
+                            value={String(shotCreatorSettings.gptImageNumberOfImages ?? 1)}
+                            onValueChange={(value) => updateSettings({ gptImageNumberOfImages: Number(value) })}
+                        >
+                            <SelectTrigger className="bg-card border-border text-white h-9 text-sm">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
+                                    <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

@@ -28,6 +28,15 @@ export function buildModelSettings(
       modelSettings.personGeneration = settings.personGeneration || 'allow_all';
       break;
 
+    case 'gpt-image-2':
+      modelSettings.aspectRatio = settings.aspectRatio;
+      modelSettings.quality = settings.gptImageQuality || 'medium';
+      modelSettings.outputFormat = settings.outputFormat || 'webp';
+      modelSettings.background = settings.gptImageBackground || 'auto';
+      modelSettings.moderation = settings.gptImageModeration || 'auto';
+      modelSettings.numberOfImages = settings.gptImageNumberOfImages ?? 1;
+      break;
+
     default:
       // Unknown model - copy basic settings
       modelSettings.aspectRatio = settings.aspectRatio;

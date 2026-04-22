@@ -370,12 +370,14 @@ export class WebhookService {
           logger.generation.info('Video cost calculated', { model, resolution, duration, cost: overrideAmount })
         }
       } else {
-        // Image: use resolution-based pricing (e.g., nano-banana-pro tiered pricing)
+        // Image: use tier-based pricing — resolution for nano-banana-2, quality for gpt-image-2
         const modelSettings = currentMetadata.modelSettings as Record<string, unknown> | undefined;
         const imageResolution = modelSettings?.resolution as string | undefined;
-        const imageCost = getModelCost(model as ModelId, imageResolution);
+        const imageQuality = modelSettings?.quality as string | undefined;
+        const tierKey = model === 'gpt-image-2' ? imageQuality : imageResolution;
+        const imageCost = getModelCost(model as ModelId, tierKey);
         overrideAmount = Math.round(imageCost * 100); // Convert to cents/points
-        logger.generation.info('Image cost calculated', { model, resolution: imageResolution, cost: overrideAmount })
+        logger.generation.info('Image cost calculated', { model, tier: tierKey, cost: overrideAmount })
       }
 
       const deductResult = await creditsService.deductCredits(galleryEntry.user_id, model, {

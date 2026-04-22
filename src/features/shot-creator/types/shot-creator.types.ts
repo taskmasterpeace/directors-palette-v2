@@ -81,4 +81,9 @@ export interface ShotCreatorSettings {
     cameraElevation?: number    // -30 to 60 degrees (vertical tilt)
     cameraDistance?: number     // 0-10 (zoom: 0=wide, 10=close-up)
     cameraEnabled?: boolean     // Whether camera angle control is active
+    // GPT Image 2 specific settings
+    gptImageQuality?: 'low' | 'medium'        // Pricing tier
+    gptImageBackground?: 'auto' | 'opaque'    // No transparent supported
+    gptImageModeration?: 'auto' | 'low'       // OpenAI content filter
+    gptImageNumberOfImages?: number           // 1-10
 }

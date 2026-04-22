@@ -89,7 +89,11 @@ export function usePromptGeneration() {
     // ── Cost calculation ───────────────────────────────────────────────
     const generationCost: GenerationCost = React.useMemo(() => {
         const model = shotCreatorSettings.model || 'nano-banana-2'
-        const costPerImage = getModelCost(model, shotCreatorSettings.resolution)
+        // Tier key: quality for gpt-image-2, resolution for tier-priced models like nano-banana-2
+        const tierKey = model === 'gpt-image-2'
+            ? (shotCreatorSettings.gptImageQuality || 'medium')
+            : shotCreatorSettings.resolution
+        const costPerImage = getModelCost(model, tierKey)
 
         const isAnchorMode = shotCreatorSettings.enableAnchorTransform
 
@@ -231,6 +235,18 @@ export function usePromptGeneration() {
                 baseSettings.cameraElevation = shotCreatorSettings.cameraElevation ?? 0
                 baseSettings.cameraDistance = shotCreatorSettings.cameraDistance ?? 5
                 break
+            case 'gpt-image-2': {
+                // GPT Image 2 only supports 1:1, 3:2, 2:3 — coerce unsupported values
+                const validAR = ['1:1', '3:2', '2:3']
+                const rawAR = shotCreatorSettings.aspectRatio || '3:2'
+                baseSettings.aspectRatio = validAR.includes(rawAR) ? rawAR : '3:2'
+                baseSettings.quality = shotCreatorSettings.gptImageQuality || 'medium'
+                baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'webp'
+                baseSettings.background = shotCreatorSettings.gptImageBackground || 'auto'
+                baseSettings.moderation = shotCreatorSettings.gptImageModeration || 'auto'
+                baseSettings.numberOfImages = shotCreatorSettings.gptImageNumberOfImages ?? 1
+                break
+            }
         }
 
         return baseSettings

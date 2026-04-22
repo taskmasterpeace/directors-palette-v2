@@ -107,6 +107,10 @@ export async function POST(request: NextRequest) {
       webhook_url,
       style_id,
       style,
+      // gpt-image-2 specific
+      quality,
+      background,
+      moderation,
     } = body
 
     let prompt = rawPrompt
@@ -222,8 +226,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Cost calculation
-    const costPerImage = Math.round(getModelCost(model as ModelId) * 100)
+    // Cost calculation — tier-aware (quality for gpt-image-2, default for others)
+    const tierKey = model === 'gpt-image-2' ? (quality || 'medium') : undefined
+    const costPerImage = Math.round(getModelCost(model as ModelId, tierKey) * 100)
     const totalCost = costPerImage * num_images
 
     // Balance check (admin bypass)
@@ -399,14 +404,26 @@ export async function POST(request: NextRequest) {
         user_email: auth.email,
       })
 
-      // Build model settings
+      // Build model settings. gpt-image-2 only supports 1:1/3:2/2:3 — coerce
+      // unsupported aspect ratios (default '16:9') to 3:2 so we don't 422.
+      const resolvedAspect = model === 'gpt-image-2'
+        ? (['1:1', '3:2', '2:3'].includes(aspect_ratio) ? aspect_ratio : '3:2')
+        : aspect_ratio
+
       const modelSettings: ImageModelSettings = {
-        aspectRatio: aspect_ratio,
-        width: ASPECT_RATIO_SIZES[aspect_ratio]?.width,
-        height: ASPECT_RATIO_SIZES[aspect_ratio]?.height,
+        aspectRatio: resolvedAspect,
+        width: ASPECT_RATIO_SIZES[resolvedAspect]?.width,
+        height: ASPECT_RATIO_SIZES[resolvedAspect]?.height,
         outputFormat: 'png',
         maxImages: 1,
         seed,
+        // gpt-image-2 pass-throughs (ignored by other models' builders)
+        ...(model === 'gpt-image-2' && {
+          quality: quality || 'medium',
+          background: background || 'auto',
+          moderation: moderation || 'auto',
+          numberOfImages: 1,
+        }),
       } as ImageModelSettings
 
       // Build Replicate input

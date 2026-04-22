@@ -10,6 +10,7 @@ export type ImageModel = Extract<ModelId,
   | 'nano-banana-2'
   | 'flux-2-klein-9b'
   | 'qwen-image-edit'
+  | 'gpt-image-2'
 >
 
 // Model-specific settings interfaces
@@ -58,12 +59,22 @@ export interface NanoBananaProSettings {
   safetyFilterLevel?: 'block_low_and_above' | 'block_medium_and_above' | 'block_only_high'
 }
 
+export interface GptImage2Settings {
+  aspectRatio?: '1:1' | '3:2' | '2:3'
+  quality?: 'low' | 'medium'
+  outputFormat?: 'jpg' | 'png' | 'webp'
+  background?: 'auto' | 'opaque'
+  moderation?: 'auto' | 'low'
+  numberOfImages?: number // 1-10
+}
+
 // Union type for all model settings
 export type ImageModelSettings =
   | NanoBanana2Settings
   | QwenImageEditSettings
   | SeedreamSettings
   | NanoBananaProSettings
+  | GptImage2Settings
 
 // Input for image generation service
 export interface ImageGenerationInput {
@@ -104,11 +115,23 @@ export interface NanoBananaProInput {
   safety_filter_level?: string
 }
 
+export interface GptImage2Input {
+  prompt: string
+  input_images?: string[]
+  aspect_ratio?: '1:1' | '3:2' | '2:3'
+  quality?: 'low' | 'medium' | 'high' | 'auto'
+  output_format?: 'webp' | 'png' | 'jpeg'
+  background?: 'auto' | 'opaque'
+  moderation?: 'auto' | 'low'
+  number_of_images?: number
+}
+
 // Union type for all Replicate inputs
 export type ReplicateImageInput =
   | NanoBanana2Input
   | SeedreamInput
   | NanoBananaProInput
+  | GptImage2Input
 
 // API Request/Response types
 export interface ImageGenerationRequest {

@@ -339,9 +339,12 @@ export async function POST(request: NextRequest) {
     // ✅ CREDITS: Check if user has sufficient credits (admins bypass)
     const userIsAdmin = isAdminEmail(user.email)
 
-    // Get resolution-aware cost for tiered pricing (nano-banana-pro)
+    // Get tier-aware cost for tiered pricing.
+    // nano-banana-2: keyed by resolution (1K/2K). gpt-image-2: keyed by quality (low/medium).
     const resolution = modelSettings?.resolution as string | undefined;
-    const modelCost = getModelCost(model as ModelId, resolution);
+    const quality = modelSettings?.quality as string | undefined;
+    const tierKey = model === 'gpt-image-2' ? quality : resolution;
+    const modelCost = getModelCost(model as ModelId, tierKey);
 
     const modelCostCents = Math.round(modelCost * 100); // Convert to cents/points
 
@@ -429,7 +432,9 @@ export async function POST(request: NextRequest) {
       // Calculate total cost: 1 image per input (anchor is free)
       const numImages = inputUrls.length
       const resolution = modelSettings?.resolution as string | undefined
-      const modelCost = getModelCost(model as ModelId, resolution)
+      const quality = modelSettings?.quality as string | undefined
+      const tierKey = model === 'gpt-image-2' ? quality : resolution
+      const modelCost = getModelCost(model as ModelId, tierKey)
       const totalCostCents = Math.round(modelCost * 100) * numImages
 
       // Check credits (admins bypass)

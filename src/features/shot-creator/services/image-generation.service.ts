@@ -14,6 +14,7 @@ import type {
   NanoBanana2Settings,
   Flux2Klein9bSettings,
   QwenImageEditSettings,
+  GptImage2Settings,
 } from '../types/image-generation.types'
 import { buildCameraAnglePrompt } from '../helpers/camera-angle.helper'
 import { logger } from '@/lib/logger'
@@ -55,6 +56,9 @@ export class ImageGenerationService {
         break
       case 'qwen-image-edit':
         errors.push(...this.validateQwenImageEdit(input))
+        break
+      case 'gpt-image-2':
+        errors.push(...this.validateGptImage2(input))
         break
     }
 
@@ -106,9 +110,88 @@ export class ImageGenerationService {
         return this.buildFlux2Klein9bInput(input)
       case 'qwen-image-edit':
         return this.buildQwenImageEditInput(input)
+      case 'gpt-image-2':
+        return this.buildGptImage2Input(input)
       default:
         throw new Error(`Unsupported model: ${input.model}`)
     }
+  }
+
+  /**
+   * Validate gpt-image-2 specific constraints
+   */
+  private static validateGptImage2(input: ImageGenerationInput): string[] {
+    const errors: string[] = []
+    const settings = input.modelSettings as GptImage2Settings
+
+    // Max 10 reference images (matches number_of_images cap)
+    if (input.referenceImages && input.referenceImages.length > 10) {
+      errors.push('GPT Image 2 supports maximum 10 reference images')
+    }
+
+    // Only 3 aspect ratios allowed
+    if (settings.aspectRatio) {
+      const valid = ['1:1', '3:2', '2:3']
+      if (!valid.includes(settings.aspectRatio)) {
+        errors.push(`GPT Image 2 only supports aspect ratios: ${valid.join(', ')}`)
+      }
+    }
+
+    // Quality must be low or medium (we don't expose high/auto)
+    if (settings.quality && !['low', 'medium'].includes(settings.quality)) {
+      errors.push('GPT Image 2 quality must be low or medium')
+    }
+
+    // Background can't be transparent — not supported by this model
+    if (settings.background && !['auto', 'opaque'].includes(settings.background)) {
+      errors.push('GPT Image 2 does not support transparent backgrounds (use gpt-image-1.5 for transparent)')
+    }
+
+    // numberOfImages: 1-10
+    if (settings.numberOfImages !== undefined && (settings.numberOfImages < 1 || settings.numberOfImages > 10)) {
+      errors.push('GPT Image 2: number of images must be between 1 and 10')
+    }
+
+    return errors
+  }
+
+  private static buildGptImage2Input(input: ImageGenerationInput) {
+    const settings = input.modelSettings as GptImage2Settings
+    const replicateInput: Record<string, unknown> = {
+      prompt: input.prompt,
+    }
+
+    if (settings.aspectRatio) {
+      replicateInput.aspect_ratio = settings.aspectRatio
+    }
+
+    if (settings.quality) {
+      replicateInput.quality = settings.quality
+    }
+
+    if (settings.outputFormat) {
+      // Replicate expects 'jpeg' not 'jpg'
+      replicateInput.output_format = settings.outputFormat === 'jpg' ? 'jpeg' : settings.outputFormat
+    }
+
+    if (settings.background) {
+      replicateInput.background = settings.background
+    }
+
+    if (settings.moderation) {
+      replicateInput.moderation = settings.moderation
+    }
+
+    if (settings.numberOfImages !== undefined) {
+      replicateInput.number_of_images = settings.numberOfImages
+    }
+
+    // gpt-image-2 API uses `input_images` field for reference/editing images
+    if (input.referenceImages && input.referenceImages.length > 0) {
+      replicateInput.input_images = this.normalizeReferenceImages(input.referenceImages)
+    }
+
+    return replicateInput
   }
 
   private static buildNanoBanana2Input(input: ImageGenerationInput) {

@@ -48,6 +48,12 @@ const MODEL_CAPABILITIES: Record<ModelId, {
     refImages: 'Required (1)',
     bestFor: ['Camera angle control', '3D viewpoint changes', 'Multi-angle renders', 'Object rotation']
   },
+  'gpt-image-2': {
+    speed: '~35s',
+    textRendering: 'Best-in-class',
+    refImages: 'Up to 10',
+    bestFor: ['Sharp text in images', 'Strong instruction following', 'Identity-preserving edits', 'Multi-image compositing']
+  },
 }
 
 interface ModelSelectorProps {
@@ -112,7 +118,7 @@ export function ModelSelector({
         <span className="text-sm font-medium text-white">Model Selection</span>
       </div>
       
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
         {models.map((model) => {
           const isSelected = selectedModel === model.id
           const capabilities = MODEL_CAPABILITIES[model.id as ModelId]

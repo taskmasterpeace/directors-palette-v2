@@ -22,7 +22,7 @@ export const ASPECT_RATIO_SIZES: Record<string, { width: number; height: number 
 };
 
 export type ModelType = 'generation' | 'editing'
-export type ModelId = 'nano-banana-2' | 'flux-2-klein-9b' | 'qwen-image-edit'
+export type ModelId = 'nano-banana-2' | 'flux-2-klein-9b' | 'qwen-image-edit' | 'gpt-image-2'
 
 export interface ModelParameter {
     id: string
@@ -247,6 +247,64 @@ export const MODEL_PARAMETERS: Record<string, ModelParameter> = {
             { value: '3:4', label: '3:4 Portrait' },
         ]
     },
+    // GPT Image 2 parameters — openai/gpt-image-2 on Replicate.
+    // Note: model only supports 3 aspect ratios (1:1, 3:2, 2:3). Quality is
+    // the pricing lever (low ~$0.01, medium ~$0.05). No transparent bg.
+    gptImage2AspectRatio: {
+        id: 'aspectRatio',
+        label: 'Aspect Ratio',
+        type: 'select',
+        default: '3:2',
+        options: [
+            { value: '1:1', label: '1:1 Square' },
+            { value: '3:2', label: '3:2 Landscape' },
+            { value: '2:3', label: '2:3 Portrait' },
+        ],
+        description: 'GPT Image 2 only supports 1:1, 3:2, 2:3',
+    },
+    gptImage2Quality: {
+        id: 'quality',
+        label: 'Quality',
+        type: 'select',
+        default: 'medium',
+        options: [
+            { value: 'low', label: 'Low (2 pts) — fast, cheaper' },
+            { value: 'medium', label: 'Medium (8 pts) — best value' },
+        ],
+        description: 'Higher quality uses more pts',
+    },
+    gptImage2Background: {
+        id: 'background',
+        label: 'Background',
+        type: 'select',
+        default: 'auto',
+        options: [
+            { value: 'auto', label: 'Auto' },
+            { value: 'opaque', label: 'Opaque' },
+        ],
+        description: 'GPT Image 2 does not support transparent backgrounds',
+    },
+    gptImage2Moderation: {
+        id: 'moderation',
+        label: 'Content Moderation',
+        type: 'select',
+        default: 'auto',
+        options: [
+            { value: 'auto', label: 'Auto (default)' },
+            { value: 'low', label: 'Low (less strict)' },
+        ],
+        description: 'OpenAI content filter strictness',
+    },
+    gptImage2NumberOfImages: {
+        id: 'numberOfImages',
+        label: 'Number of Images',
+        type: 'slider',
+        min: 1,
+        max: 10,
+        step: 1,
+        default: 1,
+        description: 'Generate up to 10 images per request',
+    },
 }
 
 export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
@@ -322,6 +380,36 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         maxReferenceImages: 1, // Camera Angle: one subject image to rotate around
         requiresInputImage: true,
         estimatedSeconds: 30,
+    },
+    'gpt-image-2': {
+        id: 'gpt-image-2',
+        name: 'gpt-image-2',
+        displayName: 'GPT Image 2',
+        type: 'generation',
+        icon: '✨',
+        description: 'OpenAI\'s image model — strongest text rendering and instruction following. Supports editing with up to 10 reference images.',
+        badge: 'Text Master',
+        badgeColor: 'bg-emerald-600',
+        textColor: 'text-emerald-300',
+        endpoint: 'openai/gpt-image-2',
+        costPerImage: 0.08, // 8 pts = $0.08 — default (medium) rate
+        // Tiered pricing by quality (not resolution). costByResolution is the
+        // generic tier-keyed pricing map; route passes quality as the lookup key.
+        costByResolution: {
+            low: 0.02,    // 2 pts — Replicate cost ~$0.01, ~100% margin (small-dollar rounding)
+            medium: 0.08, // 8 pts — Replicate cost ~$0.05, ~60% margin
+        },
+        supportedParameters: ['aspectRatio', 'quality', 'outputFormat', 'background', 'moderation', 'numberOfImages'],
+        parameters: {
+            aspectRatio: MODEL_PARAMETERS.gptImage2AspectRatio,
+            quality: MODEL_PARAMETERS.gptImage2Quality,
+            outputFormat: MODEL_PARAMETERS.outputFormat,
+            background: MODEL_PARAMETERS.gptImage2Background,
+            moderation: MODEL_PARAMETERS.gptImage2Moderation,
+            numberOfImages: MODEL_PARAMETERS.gptImage2NumberOfImages,
+        },
+        maxReferenceImages: 10,
+        estimatedSeconds: 35,
     },
 }
 

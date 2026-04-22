@@ -15,19 +15,32 @@ export async function GET(request: NextRequest) {
     (ar) => ar !== 'match_input_image'
   )
 
-  const image_models = Object.values(MODEL_CONFIGS).map((m) => ({
-    id: m.id,
-    name: m.displayName,
-    category: 'image' as const,
-    type: m.type,
-    cost_pts: Math.round(m.costPerImage * 100),
-    supports_img2img: (m.maxReferenceImages ?? 0) > 0,
-    supports_loras: m.id === 'flux-2-klein-9b',
-    max_reference_images: m.maxReferenceImages ?? 0,
-    requires_input_image: m.requiresInputImage ?? false,
-    supported_aspect_ratios: supportedAspectRatios,
-    estimated_seconds: m.estimatedSeconds ?? null,
-  }))
+  const image_models = Object.values(MODEL_CONFIGS).map((m) => {
+    // Prefer per-model aspect ratio list (e.g., gpt-image-2 only supports 1:1/3:2/2:3)
+    const modelAspectRatios = m.parameters.aspectRatio?.options
+      ?.map((o) => o.value)
+      .filter((v) => v !== 'match_input_image')
+    // Expose tiered pricing when present (e.g., gpt-image-2 quality tiers, nano-banana-2 resolution tiers)
+    const cost_tiers = m.costByResolution
+      ? Object.fromEntries(
+          Object.entries(m.costByResolution).map(([k, v]) => [k, Math.round(v * 100)])
+        )
+      : null
+    return {
+      id: m.id,
+      name: m.displayName,
+      category: 'image' as const,
+      type: m.type,
+      cost_pts: Math.round(m.costPerImage * 100),
+      cost_tiers,
+      supports_img2img: (m.maxReferenceImages ?? 0) > 0,
+      supports_loras: m.id === 'flux-2-klein-9b',
+      max_reference_images: m.maxReferenceImages ?? 0,
+      requires_input_image: m.requiresInputImage ?? false,
+      supported_aspect_ratios: modelAspectRatios?.length ? modelAspectRatios : supportedAspectRatios,
+      estimated_seconds: m.estimatedSeconds ?? null,
+    }
+  })
 
   const video_models = Object.entries(ANIMATION_MODELS)
     .filter(([id]) => id !== 'seedance-pro')
