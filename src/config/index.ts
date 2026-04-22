@@ -386,7 +386,7 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         name: 'gpt-image-2',
         displayName: 'GPT Image 2',
         type: 'generation',
-        icon: '✨',
+        icon: '🎨',
         description: 'OpenAI\'s image model — strongest text rendering and instruction following. Supports editing with up to 10 reference images.',
         badge: 'Text Master',
         badgeColor: 'bg-emerald-600',

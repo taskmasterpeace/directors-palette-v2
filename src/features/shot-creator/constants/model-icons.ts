@@ -1,14 +1,13 @@
 /**
- * Model icon mapping — must match icons in src/config/index.ts MODEL_CONFIGS
+ * Model icon lookup — always sources from the central MODEL_CONFIGS.
+ *
+ * Do NOT re-introduce a local hardcoded map: the previous version drifted
+ * when new models were added (gpt-image-2 fell back to 🍌 because it
+ * wasn't in the local map). Let MODEL_CONFIGS be the single source of truth.
  */
-
-export const MODEL_ICONS: Record<string, string> = {
-  'nano-banana-2': '🍌',
-  'flux-2-klein-9b': '🔥',
-  'qwen-image-edit': '🎥',
-}
+import { MODEL_CONFIGS, ModelId } from '@/config'
 
 export function getModelIcon(model?: string): string {
   if (!model) return '🍌'
-  return MODEL_ICONS[model] || '🍌'
+  return MODEL_CONFIGS[model as ModelId]?.icon ?? '🍌'
 }
