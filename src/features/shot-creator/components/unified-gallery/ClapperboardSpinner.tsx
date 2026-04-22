@@ -1,20 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-
-/** Estimated generation time in seconds per model (measured averages) */
-const MODEL_ESTIMATED_SECONDS: Record<string, number> = {
-  'nano-banana-2': 60,
-  'flux-2-klein-9b': 15,
-  'qwen-image-edit': 30,
-}
-
-/** Map model ID to a short display name */
-const MODEL_DISPLAY_NAMES: Record<string, string> = {
-  'nano-banana-2': 'Nano Banana 2',
-  'flux-2-klein-9b': 'Flux 2 Klein',
-  'qwen-image-edit': 'Camera Angle',
-}
+import { MODEL_CONFIGS, ModelId } from '@/config'
 
 interface ClapperboardSpinnerProps {
   model: string
@@ -27,10 +14,15 @@ interface ClapperboardSpinnerProps {
  * Animated clapperboard loading indicator.
  * Shows progress bar, estimated countdown, and model name.
  * Handles overtime gracefully when generation exceeds the estimate.
+ *
+ * Estimates and display names come from the central MODEL_CONFIGS — never
+ * duplicate those here or they will drift when new models are added
+ * (see 2026-04-22: gpt-image-2 shipped with stale 12s fallback).
  */
 export function ClapperboardSpinner({ model, prompt, startedAt }: ClapperboardSpinnerProps) {
-  const estimatedSeconds = MODEL_ESTIMATED_SECONDS[model] ?? 12
-  const displayName = MODEL_DISPLAY_NAMES[model] ?? model
+  const modelConfig = MODEL_CONFIGS[model as ModelId]
+  const estimatedSeconds = modelConfig?.estimatedSeconds ?? 60
+  const displayName = modelConfig?.displayName ?? model
 
   // Use the passed-in start time so progress survives remounts (navigation away and back)
   const origin = startedAt ?? Date.now()

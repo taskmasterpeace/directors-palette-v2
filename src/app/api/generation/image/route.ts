@@ -1243,24 +1243,36 @@ export async function POST(request: NextRequest) {
             });
           }
         } else if (completedPrediction.status === 'failed') {
-          // Update gallery with failed status
+          // Persist the actual Replicate error so the client polling/subscription
+          // can surface it to the user (instead of a generic "Generation failed").
+          const replicateError = completedPrediction.error
+            ? (typeof completedPrediction.error === 'string' ? completedPrediction.error : JSON.stringify(completedPrediction.error))
+            : 'Prediction failed on Replicate';
           await supabase
             .from('gallery')
-            .update({ status: 'failed' })
+            .update({ status: 'failed', error_message: replicateError })
             .eq('id', gallery.id);
 
           return NextResponse.json({
             predictionId: prediction.id,
             galleryId: gallery.id,
             status: 'failed',
-            error: completedPrediction.error,
+            error: replicateError,
           });
         }
       } catch (pollError) {
-        lognog.devError('Polling error', {
-          error: pollError instanceof Error ? pollError.message : String(pollError)
-        });
-        // Return pending status if polling fails
+        // If replicate.wait() throws, the prediction is in an unknown state.
+        // Mark the gallery row as failed so the client's polling/subscription
+        // immediately surfaces a failure — otherwise the spinner runs until
+        // the client-side hard timeout (up to 5 min).
+        const errMsg = pollError instanceof Error ? pollError.message : String(pollError);
+        lognog.devError('Polling error', { error: errMsg });
+        try {
+          await supabase
+            .from('gallery')
+            .update({ status: 'failed', error_message: `Replicate polling failed: ${errMsg}` })
+            .eq('id', gallery.id);
+        } catch { /* best-effort only */ }
       }
     }
 

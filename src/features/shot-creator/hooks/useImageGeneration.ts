@@ -383,13 +383,23 @@ export function useImageGeneration() {
                 }, 60000)
             }
 
-            // Hard timeout: surface error after 5 minutes so users aren't stuck
+            // Hard timeout: model-aware so fast models don't make users wait 5 full
+            // minutes when Replicate silently drops a webhook or OpenAI moderation
+            // rejects a prompt. Formula: max(estimatedSeconds × 4, 120s), capped at 300s.
+            // - flux-2-klein (15s est) → 120s floor
+            // - qwen-image-edit (30s) → 120s floor
+            // - gpt-image-2 (35s) → 140s
+            // - nano-banana-2 (60s) → 240s
+            // - unknown → 240s (60s default × 4)
             if (!resolved) {
+                const pending = useUnifiedGalleryStore.getState().images.find(img => img.id === activeGalleryId)
+                const estimate = pending?.model ? (getModelConfig(pending.model as Parameters<typeof getModelConfig>[0])?.estimatedSeconds ?? 60) : 60
+                const hardTimeoutMs = Math.min(300_000, Math.max(120_000, estimate * 4 * 1000))
                 hardTimeoutId = setTimeout(() => {
                     if (!resolved) {
                         handleError('Generation timed out. The image service may be under heavy load — please try again.')
                     }
-                }, 5 * 60 * 1000)
+                }, hardTimeoutMs)
             }
         }
 
