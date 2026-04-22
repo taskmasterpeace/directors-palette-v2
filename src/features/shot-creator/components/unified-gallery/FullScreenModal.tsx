@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import Image from 'next/image'
-import { X, Copy, Download, ChevronLeft, ChevronRight, FileText, Link, Tag, Sparkles, Film, Layout, Save, Trash2, Info, Grid3x3, Eraser, Clapperboard, Layers, Share2, RefreshCw, Ratio, Box, Sliders, Hash, ArrowUpFromLine } from 'lucide-react'
+import { X, Copy, Download, ChevronLeft, ChevronRight, FileText, Link, Tag, Sparkles, Film, Layout, Save, Trash2, Info, Grid3x3, Eraser, Clapperboard, Layers, Share2, RefreshCw, Ratio, Box, Sliders, Hash, ArrowUpFromLine, Crop } from 'lucide-react'
 import { useToast } from "@/hooks/use-toast"
 import { GeneratedImage } from "../../store/unified-gallery-store"
 import { useIsMobile } from '@/hooks/useMediaQuery'
 import { clipboardManager } from '@/utils/clipboard-manager'
 import { ExtractGridModal } from './ExtractGridModal'
+import { ImageCropModal } from './ImageCropModal'
 import { logger } from '@/lib/logger'
 
 interface FullscreenModalProps {
@@ -71,6 +72,7 @@ function FullscreenModal({
     const isMobile = useIsMobile()
     const [showDetails, setShowDetails] = useState(false)
     const [extractModalOpen, setExtractModalOpen] = useState(false)
+    const [cropModalOpen, setCropModalOpen] = useState(false)
     const [promptExpanded, setPromptExpanded] = useState(false)
 
     // Keyboard navigation
@@ -461,6 +463,17 @@ function FullscreenModal({
                                     Download
                                 </Button>
 
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="flex-1 text-white border-border"
+                                    onClick={() => setCropModalOpen(true)}
+                                    title="Crop to any aspect ratio, then download or save to gallery"
+                                >
+                                    <Crop className="w-3.5 h-3.5 mr-1" />
+                                    Crop
+                                </Button>
+
                                 {onShare && (
                                     <Button
                                         size="sm"
@@ -849,6 +862,15 @@ function FullscreenModal({
                 gridImageUrl={fullscreenImage?.url || null}
                 sourceImageId={fullscreenImage?.id}
             />
+
+            {/* Crop Modal — renders above fullscreen; closes on save or cancel */}
+            {cropModalOpen && fullscreenImage && (
+                <ImageCropModal
+                    imageUrl={fullscreenImage.url}
+                    galleryId={fullscreenImage.id}
+                    onClose={() => setCropModalOpen(false)}
+                />
+            )}
         </div>
     )
 }

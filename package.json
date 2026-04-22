@@ -97,6 +97,7 @@
     "react-dom": "19.1.0",
     "react-dropzone": "^14.3.8",
     "react-hook-form": "^7.60.0",
+    "react-image-crop": "^11.0.10",
     "react-konva": "^19.2.3",
     "react-medium-image-zoom": "^5.2.10",
     "react-pageflip": "^2.0.3",
