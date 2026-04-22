@@ -828,7 +828,10 @@ export function useImageGeneration() {
                         response.galleryId,
                         variationPrompt,
                         model,
-                        modelSettings.aspectRatio || '16:9'
+                        modelSettings.aspectRatio || '16:9',
+                        typeof (modelSettings as Record<string, unknown>).quality === 'string'
+                            ? (modelSettings as Record<string, unknown>).quality as string
+                            : undefined
                     )
                 }
 

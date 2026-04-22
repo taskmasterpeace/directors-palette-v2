@@ -8,6 +8,18 @@ interface ClapperboardSpinnerProps {
   prompt?: string
   /** Epoch ms when generation started — survives remounts so progress doesn't reset on navigation */
   startedAt?: number
+  /**
+   * Model-specific quality tier (currently only gpt-image-2: "low" | "medium").
+   * When provided, overrides the model's default estimatedSeconds because the
+   * flat 35s default under-estimates medium and over-estimates low.
+   */
+  quality?: string
+}
+
+/** gpt-image-2 runs faster at low, slower at medium — override the flat 35s default. */
+const GPT_IMAGE_2_ESTIMATES: Record<string, number> = {
+  low: 25,
+  medium: 55,
 }
 
 /**
@@ -19,9 +31,14 @@ interface ClapperboardSpinnerProps {
  * duplicate those here or they will drift when new models are added
  * (see 2026-04-22: gpt-image-2 shipped with stale 12s fallback).
  */
-export function ClapperboardSpinner({ model, prompt, startedAt }: ClapperboardSpinnerProps) {
+export function ClapperboardSpinner({ model, prompt, startedAt, quality }: ClapperboardSpinnerProps) {
   const modelConfig = MODEL_CONFIGS[model as ModelId]
-  const estimatedSeconds = modelConfig?.estimatedSeconds ?? 60
+  const defaultEstimate = modelConfig?.estimatedSeconds ?? 60
+  // gpt-image-2 estimate varies by quality tier; other models use the flat default.
+  const estimatedSeconds =
+    model === 'gpt-image-2' && quality && GPT_IMAGE_2_ESTIMATES[quality]
+      ? GPT_IMAGE_2_ESTIMATES[quality]
+      : defaultEstimate
   const displayName = modelConfig?.displayName ?? model
 
   // Use the passed-in start time so progress survives remounts (navigation away and back)

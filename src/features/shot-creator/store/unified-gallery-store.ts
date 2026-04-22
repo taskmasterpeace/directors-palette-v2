@@ -38,6 +38,7 @@ export interface GeneratedImage {
     error?: string // Error message if generation failed
     isGrid?: boolean // True if this is a 3x3 grid image (for extraction)
     gridType?: 'angles' | 'broll' // Type of grid for context
+    quality?: string // Quality tier (e.g. gpt-image-2 "low"/"medium") — used by the pending spinner for tier-aware estimates
   }
   createdAt?: string
   timestamp: number // NEW: Timestamp for compatibility with GalleryImage
@@ -145,7 +146,7 @@ interface UnifiedGalleryState {
   getTotalCreditsUsed: () => number
 
   // Pending placeholder management
-  addPendingPlaceholder: (galleryId: string, prompt: string, model: string, aspectRatio?: string) => void
+  addPendingPlaceholder: (galleryId: string, prompt: string, model: string, aspectRatio?: string, quality?: string) => void
   updatePendingImage: (galleryId: string, updates: Partial<GeneratedImage>) => void
   removePendingByGalleryId: (galleryId: string) => void
 
@@ -671,7 +672,7 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
   },
 
   // Pending placeholder management
-  addPendingPlaceholder: (galleryId, prompt, model, aspectRatio = '16:9') => {
+  addPendingPlaceholder: (galleryId, prompt, model, aspectRatio = '16:9', quality) => {
     const pendingImage: GeneratedImage = {
       id: galleryId, // Use the gallery ID so we can update it later
       url: '', // No URL yet
@@ -686,6 +687,10 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
       metadata: {
         createdAt: new Date().toISOString(),
         creditsUsed: 1,
+        // Stash quality tier so ClapperboardSpinner can pick a gpt-image-2
+        // tier-aware estimate (low=25s, medium=55s) instead of the flat 35s
+        // default. Lives on metadata because settings is a strict shape.
+        ...(quality ? { quality } : {}),
       },
       timestamp: Date.now(),
       tags: [],
