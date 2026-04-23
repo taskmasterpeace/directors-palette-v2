@@ -98,7 +98,8 @@ export function AnimatorUnifiedGallery({
 
   const handleDownloadBlob = async (video: DerivedVideo) => {
     try {
-      const response = await fetch(video.videoUrl)
+      const response = await fetch(video.videoUrl, { signal: AbortSignal.timeout(30000) })
+      if (!response.ok) throw new Error(`HTTP ${response.status}`)
       const blob = await response.blob()
       const blobUrl = URL.createObjectURL(blob)
       const link = document.createElement('a')
@@ -112,8 +113,8 @@ export function AnimatorUnifiedGallery({
       link.click()
       document.body.removeChild(link)
       URL.revokeObjectURL(blobUrl)
-    } catch {
-      toast.error('Could not download video.')
+    } catch (error) {
+      toast.error(`Could not download video: ${error instanceof Error ? error.message : 'Please try again.'}`)
     }
   }
 
