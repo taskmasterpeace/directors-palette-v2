@@ -137,26 +137,20 @@ const CompactVideoCardComponent = ({
 
   const handleDownload = async (videoUrl: string, videoId: string) => {
     try {
-      // Fetch the video as a blob
-      const response = await fetch(videoUrl)
+      const response = await fetch(videoUrl, { signal: AbortSignal.timeout(30000) })
+      if (!response.ok) throw new Error(`HTTP ${response.status}`)
       const blob = await response.blob()
-
-      // Create a temporary URL for the blob
       const blobUrl = URL.createObjectURL(blob)
-
-      // Create and trigger download
       const link = document.createElement('a')
       link.href = blobUrl
       link.download = `reference_${videoId}.mp4`
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
-
-      // Clean up the blob URL
       URL.revokeObjectURL(blobUrl)
     } catch (error) {
       logger.shotCreator.error('Failed to download video', { error: error instanceof Error ? error.message : String(error) })
-      toast.error('Could not download video. Please try again.')
+      toast.error(`Could not download video: ${error instanceof Error ? error.message : 'Please try again.'}`)
     }
   }
 
