@@ -1026,71 +1026,88 @@ export function UserManual() {
                                 </CardContent>
                             </Card>
 
-                            {/* GPT Image Family */}
+                            {/* GPT Image 2 Family */}
                             <Card className="bg-gradient-to-br from-blue-950/20 to-background border-blue-900/30">
                                 <CardHeader className="pb-2">
                                     <div className="flex items-center justify-between">
                                         <CardTitle className="flex items-center gap-2">
-                                            <span className="text-2xl">🎨</span> GPT Image Family
+                                            <span className="text-2xl">🎨</span> GPT Image 2
                                         </CardTitle>
                                         <div className="flex gap-2 text-xs font-bold">
-                                            <span className="px-2 py-1 rounded bg-green-500/20 text-green-400">3-27 PTS</span>
+                                            <span className="px-2 py-1 rounded bg-green-500/20 text-green-400">2-8 PTS</span>
                                         </div>
                                     </div>
-                                    <CardDescription>OpenAI GPT Image 1.5 - Premium quality with transparent backgrounds</CardDescription>
+                                    <CardDescription>OpenAI&apos;s latest — best-in-class text rendering with two quality tiers</CardDescription>
                                 </CardHeader>
                                 <CardContent className="text-sm space-y-4">
-                                    <div className="grid grid-cols-3 gap-2 text-xs">
-                                        <div className="p-2 rounded bg-green-500/10 border border-green-500/20 text-center">
-                                            <span className="font-semibold text-green-400">Low</span>
-                                            <p className="text-muted-foreground">3 pts</p>
-                                            <p className="text-[10px] text-muted-foreground/70">Fast drafts</p>
+                                    <div className="grid grid-cols-2 gap-2 text-xs">
+                                        <div className="p-2 rounded bg-cyan-500/10 border border-cyan-500/30 text-center relative">
+                                            <span className="absolute -top-2 right-2 text-[9px] px-1.5 py-0.5 rounded-full bg-cyan-600/30 text-cyan-200 border border-cyan-500/50 font-bold">
+                                                RECOMMENDED
+                                            </span>
+                                            <span className="font-semibold text-cyan-300">⚡ Low</span>
+                                            <p className="text-muted-foreground">2 pts · ~20s</p>
+                                            <p className="text-[10px] text-muted-foreground/70">Default, great for everything</p>
                                         </div>
                                         <div className="p-2 rounded bg-blue-500/10 border border-blue-500/20 text-center">
-                                            <span className="font-semibold text-blue-400">Medium</span>
-                                            <p className="text-muted-foreground">10 pts</p>
-                                            <p className="text-[10px] text-muted-foreground/70">Standard</p>
+                                            <span className="font-semibold text-blue-400">✨ Medium</span>
+                                            <p className="text-muted-foreground">8 pts · ~45s</p>
+                                            <p className="text-[10px] text-muted-foreground/70">Hero shots</p>
                                         </div>
-                                        <div className="p-2 rounded bg-violet-500/10 border border-violet-500/20 text-center">
-                                            <span className="font-semibold text-violet-400">High</span>
-                                            <p className="text-muted-foreground">27 pts</p>
-                                            <p className="text-[10px] text-muted-foreground/70">Premium</p>
+                                    </div>
+
+                                    {/* When to use which — honest guidance from side-by-side testing */}
+                                    <div className="space-y-2">
+                                        <h4 className="font-semibold text-blue-400">When to use Low vs Medium</h4>
+                                        <div className="space-y-2">
+                                            <div className="p-2.5 rounded bg-cyan-500/5 border border-cyan-500/20">
+                                                <p className="text-cyan-300 font-semibold text-xs mb-1">⚡ Use Low (2 pts) for 95% of work</p>
+                                                <ul className="text-muted-foreground text-xs space-y-0.5 list-disc pl-4">
+                                                    <li>Storyboard thumbnails and rapid iteration</li>
+                                                    <li>Text-heavy designs (posters, signs, titles) — text quality is identical to Medium</li>
+                                                    <li>Reference-image-driven edits</li>
+                                                    <li>Batch generation where speed + cost matter</li>
+                                                    <li>Anything you plan to iterate on a few times before keeping</li>
+                                                </ul>
+                                            </div>
+                                            <div className="p-2.5 rounded bg-blue-500/5 border border-blue-500/20">
+                                                <p className="text-blue-300 font-semibold text-xs mb-1">✨ Use Medium (8 pts) only for hero shots</p>
+                                                <ul className="text-muted-foreground text-xs space-y-0.5 list-disc pl-4">
+                                                    <li>The final image going into a client deliverable or marketing asset</li>
+                                                    <li>Extreme close-ups where fine texture detail matters (skin pores, fabric weaves, fur)</li>
+                                                    <li>Prompts with many specific small-object nouns you need rendered literally (e.g. &quot;salt crystals in beard&quot;)</li>
+                                                </ul>
+                                            </div>
+                                            <p className="text-[11px] text-muted-foreground italic border-l-2 border-border pl-2">
+                                                We ran side-by-side tests (diner signs, movie posters, portraits, cluttered flat-lays). Text fidelity, composition, and overall polish were essentially tied between Low and Medium. Medium&apos;s real edge is ~10% sharper micro-texture — worth 4x the cost only on the shots you&apos;ll actually ship.
+                                            </p>
                                         </div>
                                     </div>
 
                                     <div className="space-y-2">
                                         <h4 className="font-semibold text-blue-400">Special Features</h4>
                                         <ul className="text-muted-foreground space-y-1 list-disc pl-4">
-                                            <li><strong>Transparent backgrounds:</strong> PNG output with no background for compositing</li>
+                                            <li><strong>Best-in-class text rendering:</strong> Signs, posters, handwritten labels all legible</li>
+                                            <li><strong>Reference images:</strong> Up to 10 for style matching and edits</li>
+                                            <li><strong>Transparent backgrounds:</strong> Via Background → Transparent setting</li>
                                             <li><strong>Multi-image generation:</strong> Generate 1-10 images per request</li>
-                                            <li><strong>Best-in-class text rendering:</strong> Accurate text in images</li>
-                                            <li><strong>Aspect ratios:</strong> 1:1 Square, 3:2 Landscape, 2:3 Portrait</li>
-                                        </ul>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <h4 className="font-semibold text-blue-400">Prompting Tips</h4>
-                                        <ul className="text-muted-foreground space-y-1 list-disc pl-4">
-                                            <li>Highly capable with conversational prompts</li>
-                                            <li>Excels at detailed scenes and photorealistic content</li>
-                                            <li>For transparent backgrounds, select PNG format and &quot;Transparent&quot; background</li>
-                                            <li>Use Low for quick iterations, High for final renders</li>
+                                            <li><strong>Aspect ratios:</strong> 1:1 Square, 3:2 Landscape, 2:3 Portrait only</li>
                                         </ul>
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4 text-xs">
                                         <div className="p-2 rounded bg-green-500/10 border border-green-500/20">
                                             <span className="font-semibold text-green-400">Strengths</span>
-                                            <p className="text-muted-foreground mt-1">Transparent backgrounds, excellent text rendering, high quality, multi-image generation, versatile quality tiers</p>
+                                            <p className="text-muted-foreground mt-1">Unmatched text rendering, reference image support (10), transparent backgrounds, Low tier is the cheapest text-capable model we offer.</p>
                                         </div>
                                         <div className="p-2 rounded bg-red-500/10 border border-red-500/20">
                                             <span className="font-semibold text-red-400">Weaknesses</span>
-                                            <p className="text-muted-foreground mt-1">Higher cost at high quality, no reference image support, limited aspect ratio options</p>
+                                            <p className="text-muted-foreground mt-1">Only 3 aspect ratios (no 16:9 — use the built-in Crop tool). No LoRA support. Slower than Z-Image / Nano Banana at Medium.</p>
                                         </div>
                                     </div>
 
                                     <p className="text-muted-foreground border-t border-border/50 pt-3">
-                                        <strong>Best for:</strong> Product images with transparent backgrounds, text-heavy designs, marketing assets, batch generation, compositing work.
+                                        <strong>Best for:</strong> Anything with text in it, reference-driven edits, product images with transparent backgrounds, marketing assets, storyboards.
                                     </p>
                                 </CardContent>
                             </Card>
@@ -1141,35 +1158,27 @@ export function UserManual() {
                                                 <td className="text-center p-2">★★★★★</td>
                                                 <td className="text-center p-2">14</td>
                                             </tr>
-                                            <tr className="border-b border-border/30 hover:bg-muted/30">
-                                                <td className="p-2">🎨 GPT Image Low</td>
-                                                <td className="text-center p-2 text-green-400">3 pts</td>
+                                            <tr className="border-b border-border/30 hover:bg-muted/30 bg-cyan-950/10">
+                                                <td className="p-2">🎨 GPT Image 2 <span className="text-[10px] font-semibold text-cyan-400 ml-1">Low</span></td>
+                                                <td className="text-center p-2 text-cyan-400">2 pts</td>
                                                 <td className="text-center p-2">⚡⚡⚡</td>
-                                                <td className="text-center p-2">★★★☆☆</td>
+                                                <td className="text-center p-2">★★★★☆</td>
                                                 <td className="text-center p-2">★★★★★</td>
-                                                <td className="text-center p-2 text-muted-foreground/50">-</td>
+                                                <td className="text-center p-2">10</td>
                                             </tr>
-                                            <tr className="border-b border-border/30 hover:bg-muted/30">
-                                                <td className="p-2">🎨 GPT Image Medium</td>
-                                                <td className="text-center p-2 text-blue-400">10 pts</td>
+                                            <tr className="hover:bg-muted/30">
+                                                <td className="p-2">🎨 GPT Image 2 <span className="text-[10px] font-semibold text-blue-400 ml-1">Medium</span></td>
+                                                <td className="text-center p-2 text-blue-400">8 pts</td>
                                                 <td className="text-center p-2">⚡⚡</td>
                                                 <td className="text-center p-2">★★★★☆</td>
                                                 <td className="text-center p-2">★★★★★</td>
-                                                <td className="text-center p-2 text-muted-foreground/50">-</td>
-                                            </tr>
-                                            <tr className="hover:bg-muted/30">
-                                                <td className="p-2">✨ GPT Image HD</td>
-                                                <td className="text-center p-2 text-violet-400">27 pts</td>
-                                                <td className="text-center p-2">⚡</td>
-                                                <td className="text-center p-2">★★★★★</td>
-                                                <td className="text-center p-2">★★★★★</td>
-                                                <td className="text-center p-2 text-muted-foreground/50">-</td>
+                                                <td className="text-center p-2">10</td>
                                             </tr>
                                         </tbody>
                                     </table>
                                 </div>
                                 <p className="text-xs text-muted-foreground mt-4">
-                                    <strong>Note:</strong> GPT Image models support transparent PNG backgrounds. Cost varies by quality tier.
+                                    <strong>Note:</strong> GPT Image 2 supports transparent PNG backgrounds and up to 10 reference images. Default quality is <span className="text-cyan-400 font-semibold">Low</span> — upgrade to Medium only for hero shots.
                                 </p>
                             </CardContent>
                         </Card>
