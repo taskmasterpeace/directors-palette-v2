@@ -266,12 +266,12 @@ export const MODEL_PARAMETERS: Record<string, ModelParameter> = {
         id: 'quality',
         label: 'Quality',
         type: 'select',
-        default: 'medium',
+        default: 'low',
         options: [
-            { value: 'low', label: 'Low (2 pts) — fast, cheaper' },
-            { value: 'medium', label: 'Medium (8 pts) — best value' },
+            { value: 'low', label: '⚡ Low · 2 pts — Recommended' },
+            { value: 'medium', label: '✨ Medium · 8 pts — Hero shots' },
         ],
-        description: 'Higher quality uses more pts',
+        description: 'Low nails text + detail at 1/4 the cost. Medium is for the occasional hero shot.',
     },
     gptImage2Background: {
         id: 'background',
@@ -392,7 +392,7 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         badgeColor: 'bg-emerald-600',
         textColor: 'text-emerald-300',
         endpoint: 'openai/gpt-image-2',
-        costPerImage: 0.08, // 8 pts = $0.08 — default (medium) rate
+        costPerImage: 0.02, // 2 pts = $0.02 — default (low) rate; side-by-side testing showed low is indistinguishable from medium for most use cases
         // Tiered pricing by quality (not resolution). costByResolution is the
         // generic tier-keyed pricing map; route passes quality as the lookup key.
         costByResolution: {

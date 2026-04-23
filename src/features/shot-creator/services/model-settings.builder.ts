@@ -30,7 +30,7 @@ export function buildModelSettings(
 
     case 'gpt-image-2':
       modelSettings.aspectRatio = settings.aspectRatio;
-      modelSettings.quality = settings.gptImageQuality || 'medium';
+      modelSettings.quality = settings.gptImageQuality || 'low';
       modelSettings.outputFormat = settings.outputFormat || 'webp';
       modelSettings.background = settings.gptImageBackground || 'auto';
       modelSettings.moderation = settings.gptImageModeration || 'auto';

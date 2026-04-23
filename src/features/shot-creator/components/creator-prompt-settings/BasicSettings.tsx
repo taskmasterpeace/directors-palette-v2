@@ -150,24 +150,39 @@ const BasicSettings = () => {
             {/* GPT Image 2 specific controls */}
             {selectedModel === 'gpt-image-2' && (
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-3">
-                    {/* Quality (pricing tier) */}
+                    {/* Quality (pricing tier) — low is the recommended default; side-by-side testing showed
+                        low matches medium on text + detail at 1/4 the cost, so we lean in hard. */}
                     <div className="space-y-1">
                         <Label className="text-xs text-muted-foreground">
                             Quality
                             <span className="ml-1 text-amber-400">
-                                ({Math.round(getModelCost(selectedModel as ModelId, shotCreatorSettings.gptImageQuality || 'medium') * 100)} pts)
+                                ({Math.round(getModelCost(selectedModel as ModelId, shotCreatorSettings.gptImageQuality || 'low') * 100)} pts)
                             </span>
                         </Label>
                         <Select
-                            value={shotCreatorSettings.gptImageQuality || 'medium'}
+                            value={shotCreatorSettings.gptImageQuality || 'low'}
                             onValueChange={(value) => updateSettings({ gptImageQuality: value as 'low' | 'medium' })}
                         >
                             <SelectTrigger className="bg-card border-border text-white h-9 text-sm">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="low">Low (2 pts)</SelectItem>
-                                <SelectItem value="medium">Medium (8 pts)</SelectItem>
+                                <SelectItem value="low">
+                                    <span className="flex items-center gap-2">
+                                        <span>⚡ Low · 2 pts</span>
+                                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-cyan-600/20 text-cyan-300 border border-cyan-600/40 font-medium">
+                                            RECOMMENDED
+                                        </span>
+                                    </span>
+                                </SelectItem>
+                                <SelectItem value="medium">
+                                    <span className="flex items-center gap-2">
+                                        <span>✨ Medium · 8 pts</span>
+                                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">
+                                            Hero shots
+                                        </span>
+                                    </span>
+                                </SelectItem>
                             </SelectContent>
                         </Select>
                     </div>

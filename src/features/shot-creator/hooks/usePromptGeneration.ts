@@ -91,7 +91,7 @@ export function usePromptGeneration() {
         const model = shotCreatorSettings.model || 'nano-banana-2'
         // Tier key: quality for gpt-image-2, resolution for tier-priced models like nano-banana-2
         const tierKey = model === 'gpt-image-2'
-            ? (shotCreatorSettings.gptImageQuality || 'medium')
+            ? (shotCreatorSettings.gptImageQuality || 'low')
             : shotCreatorSettings.resolution
         const costPerImage = getModelCost(model, tierKey)
 
@@ -240,7 +240,7 @@ export function usePromptGeneration() {
                 const validAR = ['1:1', '3:2', '2:3']
                 const rawAR = shotCreatorSettings.aspectRatio || '3:2'
                 baseSettings.aspectRatio = validAR.includes(rawAR) ? rawAR : '3:2'
-                baseSettings.quality = shotCreatorSettings.gptImageQuality || 'medium'
+                baseSettings.quality = shotCreatorSettings.gptImageQuality || 'low'
                 baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'webp'
                 baseSettings.background = shotCreatorSettings.gptImageBackground || 'auto'
                 baseSettings.moderation = shotCreatorSettings.gptImageModeration || 'auto'
