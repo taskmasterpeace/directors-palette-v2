@@ -145,6 +145,8 @@ export function FullscreenVideoModal({
             src={videoUrl}
             controls
             autoPlay
+            muted
+            playsInline
             className="relative max-w-full max-h-[calc(100vh-7rem)] rounded-lg ring-1 ring-white/[0.08] shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           />
